@@ -1,6 +1,6 @@
 /* ES5, old MAG WebKit. Browsers never obtain a media URL or start streams. */
 var MagPortal = (function () {
-    var state = { kind:"tv", view:"countries", country:"", countryName:"", group:"", q:"", quality:"auto", favorites:"0", series:"", season:"", seasonName:"" };
+    var state = { kind:"tv", view:"groups", country:"PT", countryName:"Portugal", group:"", q:"", quality:"auto", favorites:"0", series:"", season:"", seasonName:"" };
     var stack=[], items=[], selected=0, offset=0, total=0, pageSize=10;
     var nativePlayer=null, playerReady=false, initialized=false, playing=false, playingItem=null, paused=false, meta={};
     var playSeq=0, loadSeq=0, detailSeq=0, pageRequest=null, playRequest=null;
@@ -340,10 +340,10 @@ var MagPortal = (function () {
         if(code===13||code===40){favoriteTabsFocus=false;render();return true;}
         return code===38;
     }
-    function selectKind(kind){
+    function selectKind(kind,allCountries){
         if(kind==="all"){selectFavoriteKind("tv",false);return;}menuFocus="list";sidebarIndex=kind==="movie"?1:kind==="series"?2:0;favoriteTabsFocus=false;
-        if(playing){stop();}closeOverlay();stack=[];state.kind=kind;state.view=kind==="tv"?"countries":kind==="all"?"items":"groups";
-        state.country="";state.countryName="";state.group="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites=kind==="all"?"1":"0";loadPage(0,false);
+        if(playing){stop();}closeOverlay();stack=[];state.kind=kind;state.view=kind==="tv"&&allCountries?"countries":"groups";
+        state.country=kind==="tv"&&!allCountries?"PT":"";state.countryName=state.country==="PT"?"Portugal":"";state.group="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites="0";loadPage(0,false);
     }
     function nextKind(){var kinds=["tv","movie","series","all"],i;for(i=0;i<kinds.length;i+=1){if((state.favorites==="1"?"all":state.kind)===kinds[i]){selectKind(kinds[(i+1)%kinds.length]);return;}}}
     function back(){
@@ -351,7 +351,7 @@ var MagPortal = (function () {
         if(fastDirection){window.clearTimeout(fastTimer);fastDirection=0;seekTarget=null;seekDirection=0;showOsd("Escolha cancelada · A reprodução continua");return;}
         if(overlay){closeOverlay();return;}if(playing){stop();return;}if(state.q){state.q="";loadPage(0,false);return;}
         if(stack.length){var previous=stack.pop();state=previous.state;loadPage(previous.selected,false);}
-        else if(state.kind!=="tv"||state.view!=="countries"){selectKind("tv");}
+        else if(state.kind==="tv"&&state.view!=="countries"){selectKind("tv",true);}else if(state.kind!=="tv"){selectKind("tv");}
     }
     function favorite(){
         var item=playing?playingItem:current();
@@ -401,7 +401,7 @@ var MagPortal = (function () {
         {label:favoriteLabel(current()),icon:"all",description:"Guarde ou remova o canal, filme ou série selecionado. Primeiro escolha um título na lista.",action:favorite},
         {label:"Abrir favoritos",icon:"all",description:"Veja os canais, filmes e séries que guardou.",action:function(){selectKind("all");}},
         {label:"Qualidade da TV",icon:"quality",badge:state.quality==="auto"?"Auto":state.quality,description:"Escolha a qualidade e controle as versões repetidas dos canais.",action:qualityPicker},
-        {label:state.favorites==="1"?"Tipo de favorito":"Países e categorias",icon:state.favorites==="1"?"all":"country",description:state.favorites==="1"?"Escolha Canais, Filmes ou Séries nos seus favoritos.":"Volte ao início da secção para explorar os conteúdos por país ou categoria.",action:function(){if(state.favorites==="1"){favoriteKindPicker();}else{selectKind(state.kind);}}},
+        {label:state.favorites==="1"?"Tipo de favorito":"Países e categorias",icon:state.favorites==="1"?"all":"country",description:state.favorites==="1"?"Escolha Canais, Filmes ou Séries nos seus favoritos.":"Volte ao início da secção para explorar os conteúdos por país ou categoria.",action:function(){if(state.favorites==="1"){favoriteKindPicker();}else{selectKind(state.kind,true);}}},
         {label:"Recarregar esta lista",icon:"group",description:"Volta a carregar a página atual a partir do catálogo já guardado.",action:function(){loadPage(selected,false);loadLibrary();}},
         {label:"Guia do comando",icon:"options",description:"Consulte as teclas para pesquisar, guardar favoritos e controlar a reprodução.",action:help},
         {label:"Programação e detalhes",icon:"tv",badge:"INFO",description:"Veja o EPG do canal selecionado ou a descrição do filme ou episódio.",action:showInfo},

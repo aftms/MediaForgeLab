@@ -120,3 +120,9 @@ Referências: [Samsung AVPlay](https://developer.samsung.com/smarttv/develop/api
 Nome e símbolo atualizados em MAG, web/PWA, gestão e lançadores TV. Os IDs
 técnicos Tizen/Android, certificado HTTPS, chaves de armazenamento e assinatura
 são mantidos para atualizar a instalação existente e preservar os dados.
+
+## País inicial dos canais
+
+A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
+BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
+seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.

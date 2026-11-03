@@ -8,7 +8,7 @@ A aplicação MAG/web/TV é a base. Antiga MediaCatalog arquivada em
 Evolução conjunta passo a passo, sem importar a interface antiga.
 
 Nome visível **Media Forge Lab**, novo símbolo de enquadramentos/reprodução.
-MAG r19, web v6, TV r7. Pesquisa TV com lupa apenas no topo direito, 30 títulos/página.
+MAG r20, web v7, TV r8. Pesquisa TV com lupa apenas no topo direito, 30 títulos/página.
 Favoritos, pastas, progresso, catálogo completo e atualização são partilhados.
 Um único stream entre as interfaces; apps externas ao portal não são controladas.
 
@@ -41,3 +41,13 @@ abre instalação nativa quando disponível ou ajuda contextual, distingue PWA
 aberta/appinstalled e mantém ação após cancelar. Cache da shell atualizado;
 manifesto corrigido para UTF-8. Testes Chrome isolado 1366/390px passaram,
 JS syntax/diffcheck passaram; sem reinício do serviço nem acesso ao fornecedor.
+
+## Portugal por defeito — MAG r20, web v7, TV r8
+
+Entrar na secção TV seleciona PT em todas as interfaces. Filmes, séries e
+favoritos mantêm-se sem filtro de país automático. Web/TV permitem trocar o
+país no seletor; MAG abre as categorias de Portugal, BACK ou MENU → Países e
+categorias permite escolher outro país. A pesquisa respeita o país selecionado.
+Regressão MAG e compatibilidade ES5 passaram; Chrome verificou PT inicial,
+ES selecionável, entrada/saída das secções e favoritos sem PT. Sem streams.
+Samsung 1.0.8 instalada; Xiaomi recarrega a interface partilhada.

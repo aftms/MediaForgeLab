@@ -219,3 +219,9 @@ Validado em Chrome isolado: botão visível, ajuda em contexto seguro e HTTP LAN
 callback de instalação simulado, cancelamento, evento appinstalled e layout390px.
 Não se instalou uma PWA real neste teste nem se abriram transmissões.
 Referência: [evento beforeinstallprompt](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeinstallprompt_event).
+
+## País inicial dos canais
+
+A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
+BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
+seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.

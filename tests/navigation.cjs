@@ -86,22 +86,23 @@ function harness(native=true, opts={}) {
     type(s){for(const c of s)ctx.MagPortal.keypress({charCode:c.charCodeAt(0),preventDefault(){}});},
     click(id){nodes[id].onclick();},
     flush(ms){for(const[id,t]of Array.from(timers))if(t.ms===ms){timers.delete(id);t.fn();}},
-    enterTV(){this.key(13);this.key(13);}
+    enterTV(){this.key(13);}
   };
 }
 // Startup must not wait for onload, aggregate metadata or native InitPlayer.
 let h=harness(true,{defer:u=>u==='/api/library'});
-assert.equal(h.nodes['selected-name'].value,'Portugal');
+assert.match(h.nodes['selected-name'].value,/Todos/);
+assert.match(h.nodes.group.value,/Portugal/);
 assert.equal(h.ctx.window.onload,undefined);
 assert(!h.calls.some(c=>c[0]==='Init'));
 assert.equal(h.requests.filter(r=>r.url.startsWith('/api/catalog')).length,1);
-assert(h.requests[0].url.includes('view=countries'));
+assert(h.requests[0].url.includes('view=groups'));assert(h.requests[0].url.includes('country=PT'));
 h.ctx.MagPortal.init();assert.equal(h.requests.length,3);
 h.flush(15000);assert.match(h.nodes['library-counts'].value,/indisponível/);
 h=harness(false,{defer:u=>u.startsWith('/api/catalog')});h.flush(15000);assert.match(h.nodes.group.value,/MENU para repetir/);
 h=harness(false,{sendThrows:true});assert.match(h.nodes.group.value,/MENU para repetir/);
 h=harness(false,{missingScript:true});assert.match(h.nodes.group.value,/Interface não carregada/);
-h=harness(false);assert.equal(h.nodes['selected-name'].value,'Portugal');h.enterTV();assert.match(h.nodes['selected-name'].value,/Canal 1/);h.key(13);assert(!h.requests.some(r=>r.url==='/api/media/mag'));assert.match(h.nodes.status.value,/computador/);
+h=harness(false);assert.match(h.nodes['selected-name'].value,/Todos/);h.enterTV();assert.match(h.nodes['selected-name'].value,/Canal 1/);h.key(13);assert(!h.requests.some(r=>r.url==='/api/media/mag'));assert.match(h.nodes.status.value,/computador/);
 h.key(34);assert.match(h.nodes['selected-name'].value,/Canal 11/);h.key(8);assert.match(h.nodes['selected-name'].value,/Todos/);h.key(8);assert.equal(h.nodes['selected-name'].value,'Portugal');
 
 h=harness(false);h.click('tab-movie');h.key(13);h.key(114);h.type('camara');h.key(13);assert.match(h.nodes['selected-name'].value,/Câmara/);assert(h.requests.at(-1).url.includes('q=camara'));assert(!h.requests.some(r=>r.url==='/api/media/mag'));
@@ -307,7 +308,7 @@ h.key(40);h.key(13);assert.match(h.nodes.group.value,/Favoritos \/ Filmes/);
 h.key(114);h.type('Cinema');h.flush(250);h.key(13);assert.match(h.nodes.list.value,/Câmara de Cinema/);
 h.key(8);h.advance(800);h.key(113);assert.match(h.nodes['selected-name'].value,/Sem resultados/);
 h.key(38);h.key(37);h.key(40);assert.match(h.nodes.list.value,/Canal 1/);
-h.key(112);assert.equal(h.nodes.group.value,'TV');assert.equal(h.nodes['favorite-tabs'].style.display,'none');
+h.key(112);assert.equal(h.nodes.group.value,'TV / Portugal');assert.equal(h.nodes['favorite-tabs'].style.display,'none');
 assert(h.requests.filter(r=>r.url.startsWith('/api/catalog?')&&r.url.includes('favorites=1')).every(r=>!r.url.includes('kind=all')));
 console.log('PASS: grouped favorites, default channels, remote/MENU navigation, series return, scoped search and empty groups.');
 
@@ -354,3 +355,7 @@ assert.equal(h.nodes['selected-name'].value,'Câmara de Cinema');assert(!h.reque
 h=harness();h.key(115);assert.equal(h.nodes['selected-name'].value,'Sem resultados');h.key(37);assert.match(h.nodes['tab-all'].className,/remote-focus/);h.key(38);h.key(13);h.release(13);assert.match(h.nodes.group.value,/Séries/);
 let late=false;h=harness(true,{defer:u=>late&&u.startsWith('/api/catalog')});late=true;h.click('tab-movie');h.key(37);h.pending[0].complete();assert.match(h.nodes['tab-movie'].className,/remote-focus/);
 console.log('PASS: sidebar/list arrows, all section/action buttons, stable selection, held OK protection, search return, empty/slow lists and CH page navigation.');
+
+// Portugal is only the default live-TV country; the world and other sections remain accessible.
+h=harness(false);assert(h.requests[0].url.includes("country=PT"));h.key(8);assert(h.requests.at(-1).url.includes("view=countries"));h.click("tab-movie");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-series");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-all");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-tv");assert(h.requests.at(-1).url.includes("country=PT"));h.click("options-button");for(let i=0;i<4;i++)h.key(40);h.key(13);assert(h.requests.at(-1).url.includes("view=countries"));
+console.log("PASS: default Portugal for live TV, BACK/MENU world browsing and unchanged movies/series/favorites.");

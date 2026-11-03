@@ -401,3 +401,9 @@ Referências:
 Código ativo na raiz deste repositório; projeto Gateway `mediaforgelab`.
 Ver [TV.md](TV.md), [MIGRATION.md](MIGRATION.md) e [HANDOFF.md](HANDOFF.md).
 A versão desktop antiga está arquivada localmente, sem integração automática.
+
+## País inicial dos canais
+
+A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
+BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
+seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.
