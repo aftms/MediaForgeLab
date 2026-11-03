@@ -40,6 +40,7 @@ function harness(native=true, opts={}) {
     if(url.startsWith('/api/catalog?')) {
       const p=new URL('http://fixture.invalid'+url).searchParams;let rows;
       if(p.get('view')==='countries')rows=[{id:'country:PT',name:'Portugal',kind:'country',group:'12 canais',count:12}];
+      else if(p.get('view')==='genres')rows=[{id:'genre:Drama',name:'Drama',kind:'genre',count:1}];
       else if(p.get('view')==='origins')rows=[{id:'origin:MEO',name:'MEO',kind:'origin',count:6},{id:'origin:VO',name:'VO · Vodafone',kind:'origin',count:6}];
       else if(p.get('view')==='groups')rows=[{id:'group:',name:'Todos os títulos',kind:'group',group:'',count:12}];
       else if(p.get('view')==='seasons')rows=Array.from(new Set(episodes.map(e=>e.season))).map(season=>({id:'season:'+season,season,kind:'season',name:'Temporada '+season,group:'Uma série',count:episodes.filter(e=>e.season===season).length}));
@@ -367,3 +368,20 @@ assert(h.requests.at(-1).url.includes('origin=MEO'));assert.match(h.nodes.group.
 h.click('tab-movie');assert(!h.requests.at(-1).url.includes('origin='));
 h.click('tab-tv');assert(!h.requests.at(-1).url.includes('origin='));
 console.log('PASS: MAG origins picker uses remote, sends origin filter and resets outside TV.');
+
+h=harness();h.nodes['tab-movie'].onclick();h.nodes['options-button'].onclick();
+// Last two options are the VOD country and genre filters.
+h.key(38);h.key(13);assert.match(h.nodes['picker-title'].value,/Género/);
+h.key(40);h.key(13);assert.ok(h.requests.some(r=>r.url.includes('genre=Drama')&&r.url.includes('kind=movie')));
+h.nodes['options-button'].onclick();h.key(38);h.key(38);h.key(13);
+assert.match(h.nodes['picker-title'].value,/País/);h.key(40);h.key(13);
+assert.ok(h.requests.some(r=>r.url.includes('country=PT')&&r.url.includes('kind=movie')&&!r.url.includes('genre=Drama')));
+h.nodes['tab-series'].onclick();assert.ok(h.requests[h.requests.length-1]);
+console.log('PASS: MAG VOD genre/country pickers via remote, combined query and country reset.');
+
+h=harness();h.nodes['tab-series'].onclick();h.key(13);h.key(13);
+h.nodes['options-button'].onclick();h.key(38);h.key(13);h.key(40);h.key(13);
+const filteredSeries=h.requests.filter(r=>r.url.includes('/api/catalog?')).at(-1).url;
+assert.ok(filteredSeries.includes('kind=series')&&filteredSeries.includes('genre=Drama')&&filteredSeries.includes('view=items'));
+assert.equal(new URL('http://fixture.invalid'+filteredSeries).searchParams.get('group'),'');
+console.log('PASS: MAG genre filter from seasons returns to series without treating series title as category.');

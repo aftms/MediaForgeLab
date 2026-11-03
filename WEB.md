@@ -291,3 +291,10 @@ filtro oculto nos filmes e reposição ao entrar em TV. Hashes de catálogo,
 favoritos, organização e progresso iguais antes/depois do reinício.
 Samsung 1.0.9 assinada e instalada. Xiaomi usa a UI partilhada r9 ao reabrir,
 sem novo APK (continua 1.2). Recarregar a web com Ctrl+F5 e reiniciar portal MAG.
+
+## Filtros VOD — web v10
+
+Filmes e séries: país/idioma da versão do catálogo e género, combináveis com
+categoria, pesquisa e favoritos. Todos por defeito, sem restringir a PT/BR.
+Quando o fornecedor não indica género, os títulos ficam em Sem género indicado.
+Atualizar com Ctrl+F5; o cache da PWA foi versionado para v10, sem cache de streams.

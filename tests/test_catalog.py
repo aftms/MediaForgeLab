@@ -108,6 +108,44 @@ class CatalogTests(unittest.TestCase):
         for g in groups[1:]:
             self.assertEqual(g['count'],cat.browse(dict(kind='tv',country='PT',group=g['group']))['total'])
 
+    def test_vod_country_genre_combination_and_preservation(self):
+        cat=Catalog([],self.config)
+        rows=[dict(id='m1',kind='movie',name='PT - Alpha',group='PT/BR - AÇÃO',groups=['PT/BR - AÇÃO','PT/BR - COMÉDIA']),
+              dict(id='m2',kind='movie',name='BR - Beta',group='PT/BR - AÇÃO'),
+              dict(id='m3',kind='movie',name='Shared',group='PT/BR - FILMES',genre='Drama / Mystery'),
+              dict(id='m4',kind='movie',name='Unlabelled Action',group='NETFLIX MOVIES'),
+              dict(id='s1',kind='series',name='PT - Show',group='PT/BR SERIE',genre='Action & Adventure / Drama'),
+              dict(id='s2',kind='series',name='English show',group='ENGLISH SERIES',genre='Comedy'),
+              dict(id='s3',kind='series',name='French show',group='FRANCE SÉRIES',genre='Drame'),
+              dict(id='s4',kind='series',name='Hindi show',group='HINDI WEB SERIES',genre='Drama')]
+        for row in rows:cat.add(row)
+        self.assertEqual(cat.by_id['m1']['countries'],['PT'])
+        self.assertEqual(cat.by_id['m2']['countries'],['BR'])
+        self.assertEqual(cat.by_id['m3']['countries'],['PT','BR'])
+        self.assertEqual(cat.by_id['m4']['genres'],['Sem género indicado'])
+        self.assertEqual(cat.by_id['s2']['countries'],['EN'])
+        self.assertEqual(cat.by_id['s3']['countries'],['FR'])
+        self.assertEqual(cat.by_id['s4']['countries'],['IN'])
+        self.assertEqual(cat.by_id['m1']['group'],rows[0]['group'])
+        self.assertEqual(cat.by_id['m1']['key'],'m1')
+        countries=cat.browse(dict(kind='movie',view='countries',limit=30))['items']
+        self.assertEqual({r['id']:r['count'] for r in countries},{'country:PT':2,'country:BR':2,'country:OTHER':1})
+        genres=cat.browse(dict(kind='movie',view='genres',country='PT',limit=30))['items']
+        for g in genres:
+            self.assertEqual(g['count'],cat.browse(dict(kind='movie',country='PT',genre=g['name']))['total'])
+        for country in ['','PT','BR']:
+            groups=cat.browse(dict(kind='movie',view='groups',country=country,limit=30))['items']
+            for g in groups:
+                self.assertEqual(g['count'],cat.browse(dict(kind='movie',country=country,group=g['group']))['total'])
+        params=dict(kind='movie',country='PT',genre='Ação',q='alpha',group='PT/BR - COMÉDIA')
+        self.assertEqual([i['id'] for i in cat.browse(params)['items']],['m1'])
+        cat.favorite('m1',True)
+        self.assertTrue(cat.browse(dict(params,favorites='1'))['items'][0]['favorite'])
+        self.assertEqual(cat.browse(dict(params,country='BR'))['total'],0)
+        self.assertEqual(cat.browse(dict(kind='series',country='PT',genre='Drama'))['items'][0]['id'],'s1')
+        self.assertEqual(cat.browse(dict(kind='movie',country='EN'))['total'],0)
+        self.assertEqual(cat.browse(dict(kind='series',country='EN',genre='Comédia'))['total'],1)
+
     def test_large_web_pages_are_complete_without_changing_mag_limits(self):
         for i in range(301):
             self.catalog.add(dict(id='m'+str(i),kind='movie',name='Filme '+str(i),group='PT'))

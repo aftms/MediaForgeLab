@@ -45,3 +45,21 @@ a categoria própria em `group` dos canais e em `view=groups`; filmes e séries
 mantêm os seus grupos. IDs e chaves de favoritos não mudam. As regras voltam a
 ser aplicadas ao carregar os catálogos atualizados. Não é necessário reinstalar
 APK/WGT: reabrir a interface atualiza as listas.
+
+## País/idioma e género de filmes/séries
+
+`vod_filters.py` calcula dimensões locais ao carregar o catálogo: `countries`
+identifica a versão por rótulos do catálogo, não o país de produção; EN mantém
+Inglês / Internacional, NORDIC agrupa os países nórdicos e os casos desconhecidos
+ficam explícitos. Nos grupos PT/BR, prefixos PT e BR no título distinguem versões;
+sem essa distinção, o título pertence aos dois filtros. Não implica garantia da
+faixa de áudio. `genres` normaliza metadados existentes, com categorias como
+alternativa; não adivinha pelo título. Um título pode ter vários géneros, mas
+aparece uma vez na lista filtrada. Sem dados: Sem género indicado.
+
+API: `view=countries&kind=movie|series`, `view=genres&kind=movie|series&country=PT`
+e `kind=movie|series&country=PT&genre=Ação`. Combinam com grupo, pesquisa,
+favoritos e PT/BR; parâmetros devem ser URL-encoded. IDs, grupos originais,
+ficheiros exportados e chaves de favoritos permanecem iguais. Não há pesquisa
+externa, descarga em massa de detalhes nem novas transmissões. Os índices por
+país e grupo são reconstruídos nas atualizações normais.

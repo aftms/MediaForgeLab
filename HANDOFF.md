@@ -151,3 +151,25 @@ logo carregado e r22, com lista real; sem streams nem reinício do servidor.
 Próximo: Restart portal na MAG e confirmar r22. Se persistir identidade antiga,
 verificar Portal 1 URL; URL atual com chave nova: http://192.168.1.240:8090/?v=22.
 Não afirmar que cache é causa comprovada nem que o ecrã físico foi validado.
+
+## Filtros de filmes/séries — web v10 / TV r10 / MAG r23
+
+Concluído e ativo. País/idioma + género combinam com categoria, pesquisa e
+favoritos no catálogo partilhado. Web/TV: seletores superiores; MAG: Opções →
+Filtrar por país / idioma ou Filtrar por género. País é a versão do catálogo,
+não país de produção. Não há predefinição PT nos filmes/séries; TV mantém PT.
+Regras locais em vod_filters.py: géneros dos metadados, categorias como fallback,
+desconhecidos explícitos; múltiplos géneros e grupos PT/BR sem duplicar títulos.
+
+68 testes Python e regressões JS MAG/TV/web passaram, incluindo país+género+
+pesquisa+categoria+favoritos e navegação dos seletores MAG pelo comando simulado.
+Chrome confirmou resultados reais PT+Ação em filmes e séries nas interfaces web
++TV, 390px sem overflow e TV1280×720 com paginação visível. Filme PT: 6072 títulos,
+206 classificados Ação; séries PT:708,197 Ação. Muitos filmes não têm metadados:
+5063 PT ficaram em Sem género indicado. Sem custos/API extra/streams de teste.
+
+Serviço reiniciado com lease idle; hashes de favoritos, layout, progresso e
+snapshot iguais antes/depois. Samsung 1.0.10 assinada e instalada na .229; requer
+reabrir app. Xiaomi mantém APK1.2 e recebe UIr10 hospedada ao reabrir. MAG Restart
+portal r23; web Ctrl+F5 v10. Validação com comando físico ainda por confirmar.
+Sem bloqueios desta fase; validações físicas anteriores/legado continuam pendentes.

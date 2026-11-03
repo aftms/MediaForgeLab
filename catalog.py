@@ -10,6 +10,7 @@ import unicodedata
 from urllib.parse import urlsplit
 from provider import Provider, decode_epg
 from channel_categories import CATEGORIES, category_hint
+from vod_filters import VOD_COUNTRIES, countries_for, genres_for
 from storage import atomic_batch, json_bytes, recover
 
 COUNTRIES = dict(PT='Portugal', ES='Espanha', UK='Reino Unido', IE='Irlanda', FR='França', BR='Brasil',
@@ -158,6 +159,10 @@ class Catalog:
         item = dict(source)
         item['id'] = str(item['id'])
         item.setdefault('country', '')
+        if item['kind'] in ('movie','series'):
+            item['countries'] = countries_for(item, normalized, COUNTRIES)
+            item['country'] = item['countries'][0]
+            item['genres'] = genres_for(item, normalized)
         item['quality'] = quality(item['name'], item['group'])
         item['origin'] = origin_for(item)
         item['key'] = item.get('favorite_key') or family_key(item)
@@ -186,13 +191,15 @@ class Catalog:
             if item['kind'] != 'episode':
                 self.items.append(item)
                 self.by_kind[item['kind']].append(item)
-                self.by_country[(item['kind'], item['country'])].append(item)
+                for code in item.get('countries') or [item['country']]:
+                    self.by_country[(item['kind'], code)].append(item)
                 # Keep source-group aliases for already-open/older clients.
                 groups = list(item.get('groups') or [item['group']])
                 if item['kind']=='tv' and item['category'] not in groups:
                     groups.append(item['category'])
                 for group in groups:
-                    self.by_group[(item['kind'], item['country'], group)].append(item)
+                    for code in ([''] + item['countries'] if 'countries' in item else [item['country']]):
+                        self.by_group[(item['kind'], code, group)].append(item)
                 self.by_family[item['key']].append(item)
                 self.kind_counts[item['kind']] += 1
                 self.cache.clear()
@@ -204,6 +211,9 @@ class Catalog:
         result = {k: item[k] for k in ('id', 'name', 'group', 'kind', 'country', 'quality', 'origin') if k in item}
         if item['kind']=='tv':
             result['group'] = item['category']
+        if item['kind'] in ('movie','series'):
+            result['countries'] = item['countries']
+            result['genres'] = item['genres']
         result['favorite'] = item['key'] in self.favorites
         result['plot'] = str(item.get('plot', ''))[:1000]
         if 'season' in item:
@@ -219,8 +229,9 @@ class Catalog:
         terms = normalized(params.get('q', '')[:100]).split()
         qual, favorites = params.get('quality', 'auto'), params.get('favorites') == '1'
         language=params.get('language','')
+        genre=params.get('genre','') if kind in ('movie','series','all') else ''
         origin=params.get('origin','') if kind in ('tv','all') else ''
-        cache_key = (kind, country, group, tuple(terms), qual, favorites, language, origin)
+        cache_key = (kind, country, group, tuple(terms), qual, favorites, language, origin, genre)
         with self.lock:
             if cache_key in self.cache:
                 self.cache.move_to_end(cache_key)
@@ -238,7 +249,9 @@ class Catalog:
                 source = self.by_kind.get(kind, ())
             selected = []
             for item in source:
-                if item['kind'] == 'episode' or (country and item['country'] != country) or (group and group != item.get('category') and group not in (item.get('groups') or [item['group']])):
+                if item['kind'] == 'episode' or (country and country not in (item.get('countries') or [item['country']])) or (group and group != item.get('category') and group not in (item.get('groups') or [item['group']])):
+                    continue
+                if genre and genre not in item.get('genres', []):
                     continue
                 if language=='ptbr' and not any(re.match(r'^(PT|BR)(?:\b|/)',normalized(g)) for g in item.get('groups') or [item['group']]):
                     continue
@@ -265,7 +278,7 @@ class Catalog:
 
     def directory(self, params):
         view, kind = params.get('view'), params.get('kind', 'tv')
-        key = (view, kind, params.get('country', ''), params.get('quality', 'auto'), params.get('origin',''), params.get('group',''))
+        key = (view, kind, params.get('country', ''), params.get('quality', 'auto'), params.get('origin',''), params.get('group',''), params.get('language',''))
         with self.lock:
             if key in self.summaries:
                 self.summaries.move_to_end(key)
@@ -277,12 +290,17 @@ class Catalog:
             counter = collections.Counter(i['origin'] for i in selected)
             rows = [dict(id='origin:'+k,name=ORIGINS[k],kind='origin',count=v) for k,v in sorted(counter.items(),key=lambda pair:(pair[0]=='OTHER',pair[0]))]
         elif view == 'countries':
-            counter = collections.Counter(i['country'] for i in self.selection(dict(kind='tv', quality=params.get('quality','auto'))))
-            rows = [{'id': 'country:' + k, 'name': COUNTRIES.get(k, k), 'kind': 'country', 'group': str(v) + ' canais', 'count': v}
-                    for k, v in sorted(counter.items(), key=lambda kv: (kv[0] != 'PT', normalized(COUNTRIES.get(kv[0], kv[0]))))]
+            counter = collections.Counter(c for i in self.selection(dict(kind=kind, quality=params.get('quality','auto'))) for c in (i.get('countries') or [i['country']]))
+            names = dict(COUNTRIES, **VOD_COUNTRIES) if kind in ('movie','series') else COUNTRIES
+            rows = [{'id': 'country:' + k, 'name': names.get(k, k), 'kind': 'country', 'group': str(v) + (' canais' if kind=='tv' else ' títulos'), 'count': v}
+                    for k, v in sorted(counter.items(), key=lambda kv: (kv[0] != 'PT', normalized(names.get(kv[0], kv[0]))))]
+        elif view == 'genres':
+            selection = self.selection(dict(kind=kind,country=params.get('country',''),language=params.get('language',''))) if kind in ('movie','series') else []
+            counter = collections.Counter(g for i in selection for g in i['genres'])
+            rows = [dict(id='genre:'+g,name=g,kind='genre',count=n) for g,n in sorted(counter.items(),key=lambda pair:(pair[0]=='Sem género indicado',normalized(pair[0])))]
         else:
             selection = (self.selection(dict(kind=kind, country=params.get('country', ''), quality=params.get('quality','auto'), origin=params.get('origin','')))
-                         if kind == 'tv' else self.by_kind.get(kind, ()))
+                         if kind == 'tv' else self.selection(dict(kind=kind,country=params.get('country',''),language=params.get('language',''))))
             counter = collections.Counter(group for i in selection for group in ([i['category']] if i['kind']=='tv' else (i.get('groups') or [i['group']])))
             rows = [{'id': 'group:', 'name': 'Todos os títulos' if kind != 'tv' else 'Todos os canais', 'kind':'group','group':'','count':len(selection)}]
             ordered = (sorted(counter.items(),key=lambda pair:CATEGORIES.index(pair[0])) if kind=='tv'
@@ -298,7 +316,7 @@ class Catalog:
         view, kind = params.get('view', 'items'), params.get('kind', 'tv')
         offset = max(0, min(1000000, int(params.get('offset', '0'))))
         limit = max(1, min(240 if params.get('client') == 'web' else 30, int(params.get('limit', '10'))))
-        if view in ('countries', 'groups', 'origins'):
+        if view in ('countries', 'groups', 'origins', 'genres'):
             rows = self.directory(params)
         elif view in ('seasons', 'episodes'):
             identifier = params.get('series', '')
