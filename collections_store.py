@@ -60,6 +60,9 @@ def source_url(value):
 
 def metadata(url):
     s=source_url(url)
+    if s['platform']=='facebook':
+        from facebook_metadata import metadata as facebook_metadata
+        return facebook_metadata(s['url'])
     if s['platform'] not in ('youtube','vimeo'):return {}
     # Fixed official endpoint; never fetch a user-supplied arbitrary URL.
     class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -83,6 +86,7 @@ class Collections:
         self.db.executescript('''
         CREATE TABLE IF NOT EXISTS categories(id TEXT PRIMARY KEY,name TEXT NOT NULL,parent TEXT REFERENCES categories(id) ON DELETE RESTRICT);
         CREATE TABLE IF NOT EXISTS items(id TEXT PRIMARY KEY,platform TEXT NOT NULL,remote_id TEXT NOT NULL,url TEXT NOT NULL,title TEXT NOT NULL,author TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '',thumbnail TEXT NOT NULL DEFAULT '',favorite INTEGER NOT NULL DEFAULT 0,position REAL NOT NULL DEFAULT 0,duration REAL NOT NULL DEFAULT 0,completed INTEGER NOT NULL DEFAULT 0,created REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS covers(item TEXT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE,content BLOB NOT NULL,digest TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS item_categories(item TEXT REFERENCES items(id) ON DELETE CASCADE,category TEXT REFERENCES categories(id) ON DELETE CASCADE,PRIMARY KEY(item,category));
         CREATE TABLE IF NOT EXISTS playlists(id TEXT PRIMARY KEY,name TEXT NOT NULL,resume_entry TEXT NOT NULL DEFAULT '');
         CREATE TABLE IF NOT EXISTS entries(id TEXT PRIMARY KEY,playlist TEXT REFERENCES playlists(id) ON DELETE CASCADE,item TEXT REFERENCES items(id) ON DELETE CASCADE,ordinal INTEGER NOT NULL,position REAL NOT NULL DEFAULT 0,duration REAL NOT NULL DEFAULT 0,completed INTEGER NOT NULL DEFAULT 0);
@@ -91,13 +95,31 @@ class Collections:
         CREATE INDEX IF NOT EXISTS item_tag ON item_tags(tag,item);
         CREATE INDEX IF NOT EXISTS entries_order ON entries(playlist,ordinal);
         CREATE INDEX IF NOT EXISTS item_category ON item_categories(category,item);
-        ''');self.db.commit()
+        ''')
+        if 'aspect_ratio' not in [r[1] for r in self.db.execute('PRAGMA table_info(items)')]:
+            self.db.execute('ALTER TABLE items ADD COLUMN aspect_ratio REAL NOT NULL DEFAULT 0')
+        self.db.commit()
         self.title_worker=threading.Thread(target=self._titles,daemon=True,name='collection-titles');self.title_worker.start()
         with self.lock:self._enqueue_titles()
     def _generic(self,row):return row['title']=='Vídeo '+row['platform'].capitalize()
+    def _needs_metadata(self,row):return self._generic(row) or row['platform']=='facebook' and (not row['thumbnail'] or not row['aspect_ratio'])
+    def _apply_metadata(self,id,meta,update_title=True):
+        row=self.require('items',id)
+        if update_title and meta.get('title') and self._generic(row):self.db.execute('UPDATE items SET title=? WHERE id=?',(meta['title'],id))
+        if meta.get('author'):self.db.execute('UPDATE items SET author=? WHERE id=?',(meta['author'],id))
+        if meta.get('thumbnail'):self.db.execute('UPDATE items SET thumbnail=? WHERE id=?',(meta['thumbnail'],id))
+        if meta.get('_cover'):
+            digest=hashlib.sha256(meta['_cover']).hexdigest()[:16]
+            self.db.execute('INSERT INTO covers VALUES(?,?,?) ON CONFLICT(item) DO UPDATE SET content=excluded.content,digest=excluded.digest',(id,meta['_cover'],digest))
+            self.db.execute('UPDATE items SET thumbnail=?,aspect_ratio=? WHERE id=?',('/collections/image/'+id+'?v='+digest,meta.get('aspect_ratio',0),id))
+    def image(self,id):
+        with self.lock:
+            row=self.db.execute('SELECT content FROM covers WHERE item=?',(id,)).fetchone()
+            if not row:raise CollectionError('Capa indisponível.',404)
+            return bytes(row['content'])
     def _enqueue_titles(self):
-        for row in self.db.execute("SELECT id,title,platform FROM items WHERE platform IN ('youtube','vimeo')"):
-            if self._generic(row) and row['id'] not in self.title_attempted:
+        for row in self.db.execute("SELECT * FROM items WHERE platform IN ('youtube','vimeo','facebook')"):
+            if self._needs_metadata(row) and row['id'] not in self.title_attempted:
                 self.title_attempted.add(row['id']);self.title_pending.add(row['id']);self.title_jobs.put(row['id'])
     def _titles(self):
         while not self.closed.is_set():
@@ -107,12 +129,12 @@ class Collections:
                 with self.lock:
                     if self.closed.is_set():return
                     row=self.db.execute('SELECT * FROM items WHERE id=?',(id,)).fetchone()
-                    if not row or not self._generic(row):continue
+                    if not row or not self._needs_metadata(row):continue
                 meta=metadata(row['url'])
                 with self.lock:
                     if self.closed.is_set():return
-                    if meta.get('title'):
-                        with self.db:self.db.execute('UPDATE items SET title=?,author=?,thumbnail=? WHERE id=? AND title=?',(meta['title'],meta['author'],meta['thumbnail'],id,row['title']))
+                    if meta:
+                        with self.db:self._apply_metadata(id,meta)
             except (OSError,ValueError,sqlite3.Error):pass
             finally:
                 with self.lock:self.title_pending.discard(id)
@@ -194,15 +216,13 @@ class Collections:
         if op=='metadata-preview':
             result=metadata(d.get('url'))
             if not result.get('title'):raise CollectionError('Não foi possível obter o título. Pode escrevê-lo manualmente.')
-            return result
+            return {k:v for k,v in result.items() if not k.startswith('_')}
         # Metadata is optional and never holds a database lock during network I/O.
         meta=metadata(d.get('url')) if op=='item-save' and d.get('metadata') else {}
         with self.lock,self.db:
             if op=='item-save':
                 result=self.save_item(d)
-                if meta:
-                    self.db.execute('UPDATE items SET author=?,thumbnail=? WHERE id=?',(meta['author'],meta['thumbnail'],result['id']))
-                    if not clean(d.get('title')) and result['added']:self.db.execute('UPDATE items SET title=? WHERE id=?',(meta['title'],result['id']))
+                if meta:self._apply_metadata(result['id'],meta,update_title=not clean(d.get('title')))
                 self.db.commit();self._enqueue_titles()
                 return dict(result,saved=True,item=self.get(result['id']))
             if op=='import':

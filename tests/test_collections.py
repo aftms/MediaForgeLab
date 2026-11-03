@@ -107,6 +107,19 @@ class HTTPTests(unittest.TestCase):
   with self.request('/web/collections/') as r:self.assertEqual(r.status,200);self.assertIn("frame-src 'self'",r.headers['Content-Security-Policy'])
   with self.request('/api/collections',headers={'Host':'evil.example'}) as r:self.assertEqual(r.status,403)
 
+ def test_cached_cover_for_packaged_tv_has_host_guard_and_no_metadata(self):
+  store=self.server.collections
+  with patch('collections_store.metadata',return_value={}):
+   id=store.update(dict(operation='item-save',url='https://www.facebook.com/watch/?v=123456',title='Cover'))['id']
+  content=b'\x89PNG\r\n\x1a\n'
+  with store.lock,store.db:store._apply_metadata(id,dict(_cover=content,aspect_ratio=9/16))
+  url=store.get(id)['thumbnail']
+  with self.request(url,headers={'Origin':'null','Sec-Fetch-Site':'cross-site'}) as r:
+   self.assertEqual(r.status,200);self.assertEqual(r.headers['Content-Type'].split(';')[0],'image/png');self.assertEqual(r.read(),content)
+  with self.request(url,headers={'Host':'evil.example'}) as r:self.assertEqual(r.status,403)
+  with self.request('/collections/image/col-'+'0'*24) as r:self.assertEqual(r.status,404)
+  with self.request('/api/collections',headers={'Origin':'null','Sec-Fetch-Site':'cross-site'}) as r:self.assertEqual(r.status,403)
+
  def test_tv_and_mag_are_readers_with_favorites_and_progress(self):
   headers={'X-MAG-Action':self.server.action_token}
   with self.request('/api/collections',{'operation':'item-save','url':YT,'title':'Test','client':'web'},headers) as r:id=json.load(r)['id']

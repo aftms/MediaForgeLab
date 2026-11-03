@@ -744,3 +744,40 @@ unitários para CSS. Sem vídeos iniciados, sem restart de backend. Instalação
 Samsung com guarda para playback Samsung; reprodução no navegador preservada.
 Commit/push desta fase. Próximo Ctrl+F5/reabrir Coleções. Categorias/tags continuam
 em discussão, hierarquia de tags não implementada; gestão web/favoritos todos mantidos.
+
+
+## Facebook — capa pública e vídeo sem corte, Coleções v5 (2026-11-03)
+
+Pedido: cartão Facebook sem imagem e reprodução ampliada/cortada. No Chrome,
+vídeo natural 720×1280 desenhado 1352×2404 num iframe 1352×650. oEmbed público
+devolveu HTML/width, sem título/capa. A página pública forneceu Open Graph e poster
+1206×2144. facebook_metadata.py usa apenas hosts HTTPS permitidos, redirects
+limitados/validados, sem cookies/autenticação, limites de tamanho e decode Pillow.
+Capa PNG até 640px guardada como BLOB na mesma SQLite privada; URL local com digest.
+Migração aspect_ratio preserva itens/favoritos/tags/progresso. Metadados em fundo
+recuperam capas anteriores sem alterar títulos manuais. Imagens para TV sem chave
+em URL, protegidas por LAN/Host; API da biblioteca mantém as proteções existentes.
+
+Leitor oficial FB centrado e escalado para caber inteiro. Resize só altera CSS;
+Enquadramento Auto/Vertical/Horizontal/Quadrado corrige posters que não correspondam
+ao vídeo. PiP vertical ajustado; títulos pequenos mantidos. Controlos próprios do
+Facebook, seguinte manual e sem progresso confirmado por API. Destacar/repor pode
+reiniciar iframe, como antes. Não extrai transmissões nem usa o fornecedor IPTV.
+
+Backend ativado após confirmar media/personal/scan/refresh inativos. Produção confirmou
+capa PNG local, ratio 0.5625 e título do FB existente. Samsung1.0.23 construída e
+instalada exit0; TVr23/Coleçõesv5, web24/MAGr29. Xiaomi desligada: APK1.4 construído,
+não instalado; não tentar instalar enquanto desligada.
+
+Validação: 7 testes metadata + 13 Coleções PASS. Bateria101: 100 PASS e um erro
+intermitente em test_personal_pipeline; repetição isolada também falhou no encode,
+baseline HEAD passou e última repetição no código atual passou (47.4s). Nenhuma
+alteração no pipeline Pessoal nem no respetivo teste. Não declarar 101/101 numa
+execução. Regressões MAG navigation/TV API/player PASS. Chrome real sem som: capa
+360×640, vídeo 720×1280 inteiro e tempo a avançar; resize 1400→390 sem reload;
+enquadramento manual/fullscreen/PiP/repor PASS, screenshots inspecionadas. Leitor
+de teste fechado. Sem streams IPTV. Facebook em TVs/MAG físicas ainda não validado.
+
+Próximo: Ctrl+F5/reabrir Coleções e confirmar Facebook nas TVs quando conveniente.
+Hierarquia tags/categorias continua só proposta; gestão web/favoritos todos mantidos.
+Commit/push desta fase e Gateway notes no fecho. Sem novo bloqueio de entrega.

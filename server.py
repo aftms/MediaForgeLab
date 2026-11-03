@@ -207,6 +207,8 @@ class PortalHandler(BaseHTTPRequestHandler):
         hosts = self.headers.get_all("Host", [])
         if len(hosts) != 1 or hosts[0] != host:
             return False
+        if self.command in ('GET','HEAD') and re.fullmatch(r'/collections/image/col-[a-f0-9]{24}',self.path.split('?',1)[0]):
+            return True
         if self.app.tv_access.authorized(self.path, self.headers, preflight):
             return True
         # Public, data-free embed shell only. Packaged TVs navigate from file://.
@@ -277,7 +279,10 @@ class PortalHandler(BaseHTTPRequestHandler):
         # Exact route allowlist: never expose the repository or original playlist.
         route = self.path.split("?", 1)[0]
         query = {k:v[-1] for k,v in parse_qs(urlsplit(self.path).query).items()}
-        if route == '/api/collections':
+        if route.startswith('/collections/image/'):
+            try:self.respond(200,self.app.collections.image(route.rsplit('/',1)[1]),'image/png')
+            except CollectionError as error:self.respond(error.status,{'error':str(error)})
+        elif route == '/api/collections':
             try:self.respond(200,self.app.collections.browse(query))
             except CollectionError as error:self.respond(error.status,{'error':str(error)})
             except (ValueError,TypeError):self.respond(400,{'error':'Filtro inválido.'})

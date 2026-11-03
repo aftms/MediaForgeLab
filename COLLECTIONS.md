@@ -1,4 +1,4 @@
-# Coleções — módulo v4
+# Coleções — módulo v5
 
 Biblioteca partilhada de links para vídeos, organizada por categorias/subcategorias
 e listas de reprodução. Os dados pertencem ao serviço MediaForgeLab; web, MAG e
@@ -10,7 +10,7 @@ TVs usam a mesma API e base SQLite, sem bibliotecas separadas.
   `http://192.168.1.240:8090/web/collections/?client=web` nos outros dispositivos.
   A entrada Coleções está no menu da aplicação/PWA. Também funciona sob o HTTPS
   já configurado no portal, dentro do âmbito `/web/` da PWA.
-- Samsung: abrir Media Forge Lab, versão TV r22 / pacote 1.0.22, e escolher Coleções.
+- Samsung: abrir Media Forge Lab, versão TV r23 / pacote 1.0.23, e escolher Coleções.
 - MAG: Restart portal, confirmar r29 e escolher Coleções. O menu, a biblioteca e
   a organização estão incluídos; leitores externos dependem do WebKit da box.
 - Xiaomi: requer APK 1.4 para os leitores externos. O pacote está construído em
@@ -26,7 +26,8 @@ Em **Guardar vídeo**, colar um link público e, opcionalmente, título/notas e
 categorias. YouTube e Vimeo tentam obter título/autor pelo oEmbed oficial. Os títulos em
 falta nos links importados são obtidos em segundo plano, sem bloquear a biblioteca
 nem substituir nomes escritos pelo utilizador. Se falhar, pode escrever o título
-ou usar «Obter título (YouTube/Vimeo)» no editor. O Facebook pode exigir título manual. Não é necessário iniciar sessão na rede social.
+ou usar «Obter título da origem» no editor. No Facebook, páginas públicas podem fornecer
+título e capa via metadados Open Graph. Não é necessário iniciar sessão na rede social.
 
 Em **Categorias**, criar categorias, subcategorias ou mudar a categoria mãe.
 Uma categoria inclui os vídeos das suas descendentes. Eliminar uma categoria
@@ -140,7 +141,7 @@ exportação, usar uma exportação fornecida pelo utilizador ou colar os links.
 - Uma execução concorrente com builds falhou num teste sintético de transcodificação
   do Pessoal; o teste isolado passou e a repetição completa, sem builds, passou91/91.
   Nenhum código do pipeline Pessoal foi alterado por causa dessa falha.
-- Xiaomi/MAG físicas e exemplos reais Facebook/Vimeo: confirmação pendente.
+- Xiaomi/MAG físicas e Vimeo real: confirmação pendente. Facebook real validado no Chrome na v5; TVs físicas ainda por confirmar.
 
 Referências oficiais: [YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference),
 [YouTube oEmbed](https://www.youtube.com/oembed),
@@ -167,3 +168,41 @@ Força, Glúteos, Sobremesa...). Não foi reorganizado automaticamente o conteú
 utilizador. A hierarquia de etiquetas e filtros com descendentes continua em análise.
 
 A v4 reduz os títulos dos cartões e o espaçamento entre linhas, com tamanhos adequados a web/telemóvel, MAG e TV.
+
+
+## Facebook — capa e enquadramento (v5)
+
+O serviço tenta obter título/capa dos metadados públicos da página, incluindo para
+vídeos anteriormente guardados. Só acede por HTTPS a hosts Facebook permitidos e
+imagens fbcdn.net, com limites de redirecionamentos, tamanho e tempo. Não usa
+sessões, cookies, tokens da rede social nem extrai transmissões. Páginas privadas,
+recusadas ou indisponíveis mantêm o título/capa existente e o símbolo de alternativa.
+
+A imagem é validada e reduzida a PNG, guardada na mesma SQLite privada com a
+proporção de apresentação. A biblioteca referencia uma imagem local versionada,
+evitando guardar nos clientes o endereço temporário do CDN. Favoritos, etiquetas,
+categorias, listas e progresso permanecem intactos; nomes manuais não são substituídos.
+O endpoint GET/HEAD `/collections/image/col-<id>` admite imagens nas TVs sem chave
+em URL, mantendo as verificações LAN/Host; não permite consultar a biblioteca.
+
+O leitor oficial fica centrado e ajustado ao espaço disponível, mantendo a proporção
+da capa (ou dimensões explícitas do vídeo quando fornecidas). Redimensionar a página
+ajusta apenas a apresentação, sem recarregar o iframe. «Enquadramento» permite
+escolher vertical, horizontal ou quadrado se os metadados não representarem o vídeo.
+Facebook continua com controlos próprios, avanço manual na lista e sem progresso
+confirmado por API. Destacar pode reiniciar o iframe, como anteriormente.
+
+Chrome isolado e sem som: capa local 360×640 visível; vídeo real 720×1280 inteiro,
+tempo a avançar e continuidade ao passar de janela 1400×1000 a 390×844. Screenshots
+inspecionadas. Unidade/HTTP: obtenção pública, bloqueio de URLs/redirecionamentos
+externos, resposta indisponível, persistência, migração de DB e dados preservados.
+Sem reproduções do fornecedor IPTV. Compatibilidade Facebook nas TVs/MAG físicas
+ainda depende do respetivo leitor e não foi confirmada nesta fase.
+
+
+Validação v5: 7 testes de metadados e 13 de Coleções passaram. Bateria completa:
+100 dos 101 passaram; teste sintético do pipeline Pessoal falhou de forma
+intermitente e passou na última repetição isolada. O mesmo teste na baseline HEAD
+também passou; o pipeline e o seu teste não foram alterados. Regressões MAG/TV
+passaram. Enquadramento manual, ecrã inteiro, janela destacada e reposição também
+confirmados no Chrome. Serviço ativado sem reprodução ativa; Samsung1.0.23 instalada.

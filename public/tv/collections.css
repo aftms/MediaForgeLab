@@ -7,3 +7,5 @@
 .tags{padding:0 9px;display:flex;flex-wrap:wrap;gap:5px}.tags .tag{padding:3px 7px;font-size:12px;font-weight:normal;background:#193b40;color:#ace0d5;border-color:#305b60;border-radius:12px}.filters select{max-width:210px}body.tv .tags .tag{font-size:15px}
 
 body.mag .tile strong{font-size:14px}
+
+#screen.facebook-screen{height:65vh;min-height:260px;aspect-ratio:auto}#screen.facebook-screen:fullscreen{height:100vh;max-height:none}#facebook-layout-row{display:block;margin:10px 0}#facebook-layout{padding:5px 8px;font-size:13px}
