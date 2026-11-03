@@ -8,11 +8,13 @@ from pathlib import Path
 import sys
 import threading
 import subprocess
+import socket
+from http.server import BaseHTTPRequestHandler
 import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from server import PortalServer, parse_playlist, load_config
+from server import PortalServer, PortalHTTPServer, parse_playlist, load_config
 from network import firewall_script
 
 PLAYLIST = '''\ufeff#EXTM3U
@@ -76,6 +78,22 @@ class HttpTests(unittest.TestCase):
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=2)
+
+    def test_large_gets_reuse_connection_but_unread_request_body_closes(self):
+        connection=http.client.HTTPConnection('127.0.0.1',self.server.server_port,timeout=3)
+        try:
+            connection.request('GET','/web/vendor/hls.min.js')
+            response=connection.getresponse();data=response.read()
+            self.assertEqual(response.status,200)
+            self.assertGreater(len(data),500000)
+            self.assertEqual(response.getheader('Connection'),'keep-alive')
+            transport=connection.sock
+            connection.request('GET','/api/health');response=connection.getresponse();response.read()
+            self.assertEqual(response.status,200);self.assertIs(connection.sock,transport)
+            connection.request('GET','/api/health',body=b'unread')
+            response=connection.getresponse();response.read()
+            self.assertEqual(response.getheader('Connection'),'close')
+        finally:connection.close()
 
     def fetch(self, path, headers=None, method='GET', body=None):
         conn = http.client.HTTPConnection(*self.server.server_address, timeout=3)
@@ -220,6 +238,21 @@ class HttpTests(unittest.TestCase):
             _,_,body=self.fetch('/api/source');self.assertNotIn(b'Sensitive',body)
             for endpoint in ('/.runtime/source.json','/catalogo-vod/portal-canais-completos.json','/canais-completos.m3u'):
                 self.assertEqual(self.fetch(endpoint)[0],404)
+
+
+class ConnectionBurstTests(unittest.TestCase):
+    def test_browser_and_media_connections_can_queue_before_accept(self):
+        # A burst can arrive while the accept loop is between iterations. No
+        # supplier or media is involved; all sockets belong to this fixture.
+        server=PortalHTTPServer(('127.0.0.1',0),BaseHTTPRequestHandler)
+        clients=[]
+        try:
+            for _ in range(12):
+                clients.append(socket.create_connection(server.server_address,timeout=1))
+            self.assertEqual(len(clients),12)
+        finally:
+            for client in clients:client.close()
+            server.server_close()
 
 
 if __name__ == '__main__':

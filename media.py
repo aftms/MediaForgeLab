@@ -1,10 +1,12 @@
 """One household playback lease, private upstream proxy and bounded HLS output."""
 import json
+from collections import OrderedDict
 import os
 from pathlib import Path
 import re
 import secrets
 import shutil
+import socket
 import subprocess
 import threading
 import time
@@ -30,9 +32,11 @@ class MediaManager:
         self.app = app
         self.lock = threading.RLock()
         self.upstream_lock = threading.Lock()
+        self.forwarder = None
         self.session = None
         self.last_failure = None
         self.requests = {}
+        self.probe_cache = OrderedDict()
         self.delivery = {'playlists':0, 'segments':0, 'rejected':0}
         self.closed = threading.Event()
         self.root = app.runtime / 'media'
@@ -47,10 +51,23 @@ class MediaManager:
                 if self.session and time.monotonic() - self.session['seen'] > 120:
                     self._stop()
 
+    def _cancel_forwarder(self, forwarder):
+        # Called under self.lock. A single FFmpeg may open the next HTTP range
+        # before closing the previous one. End both sockets before releasing the
+        # upstream lock, so the next range never creates a second supplier stream.
+        forwarder['cancelled'] = True
+        for key in ('client','upstream'):
+            connection = forwarder.get(key)
+            if connection:
+                try:connection.shutdown(socket.SHUT_RDWR)
+                except OSError:pass
+
     def _stop(self):
         session, self.session = self.session, None
         if not session:
             return
+        if self.forwarder and self.forwarder['session'] is session:
+            self._cancel_forwarder(self.forwarder)
         for key in ('probe_process', 'process'):
             proc = session.get(key)
             if proc and proc.poll() is None:
@@ -74,7 +91,7 @@ class MediaManager:
             s = self.session
             return dict(active=bool(s), device=s.get('device', 'MAG' if s['mode']=='mag' else 'Navegador') if s else None,
                         state=s['state'] if s else 'idle', delivery=dict(self.delivery),
-                        startup_ms=dict(s.get('startup_ms',{})) if s else {})
+                        startup_ms=dict(s.get('startup_ms',{})) if s else {}, stage=s.get('stage') if s else None)
 
     def _get(self, token, ip=None, touch=True):
         s = self.session
@@ -113,7 +130,7 @@ class MediaManager:
             token = secrets.token_hex(24)
             s = dict(token=token, owner=owner, ip=ip, mode=mode, id=identifier, kind=item['kind'], request_id=request_id,
                      seen=time.monotonic(), started=time.monotonic(), startup_ms={}, state='ready' if mode=='mag' else 'preparing',
-                     url=self.app.catalog.play_url(identifier), position=position if item['kind']!='tv' else 0,
+                     stage='ready' if mode=='mag' else 'source', url=self.app.catalog.play_url(identifier), position=position if item['kind']!='tv' else 0,
                      duration=0, audio=[], compatibility=bool(data.get('compatibility')), audio_index=audio_index)
             if mode == 'web':
                 s['device'] = {'samsung':'Samsung TV','androidtv':'Android TV','tv':'TV'}.get(data.get('device'), 'Navegador')
@@ -128,7 +145,7 @@ class MediaManager:
             return self._public(s)
 
     def _public(self, s):
-        return {k:s[k] for k in ('token','id','kind','state','position','duration','audio')}
+        return {k:s[k] for k in ('token','id','kind','state','position','duration','audio','stage')}
 
     def pulse(self, data, ip):
         with self.lock:
@@ -169,11 +186,24 @@ class MediaManager:
             raw = 'http://127.0.0.1:%s/media/raw/%s' % (self.app.config['loopback_port'], s['token'])
             fast_tv = s['kind']=='tv' and s.get('device') in ('Samsung TV','Android TV') and not s['compatibility']
             android_live = fast_tv and s.get('device')=='Android TV'
+            browser_vod = s['kind'] in ('movie','episode') and s.get('device')=='Navegador' and not s['compatibility']
             info = {'streams':[], 'format':{}}
-            if not fast_tv:
+            cache_key = (s['id'], s['url'])
+            with self.lock:
+                if self.session is not s:
+                    return
+                cached = self.probe_cache.get(cache_key) if s['kind'] != 'tv' and not s['compatibility'] else None
+                if cached and cached[0] > time.monotonic():
+                    info = cached[1]
+                    self.probe_cache.move_to_end(cache_key)
+                    s['startup_ms']['probe_cached'] = 1
+                else:
+                    cached = None
+            if not cached and not fast_tv:
                 with self.lock:
                     if self.session is not s:
                         return
+                    s['stage'] = 'analysis'
                     proc = subprocess.Popen([self.ffprobe,'-v','quiet','-rw_timeout','15000000',
                         '-analyzeduration','4000000','-probesize','4000000','-show_streams','-show_format','-of','json',raw],
                         stdout=subprocess.PIPE, **process_options())
@@ -182,6 +212,17 @@ class MediaManager:
                 if proc.returncode:
                     raise ValueError('probe')
                 info = json.loads(output)
+                with self.lock:
+                    if self.session is not s:
+                        return
+                    s['startup_ms']['probe_ready'] = round((time.monotonic()-s['started'])*1000)
+                    if s['kind'] != 'tv' and any(v.get('codec_type')=='video' and v.get('codec_name') for v in info.get('streams',[])):
+                        # Bounded metadata only, never video. Changed source URL misses
+                        # the cache; compatibility always performs a fresh full probe.
+                        self.probe_cache[cache_key] = (time.monotonic()+3600, info)
+                        self.probe_cache.move_to_end(cache_key)
+                        while len(self.probe_cache)>128:
+                            self.probe_cache.popitem(last=False)
             videos = [v for v in info.get('streams',[]) if v.get('codec_type')=='video']
             audio = [v for v in info.get('streams',[]) if v.get('codec_type')=='audio']
             if not fast_tv and not videos:
@@ -200,17 +241,22 @@ class MediaManager:
                 command = [self.ffmpeg,'-hide_banner','-loglevel','quiet','-nostdin','-y','-rw_timeout','15000000']
                 # Android live input needs only enough analysis to identify its tracks.
                 # Keep keyframe-aligned segments and original video; other clients
-                # and compatibility mode retain the established pipeline.
+                # and compatibility mode retain the established full analysis.
                 if android_live:
                     command += ['-analyzeduration','1000000','-probesize','1500000']
+                elif browser_vod:
+                    # The preceding probe already identified codecs and tracks.
+                    command += ['-analyzeduration','1000000','-probesize','2000000']
                 if s['position']:
                     command += ['-ss',str(s['position'])]
                 command += ['-readrate','1','-readrate_initial_burst','12','-i',raw,'-map','0:v:0','-map','0:a:%d?'%ai,'-sn','-dn']
                 command += ['-c:v','copy'] if copy_video else ['-c:v','libx264','-preset','veryfast','-crf','22','-pix_fmt','yuv420p','-g','48','-sc_threshold','0']
                 command += ['-c:a','copy'] if (fast_tv and s.get('device')=='Samsung TV') or (audio and audio[ai].get('codec_name')=='aac') else ['-c:a','aac','-b:a','160k','-ac','2']
-                command += ['-f','hls','-hls_time','2' if android_live else '4','-hls_list_size','10','-hls_delete_threshold','2',
+                command += ['-f','hls','-hls_time','2' if android_live or browser_vod else '4','-hls_list_size','10','-hls_delete_threshold','2',
                     '-hls_flags','delete_segments+temp_file','-hls_segment_filename',str(folder/'s%06d.ts'),str(folder/'index.m3u8')]
                 s['video_mode'] = 'remux' if copy_video else 'transcode'
+                s['stage'] = s['video_mode']
+                s['startup_ms']['processing_started'] = round((time.monotonic()-s['started'])*1000)
                 s['process'] = subprocess.Popen(command, stdout=subprocess.DEVNULL, **process_options())
             for _ in range(160):
                 with self.lock:
@@ -218,6 +264,7 @@ class MediaManager:
                         return
                     if (folder/'index.m3u8').exists():
                         s['state']='ready'
+                        s['stage']='ready'
                         s['startup_ms']['playlist_ready']=round((time.monotonic()-s['started'])*1000)
                         return
                     if s['process'].poll() is not None:
@@ -238,11 +285,19 @@ class MediaManager:
             if s['mode']=='web' and ip!='127.0.0.1' or s['mode']=='mag' and ip!=s['ip']:
                 raise MediaError('Pedido recusado.',403)
             url = s['url']
+            s['startup_ms'].setdefault('proxy_request',round((time.monotonic()-s['started'])*1000))
+            s['startup_ms']['source_requests']=s['startup_ms'].get('source_requests',0)+1
+            s['startup_ms']['last_proxy_request']=round((time.monotonic()-s['started'])*1000)
+            if s['mode']=='web' and self.forwarder and self.forwarder['session'] is s:
+                self._cancel_forwarder(self.forwarder)
         if not self.upstream_lock.acquire(timeout=12):
             raise MediaError('A ligação anterior ainda está a terminar.',409)
+        forwarder = None
         try:
             with self.lock:
                 self._get(token, touch=s['mode']=='mag')
+                forwarder = dict(session=s,client=handler.connection,upstream=None,cancelled=False)
+                self.forwarder = forwarder
             headers={'User-Agent':'MagForgeLab/1','Connection':'close'}
             byte_range=handler.headers.get('Range')
             if byte_range and re.fullmatch(r'bytes=\d*-\d*',byte_range):
@@ -250,13 +305,21 @@ class MediaManager:
             opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
             try:
                 s['startup_ms'].setdefault('upstream_open',round((time.monotonic()-s['started'])*1000))
+                s['startup_ms']['last_upstream_open']=round((time.monotonic()-s['started'])*1000)
                 response=opener.open(urllib.request.Request(url,headers=headers,method='HEAD' if handler.command=='HEAD' else 'GET'),timeout=10)
                 s['startup_ms'].setdefault('upstream_headers',round((time.monotonic()-s['started'])*1000))
+                s['startup_ms']['last_upstream_headers']=round((time.monotonic()-s['started'])*1000)
             except urllib.error.HTTPError as error:
                 handler.respond(502,{'error':'O fornecedor não disponibilizou este conteúdo.'})
                 error.close()
                 return
             with response:
+                with self.lock:
+                    # CPython HTTPResponse exposes its transport through SocketIO.
+                    forwarder['upstream'] = getattr(getattr(response.fp,'raw',None),'_sock',None)
+                    if forwarder['cancelled'] or self.session is not s:
+                        self._cancel_forwarder(forwarder)
+                        return
                 handler.send_response(response.status)
                 for name in ('Content-Length','Content-Range','Accept-Ranges','Content-Type'):
                     value=response.headers.get(name)
@@ -270,7 +333,7 @@ class MediaManager:
                     return
                 while True:
                     with self.lock:
-                        if self.session is not s:
+                        if self.session is not s or forwarder['cancelled']:
                             break
                         # FFmpeg traffic is not a browser heartbeat. A crashed
                         # browser must release even a continuously running TV feed.
@@ -283,6 +346,10 @@ class MediaManager:
                     s['startup_ms'].setdefault('first_bytes',round((time.monotonic()-s['started'])*1000))
                     handler.wfile.write(chunk)
         finally:
+            with self.lock:
+                if self.forwarder is forwarder:
+                    self.forwarder = None
+            s['startup_ms']['last_upstream_closed']=round((time.monotonic()-s['started'])*1000)
             self.upstream_lock.release()
 
     def segment(self, token, name, ip):

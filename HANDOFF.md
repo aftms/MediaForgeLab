@@ -71,3 +71,25 @@ Próximo passo: utilizador confirmar som/imagem e tempo de abertura nesta versã
 na Xiaomi. A fonte preta depende do fornecedor; sem pedido por correio, sem
 thread associada. Não iniciar nova reprodução sem assegurar ausência de outros
 leitores. Filmes/séries físicos e integração do legado continuam pendentes.
+
+## Demora web em filmes — web v8
+
+Fase concluída e ativa: troca sequencial de pedidos Range da mesma sessão
+FFmpeg, fechando cliente/origem anteriores antes de libertar a ligação única.
+Elimina duas esperas de ~10 s observadas neste filme. HTTP/1.1 persistente para
+GET/HEAD sem corpo evita resets/repetições de respostas grandes no Chrome;
+POST/erros/corpos por ler fecham. Fila HTTP 64. Cache apenas de metadados VOD
+por ID+URL (1 h/128 entradas), bypass no modo compatível; HLS web VOD alvo 2 s.
+Etapas de preparação e duração desconhecida claras; avanço desativado durante
+preparação; preservação de progresso e cancelamentos tardios testados.
+
+Filme m2213260 (A Maravilhosa Árvore Encantada): preparação anterior ~24–26 s,
+com falhas de entrega HTTP nas primeiras tentativas. Após correção, fotogramas
+no Chrome em 4,06 s; nova retoma em 3,46 s. Imagem 1920×800 revista; vídeo original,
+sem recompressão. Som não ouvido. Não generalizar os tempos a todos os títulos.
+65 testes Python e regressões JS web/MAG/TV passaram. Ver WEB.md.
+
+Testes reais autorizados terminados; lease livre. Utilizador pode voltar a
+reproduzir. Próximo passo: Ctrl+F5 e confirmar a experiência no navegador habitual.
+Sem bloqueios desta fase; pendentes anteriores de validação física TV/legado
+mantêm-se. Não abrir outras transmissões usando a autorização já concluída.

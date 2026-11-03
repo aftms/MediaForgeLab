@@ -109,9 +109,15 @@ def load_config(path):
     return config
 
 
-class PortalServer(ThreadingHTTPServer):
+class PortalHTTPServer(ThreadingHTTPServer):
+    # Browser assets, API calls and FFmpeg connect in bursts. Python 3.10's
+    # default backlog of five can drop/delay those local connections.
+    request_queue_size = 64
     daemon_threads = True
     allow_reuse_address = False
+
+
+class PortalServer(PortalHTTPServer):
 
     def __init__(self, config, channels, stats, control):
         self.config, self.channels, self.stats, self.control = config, channels, stats, control
@@ -151,6 +157,7 @@ class PortalServer(ThreadingHTTPServer):
 
 
 class PortalHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
     server_version = "MAGPortal"
     sys_version = ""
 
@@ -200,7 +207,12 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "private, max-age=86400" if mime == 'image/png' else "no-store, max-age=0")
         if mime != 'image/png':
             self.send_header("Pragma", "no-cache")
-        self.send_header("Connection", "close")
+        # Keep completed browser GETs on the same connection. Abruptly closing
+        # every large response caused resets/retries in Chrome on this Windows.
+        # Requests with unread bodies and all writes/errors still close.
+        keep_alive = (self.command in ('GET','HEAD') and status < 400 and not self.close_connection
+                      and not self.headers.get('Content-Length') and not self.headers.get('Transfer-Encoding'))
+        self.send_header("Connection", "keep-alive" if keep_alive else "close")
         if self.app.tv_access.authorized(self.path, self.headers, self.command=='OPTIONS'):
             origin = self.headers.get('Origin')
             if origin:
@@ -216,7 +228,7 @@ class PortalHandler(BaseHTTPRequestHandler):
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(content)
-        self.close_connection = True
+        self.close_connection = not keep_alive
 
     def do_HEAD(self):
         self.do_GET()
@@ -475,7 +487,7 @@ def main():
         for address,port,scheme in [('127.0.0.1',config.get('loopback_port'),'http'),(config['host'],config.get('https_port'),'https')]:
             if not port:
                 continue
-            listener=ThreadingHTTPServer((address,port),PortalHandler)
+            listener=PortalHTTPServer((address,port),PortalHandler)
             listener.backend,listener.bind_host,listener.scheme=server,address,scheme
             listener.handle_error=lambda *args: None
             if scheme=='https':

@@ -225,3 +225,46 @@ Referência: [evento beforeinstallprompt](https://developer.mozilla.org/en-US/do
 A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
 BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
 seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.
+
+## Arranque e retoma de filmes — web v8 (03/11/2026)
+
+Corrigidas duas esperas observadas no Chrome deste Windows:
+
+- O leitor/FFmpeg podia abrir o próximo pedido HTTP Range antes de fechar o
+  anterior. O bloqueio global esperava pelo timeout, somando duas esperas de
+  ~10 s. Agora o proxy termina os sockets do pedido anterior da mesma sessão
+  web e só abre o seguinte depois de libertar o bloqueio. Nunca se abrem duas
+  ligações ao fornecedor em paralelo. Parar também interrompe o transporte.
+- Os GET/HEAD locais completos usam HTTP/1.1 persistente. O encerramento de
+  cada resposta grande provocava resets/repetições no Chrome: uma leitura local
+  de 624 KB podia falhar após ~19 s; na comparação persistente chegou em 24–36 ms.
+  Escritas, erros e pedidos com corpo por ler continuam a fechar a ligação.
+  A fila de aceitação HTTP suporta rajadas de ligações do navegador/leitor.
+
+Metadados de filmes/episódios analisados por FFprobe são reutilizados em memória
+por até uma hora, com limite de 128 entradas e chave ID+URL. Não se guarda vídeo
+nesse cache. Alteração do URL, expiração e modo compatível exigem nova análise.
+No modo web normal, a segunda análise FFmpeg é limitada e o alvo HLS é 2 s;
+keyframes e vídeo original mantêm-se. Compatibilidade conserva análise completa.
+
+O leitor mostra a etapa atual, desativa avanço enquanto prepara e apresenta
+«—» até conhecer a duração. Não guarda progresso de uma preparação incompleta.
+Um erro tardio de um pedido cancelado não substitui o estado do novo leitor.
+Se a biblioteca HLS falhar ao carregar, tenta carregá-la novamente antes de
+abrir a ligação ao fornecedor, com erro explícito e prazo limitado.
+
+Teste real autorizado, uma reprodução de cada vez, no Chrome isolado:
+«PT - A Maravilhosa Árvore Encantada (2026)», ID m2213260. Antes: ~24–26 s
+para preparar; nas primeiras tentativas as falhas HTTP impediam a imagem.
+Depois: 4,06 s até o navegador apresentar fotogramas e 3,46 s numa nova retoma
+com metadados reutilizados. Imagem capturada/revista, 1920×800, vídeo original
+remuxado; som não confirmado por audição. São amostras deste filme, não um
+prazo garantido para todo o catálogo. O progresso guardado continuou disponível.
+Os testes terminaram com a ligação ao fornecedor livre.
+
+65 testes Python passaram, incluindo troca de Range com a resposta anterior
+aberta e confirmação do fecho da origem, cache/expiração/troca de fonte,
+compatibilidade, falhas, exclusão entre dispositivos, GETs grandes na mesma
+ligação e fecho de pedidos com corpo por ler. Regressões MAG, TV e novo teste
+web de preparação/cancelamento/progresso passaram. Aplicação ativa nesta raiz.
+Atualizar o separador com Ctrl+F5 para carregar a web v8.

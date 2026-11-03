@@ -96,12 +96,74 @@ class PipelineTests(unittest.TestCase):
                     app.media.release(session,'127.0.0.1')
                     self.assertFalse(segment.parent.exists())
                     self.assertFalse(app.media.status()['active'])
+                    if codec=='libx264':
+                        for scenario in ('cached','expired','changed-source','compatibility'):
+                            if scenario=='expired':
+                                for key,(_,metadata) in list(app.media.probe_cache.items()):
+                                    app.media.probe_cache[key]=(0,metadata)
+                            if scenario=='changed-source':
+                                app.catalog.by_id[identifier]['url']=f'http://127.0.0.1:{source.server_port}/mpeg4.mp4'
+                            app.media.ffprobe='must-not-run-on-cache-hit' if scenario=='cached' else shutil.which('ffprobe')
+                            again=app.media.start(dict(id=identifier,owner='fixture-browser-owner',position=3,
+                                compatibility=scenario=='compatibility'),'127.0.0.1','web')
+                            deadline=time.monotonic()+35
+                            while time.monotonic()<deadline and app.media.status()['active'] and app.media.status()['state']!='ready':
+                                time.sleep(.1)
+                            self.assertEqual(app.media.status()['state'],'ready',(scenario,app.media.status()))
+                            timing=app.media.status()['startup_ms']
+                            self.assertIn('probe_cached' if scenario=='cached' else 'probe_ready',timing,scenario)
+                            ready=app.media.pulse(again,'127.0.0.1')
+                            self.assertEqual(ready['video_mode'],'remux' if scenario in ('cached','expired') else 'transcode')
+                            self.assertGreater(ready['duration'],5)
+                            self.assertEqual(ready['position'],3)
+                            self.assertTrue(ready['audio'])
+                            app.media.release(again,'127.0.0.1')
             finally:
                 app.shutdown();app.server_close();thread.join(2)
                 source.shutdown();source.server_close();source_thread.join(2)
 
 
 class StreamingProxyTests(unittest.TestCase):
+    def test_new_ffmpeg_range_closes_previous_upstream_without_waiting(self):
+        closed=threading.Event();overlap=[]
+        class Source(BaseHTTPRequestHandler):
+            def log_message(self,*args):pass
+            def do_GET(self):
+                if self.headers.get('Range')=='bytes=1024-':
+                    overlap.append(not closed.wait(.5))
+                    self.send_response(206);self.send_header('Content-Length','1024')
+                    self.send_header('Content-Range','bytes 1024-2047/2048');self.end_headers()
+                    self.wfile.write(b'b'*1024);return
+                self.send_response(200);self.send_header('Content-Length','1048576');self.end_headers()
+                self.wfile.write(b'a'*1024);self.wfile.flush()
+                self.connection.settimeout(4)
+                try:self.connection.recv(1)
+                except OSError:pass
+                finally:closed.set()
+        with tempfile.TemporaryDirectory() as temporary:
+            source=ThreadingHTTPServer(('127.0.0.1',0),Source)
+            threading.Thread(target=source.serve_forever,daemon=True).start()
+            app=PortalServer(dict(host='127.0.0.1',port=0,network=ipaddress.ip_network('127.0.0.0/24'),runtime_path=temporary,switch_delay_ms=1000,player_solution='ffmpeg'),
+                [dict(id='1',name='Range fixture',group='PT',url=f'http://127.0.0.1:{source.server_port}/movie')],{},'fixture')
+            app.config['loopback_port']=app.server_port
+            app.media.ffmpeg=app.media.ffprobe='not-invoked';app.media._prepare=lambda session:None
+            threading.Thread(target=app.serve_forever,daemon=True).start()
+            session=app.media.start(dict(id='1',owner='range-fixture-owner'),'127.0.0.1','web')
+            url=f'http://127.0.0.1:{app.server_port}/media/raw/{session["token"]}'
+            opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            try:
+                with opener.open(url,timeout=3) as previous:
+                    self.assertEqual(previous.read(1024),b'a'*1024)
+                    # FFmpeg opens this range while its old response is still open.
+                    before=time.monotonic()
+                    with opener.open(urllib.request.Request(url,headers={'Range':'bytes=1024-'}),timeout=2) as current:
+                        self.assertEqual(current.read(),b'b'*1024)
+                    self.assertLess(time.monotonic()-before,2)
+                    self.assertEqual(overlap,[False],'Previous supplier socket must close before the next response')
+            finally:
+                app.media.release(session,'127.0.0.1');app.shutdown();app.server_close()
+                source.shutdown();source.server_close()
+
     def test_first_bytes_reach_player_before_next_upstream_burst(self):
         finish=threading.Event();delivered=threading.Event();received=[]
         class Source(BaseHTTPRequestHandler):
