@@ -7,7 +7,7 @@ const context={trackControls:{prepare(){},reset(){},feed(){},update(){}},Hls:{},
  document:{activeElement:null}};
 context.text=(id,value)=>context.$(id).textContent=value;
 vm.createContext(context);
-vm.runInContext(`let session=null,playingItem={id:'m1',kind:'movie'},hls=null,basePosition=600,duration=1200,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,subtitleIndex=-1,compatibility=false,pausedPosition=null,pollTimer;
+vm.runInContext(`let session=null,playingItem={id:'m1',kind:'movie'},hls=null,basePosition=600,duration=1200,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,subtitleIndex=-1,compatibility=false,pausedPosition=null,pollTimer,pauseTimer=null,pauseEpoch=0;
 const owner='test-owner';const video={currentTime:600,pause(){},removeAttribute(){},load(){}};
 function fmt(t){return Math.floor(t/60).toString().padStart(2,'0')+':'+Math.floor(t%60).toString().padStart(2,'0');}
 `+source.slice(source.indexOf('function updateTime()'),source.indexOf('async function refreshStatus()')),context);

@@ -346,3 +346,19 @@ rejeição de outro dispositivo e preservação de sessão perante parâmetros i
 Chrome confirmou texto PT/EN efetivamente visível, pausa sem ligação, retoma e
 biblioteca pessoal móvel. Conteúdos do fornecedor e TVs/MAG físicos ainda
 precisam de confirmação humana para estas novas opções.
+
+
+## Janela e ecrã inteiro — web v15
+
+Mantêm-se os controlos nativos dentro do vídeo (pausa, som, ecrã inteiro e menu).
+No cabeçalho do leitor, − e ＋ diminuem/aumentam a janela; no computador também
+é possível arrastar o canto inferior direito. ⛶ e o duplo clique na imagem
+usam o mesmo comando de ecrã inteiro, sem trocar a sessão nem a origem do vídeo.
+O duplo clique preserva reprodução/pausa; a faixa inferior de controlos nativos
+fica excluída deste gesto. O tamanho é limitado à janela do navegador.
+
+Pausas transitórias deixam de libertar imediatamente a ligação: só uma pausa
+persistente de900ms a liberta. Retomar nesse intervalo reutiliza o leitor; a
+pausa prolongada mantém a política de libertar a ligação. Alterar o tamanho
+não retoma automaticamente um vídeo pausado. Escape ao sair de ecrã inteiro
+não fecha o diálogo através de um evento cancel simultâneo.

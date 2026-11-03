@@ -424,3 +424,35 @@ após ambas as reproduções idle, scan/refresh parados. Rotas dos novos assets 
 aliases PWA HTTP200. Samsung1.0.14/r14 assinada/instalada sem reprodução Samsung;
 Xiaomi APK1.3 carrega UI hospedada; MAG rootr25 mantém-se, Pessoalv5. Web Ctrl+F5
 para v14. Próximo: utilizador confirmar idiomas/legendas no filme e nos dispositivos.
+
+
+## Janela do leitor web / duplo clique — web v15 (2026-11-03)
+
+Utilizador reportou demora ao maximizar, confirmou depois que o botão nativo
+no vídeo funciona bem mas duplo clique não. Preservar os controlos nativos que
+apreciou (som, pausa, fullscreen, menu). Adicionados −/＋ e ⛶ no cabeçalho,
+resize:both no computador e limites responsivos; são só alterações de layout.
+Fullscreen CSS elimina limite58vh. Duplo clique na imagem partilha função
+fullscreen com botão e restaura reprodução se o primeiro clique provocou pausa;
+se já estava pausado, continua pausado. Faixa inferior80px dos controlos nativos
+excluída. Escape/fullscreenchange não deve acionar fecho do diálogo.
+
+Antes qualquer pausa libertava imediatamente a sessão após guardar progresso.
+Agora confirmação900ms com epoch/geração/token evita libertar ligação por pausa
+transitória; play cancela, resize/fullscreen reavaliam. Pausa persistente continua
+a libertar; mudar tamanho não retoma vídeo pausado. Fecho/start cancelam timers.
+Causa do duplo clique no dispositivo do utilizador não foi observada diretamente;
+Chrome sintético valida proteção e comportamento novo sem abrir fornecedor.
+
+Testes: web-player.cjs PASS; web-window-browser.cjs PASS com FFmpeg sintético
+real e Chrome: botões −/＋, drag real do canto, requestFullscreen e duplo clique
+real entra/sai, resize viewport, pausa transitória sem novos pedidos web/stop,
+pausa persistente liberta, duplo clique em pausa preserva pausa, ajuste em pausa
+não abre stream,390px sem overflow. Captura revista. Estáticos ativos sem reiniciar
+backend nem interromper o canal que o utilizador tem aberto. TVs/MAG/Pessoal
+mantêm versões anteriores, esta alteração é específica da janela web solicitada.
+Próximo: Ctrl+F5 para webv15 e confirmar duplo clique no computador do utilizador.
+
+Ajuste final: duplo clique usa estado fullscreen capturado no primeiro clique;
+se o navegador já realizou a transição, não envia um segundo pedido. Teste final
+confirma ausência de aviso indevido de fullscreen e mantém todos os checks acima.

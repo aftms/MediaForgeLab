@@ -25,3 +25,10 @@ main{max-width:none}.display-tools{display:flex;justify-content:space-between;ga
 #install-panel details{border:1px solid var(--line);border-radius:9px;padding:12px;margin:10px 0}#install-panel summary{cursor:pointer;font-weight:650;color:var(--accent)}#install-panel li{margin:8px 0}#install-panel details p{font-size:13px}
 
 nav .personal-entry{display:block;padding:12px 13px;color:var(--text);text-decoration:none;font-weight:650;border:1px solid var(--line);border-radius:9px}nav .personal-entry:hover{background:#24444a}
+
+/* Resizing never detaches the media element. */
+#player{resize:both;min-width:min(420px,96vw);max-width:96vw;min-height:260px;max-height:94vh}
+.player-window-actions{display:flex;gap:6px;flex-shrink:0}.player-window-actions button{min-width:38px;padding:6px 10px;font-size:19px}.player-size-hint{font-size:11px;color:var(--muted);margin:0 0 10px}
+#player .player-heading>div:first-child{min-width:0}#player .player-heading h2{overflow-wrap:anywhere}
+#video:fullscreen{width:100%;height:100%;max-height:none;aspect-ratio:auto;border-radius:0;object-fit:contain;background:#000}
+@media(max-width:600px){#player .player-heading{align-items:flex-start;gap:8px;flex-wrap:wrap}.player-window-actions{margin-left:auto}#player{resize:none}.player-size-hint{display:none}}
