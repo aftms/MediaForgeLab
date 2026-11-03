@@ -8,7 +8,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  async function until(expr){for(let i=0;i<350;i++){if(await run(expr))return;await sleep(100)}throw Error('Timeout '+expr+' '+JSON.stringify(await run('({status:document.getElementById("view-status").textContent,disabled:document.getElementById("seek-position").disabled,paused:document.getElementById("video").paused,ready:document.getElementById("video").readyState,time:document.getElementById("video").currentTime,error:document.getElementById("video").error&&document.getElementById("video").error.code,requests:window.playRequests})')))}
  const click=id=>run('document.getElementById('+JSON.stringify(id)+').click()');
  async function key(k){await call('Input.dispatchKeyEvent',{type:'keyDown',windowsVirtualKeyCode:k});await call('Input.dispatchKeyEvent',{type:'keyUp',windowsVirtualKeyCode:k});}
- async function browse(client,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/personal/':'/tv/personal.html')+'?client='+client});await until('document.querySelectorAll(".tile").length===12');assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));}
+ async function browse(client,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/personal/':'/tv/personal.html')+'?client='+client});await until('document.querySelectorAll(".tile").length===Math.min(16,Number(document.getElementById("page-size").value))');assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));}
 
  try{
  await call('Page.enable');await call('Runtime.enable');
@@ -27,7 +27,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
   await key(27);assert.equal(await run('document.activeElement.id'),'item-options');
   const favoriteBefore=await run('document.querySelectorAll(".tile")[2].textContent.includes("★")');
   await run('document.querySelectorAll(".tile .open")[2].focus();MagTV.remote(73)');
-  await key(13);await until('document.getElementById("dialog").style.display==="none" && document.querySelectorAll(".tile").length===12');await sleep(300);
+  await key(13);await until('document.getElementById("dialog").style.display==="none" && document.querySelectorAll(".tile").length===Math.min(16,Number(document.getElementById("page-size").value))');await sleep(300);
   assert.equal(await idx(),2);assert.equal(await run('document.querySelectorAll(".tile")[2].textContent.includes("★")'),!favoriteBefore);
   const shot=await call('Page.captureScreenshot');fs.writeFileSync(process.argv[3]+'/personal-'+client+'.png',Buffer.from(shot.data,'base64'));
  }

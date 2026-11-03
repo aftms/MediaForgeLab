@@ -910,3 +910,30 @@ Regressão de navegação Pessoal web/MAG/TV/mobile passou, incluindo foco e ál
 Screenshot da biblioteca livre com barra Em destaque inspecionada. Sem fornecedor
 real nem stream deixado ativo pelos testes. Commit/push no fecho; Ctrl+F5 para
 carregar web27. Testes antigos PiP alinhados ao novo modo e fallback nativo.
+
+
+## Pessoal compacto — v9 / TVr27 (2026-11-03)
+
+Pedido com screenshot: cartões demasiado largos e poucos itens por página.
+Grelha responsiva: web mínimo170px, 12 colunas a2466px, cartões ~183px versus4
+colunas anteriores; thumbnails86px, títulos13px em duas linhas, pasta12px e ações
+compactas. Fallback float em6colunas para MAG sem Grid; TV/MAG títulos14px, TV
+mínimo200px na grelha moderna; mobile2colunas. Tooltips mantêm nome/pasta completos.
+
+Default web60 por página (antes12), TV30, MAG24. Seletor12/24/30/60 no rodapé,
+guardado por vista nas preferências existentes. API já aceita até60: sem alterações
+no backend nem reinício. Imagens carregam lazy nos navegadores compatíveis.
+Galeria de fotos conserva filtro/tamanho próprios, para mudar quantidade na
+biblioteca durante destaque sem duplicar/saltar fotos ao atravessar página.
+
+Chrome sintético com135 itens, sem streams: 60/60/15, página anterior/seguinte,
+troca para24/reload persistente, grelha desktop/mobile sem overflow, TV30/MAG24
+e comando CH+/- PASS. Galeria manteve sequência foto060 após mudar biblioteca
+de60 para24. Screenshots inspecionadas com miniaturas carregadas.8 testes Pessoal
+PASS. Testes de reprodução existentes escolhem12 explicitamente; navegação aceita
+os novos defaults. Não houve reprodução nem chamadas ao OneDrive real/fornecedor.
+
+Pessoalv9, web27/MAGr31/Coleções7 mantidos; Samsung1.0.27/TVr27 construída.
+Mudança ativa nos ficheiros servidos, sem interromper leitores. Instalação Samsung
+e commit/push registados no fecho. Xiaomi desligada/APK1.4 pendente como antes.
+Próximo Ctrl+F5/reabrir Pessoal e escolher a quantidade no rodapé. Sem bloqueio novo.

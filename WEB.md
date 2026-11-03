@@ -456,3 +456,8 @@ fechar/navegar para fora da app termina o contexto. A barra inferior permite Rep
 ou Parar; Repor abre a biblioteca do conteúdo destacado. Suporte completo depende
 de Document PiP e contexto seguro (127.0.0.1 ou HTTPS); PiP nativo é alternativa
 conforme o navegador. Nenhuma transmissão é guardada offline.
+
+
+Pessoalv9: cartões compactos e60 conteúdos por página por defeito. «Por página»
+no rodapé permite12/24/30/60 e fica guardado por vista. TV começa com30 e MAG24.
+Nomes/pastas completos aparecem ao passar o rato; imagens usam carregamento lazy.
