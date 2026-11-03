@@ -10,3 +10,6 @@ player.open('http://fixture.invalid/local.m3u8',()=>{});assert.equal(state,'IDLE
 player.stop();assert.equal(state,'NONE');stale();assert.equal(played,0);
 player.open('http://fixture.invalid/local.m3u8',()=>{});prepared();assert.equal(state,'PLAYING');player.stop();assert.equal(state,'NONE');
 console.log('PASS: Samsung closes after IDLE stop rejection, resets before open and ignores stale preparation callbacks.');
+
+// The early Collections shell must not attach to Pessoal or the normal TV page.
+{const env={window:{},location:{search:'?client=mag'},document:{getElementById:function(){return null;}}};vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../public/tv/player.js'),'utf8'),env);assert.equal(env.window.MFLCollectionShell,undefined);console.log('PASS: independent Collections boot guard stays out of other MAG modules.');}

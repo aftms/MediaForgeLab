@@ -1,3 +1,20 @@
+/* Keep MAG exit independent of library startup, HTTP and optional helpers. */
+(function(){
+ if(typeof location==='undefined'||!/client=mag/.test(location.search)||!document.getElementById('play-sequence'))return;
+ var shell={handle:null};document.body.className='mag';
+ function cancel(e){if(e.preventDefault)e.preventDefault();e.returnValue=false;return false;}
+ shell.home=function(){try{var player=window.gSTB||window.stb;if(player)player.Stop();}catch(ignore){}location.href='/';return false;};
+ shell.fail=function(){var node=document.getElementById('status');if(node)node.textContent='Não foi possível concluir esta operação. Prima Voltar para regressar à biblioteca.';};
+ var home=document.getElementById('home');if(home)home.onclick=shell.home;
+ try{var player=window.gSTB||window.stb;if(player&&player.EnableSpatialNavigation)player.EnableSpatialNavigation(false);}catch(ignore){}
+ document.onkeydown=function(event){var e=event||window.event||{},key=e.keyCode||e.which;
+  /* MENU always leaves the module, including when an embedded player has failed. */
+  if(key===122){cancel(e);return shell.home();}
+  try{if(shell.handle)return shell.handle(e);}catch(ignore){shell.fail();if(key===8||key===27||key===10009||key===461){cancel(e);return shell.home();}return cancel(e);}
+  if(key===8||key===27||key===10009||key===461||key===13&&document.activeElement===home){cancel(e);return shell.home();}
+ };
+ window.MFLCollectionShell=shell;setTimeout(function(){if(!shell.handle)shell.fail();},8000);
+}());
 /* ES5 adapters. Supplier addresses never reach a TV. */
 (function(){'use strict';var av=null,video,hls=null,generation=0,position=0,timer;
 function nativePlayer(){return window.MagPlayer||null;}

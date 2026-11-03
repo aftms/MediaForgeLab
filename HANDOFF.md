@@ -1053,3 +1053,55 @@ Próximo: utilizador faz Restart portal e valida Coleçõesv10 na MAG (lista/Vol
 e reprodução social física). Foi pedida confirmação assíncrona. YouTube/Facebook
 no navegador antigo continuam dependentes da capacidade real da MAG; teste feito
 no PC apenas simula limites e não confirma imagem/som na box.
+
+
+## Coleções TV: capas completas e opções — v12 / Samsung1.0.31 (2026-11-03)
+
+Pedido: na TV as capas ficam recortadas e as opções de vídeo são difíceis de
+navegar, feias e mal formatadas. Correção partilhada: imagens dimensionadas pela
+proporção original, max-width/max-height e centragem com transform WebKit, sem
+depender de object-fit. Testadas capas horizontais, verticais e quadradas.
+TV: painel lateral dedicado às opções do leitor, SVGs discretos, botões espaçados,
+fila/vídeos anterior-seguinte, retomar/pausa, posição e ecrã inteiro; foco destacado.
+Overlays com top/right/bottom/left explícitos; fallback grid-gap e margens onde o
+Tizen2019 não suporta inset/flex-gap. Botão Coleções alinhado e painel sem sobrepor
+vídeo. Ecrã inteiro TV/MAG mantém o comando no documento: OK/setas mostram opções,
+Voltar regressa às opções antes de fechar o vídeo. Links Abrir na origem ocultos
+nas TVs/MAG pois aí não permitem abrir a app de origem.
+
+Cartões TV/MAG têm Opções com ações de consulta Reproduzir/Favorito, SVGs e título
+completo. Sem gestão/importação/edição de categorias nas TVs/MAG. Voltar repõe foco
+no cartão; seleções e favoritos persistentes. Iframe externo deixa o comando no
+painel nas TVs também; não altera suporte de reprodução/autorização das origens.
+
+MAG física: utilizador confirmou v11 sem cartões E sem saída. Não considerar a
+correção v10 validada. Encontrada sintaxe não portátil ES5 strict: FunctionDeclaration
+dentro de else (play/attach). Acorn antigo do SDK aceitava-a mesmo ecmaVersion5;
+novo teste AST rejeita esse caso explicitamente. Convertidas em expressões de
+função. Shell de saída movida para player.js carregado antes de collections.js;
+scoped apenas ao DOM Coleções para não interferir com Pessoal/TV. Se o ficheiro
+principal nem sequer carregar/interpretar, Voltar/MENU continuam disponíveis e
+surge mensagem após 8s. Hipótese forte para os sintomas, sem diagnóstico direto
+do parser físico. Nova confirmação MAGv12 pedida, ainda pendente.
+
+Validação: collections-tv-browser.cjs PASS em720p/1080p sem inset/gap, capas3rácios,
+menus de consulta/foco, todas8opções leitor por setas reais, nativeAVPlay mock e
+ecrã inteiro/Voltar, sem streams reais. Regressões MAG/componente HTTP/ES5/TVPlayer/
+navegação principal PASS; gestão de etiquetas web e só consulta TV/MAG PASS.
+Na Samsung física: app1.0.31/Coleçõesv12 instalada, lista aberta, Opções→Reproduzir/
+Favorito por MagTV.remote com sucesso, Voltar repõe cartão;7capas carregadas e7
+com proporção/limites corretos. Nenhum vídeo aberto nem stream fornecedor iniciado.
+Leitor real/imagem/som não retestados nesta fase; opções leitor verificadas no PC.
+
+Sem restart backend; leitor Navegador preservado. FrontendHTTP Coleçõesv12; TVr31,
+MAGprincipalr31/web27/Pessoal10. Samsung1.0.31 instalada. Xiaomi continua desligada,
+instalação das alterações pendente. Categoria Por classificar continua pendente de
+restart seguro após confirmação de fecho do leitor; sem resposta a essa pergunta.
+Próximo: confirmar MAGv12 e validar aspeto/comando no leitor da TV com utilizador.
+
+
+Fecho desta fase: Samsung1.0.31 reinstalada com os ficheiros finais e app lançada
+normalmente (debug0), sem abrir conteúdos. AndroidTV APK1.5/code6 compilado e
+assinado, com Coleçõesv12; adb devices vazio, pelo que Xiaomi não foi instalada.
+Browser do utilizador continuou ativo e backend não foi reiniciado. Confirmação
+MAGv12 ainda não recebida; não confundir testes de simulação com validação física.

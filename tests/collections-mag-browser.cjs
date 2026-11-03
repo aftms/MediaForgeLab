@@ -8,7 +8,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  socket.onmessage=e=>{const d=JSON.parse(e.data);if(d.method==='Fetch.requestPaused'){const css=fs.readFileSync(require('path').join(__dirname,'../public/tv/collections.css'),'utf8').replace(/\binset:[^;}]+;?/g,'');call('Fetch.fulfillRequest',{requestId:d.params.requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'text/css'}],body:Buffer.from(css).toString('base64')}).catch(()=>{});}if(d.method==='Runtime.exceptionThrown')errors.push(d.params.exceptionDetails.text);if(d.id&&pending.has(d.id)){const p=pending.get(d.id);pending.delete(d.id);clearTimeout(p.timer);d.error?p.reject(Error(d.error.message)):p.resolve(d.result)}};
  const call=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence;pending.set(id,{resolve,reject,timer:setTimeout(()=>reject(Error('CDP timeout '+method)),12000)});socket.send(JSON.stringify({id,method,params}))});
  async function run(expression){const r=await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception.description);return r.result.value;}
- async function until(expression){for(let i=0;i<100;i++){if(await run(expression))return;await sleep(80)}throw Error('Timeout: '+expression);}
+ async function until(expression){for(let i=0;i<100;i++){if(await run(expression))return;await sleep(80)}throw Error('Timeout: '+expression+' / '+await run(`({status:document.getElementById('status')&&document.getElementById('status').textContent,client:document.body.className,count:document.querySelectorAll('.tile').length})`).then(JSON.stringify));}
  const key=code=>run(`document.onkeydown({which:${code}})`);
  async function open(extra=''){await call('Page.navigate',{url:fixture.url+'/tv/collections.html?client=mag'+extra});await until(`!!window.MFLCollectionShell`);}
  async function listed(){await until(`document.querySelectorAll('.tile').length===3`);}
@@ -18,7 +18,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
   await call('Fetch.enable',{patterns:[{urlPattern:'*collections.css*',requestStage:'Request'}]});
   await call('Network.setBlockedURLs',{urls:['https://*','*/collections/player*']});
   await call('Page.addScriptToEvaluateOnNewDocument',{source:`if(/client=mag/.test(location.search)){
-   Object.defineProperty(XMLHttpRequest.prototype,'onload',{get:function(){return null;},set:function(){}});
+   window.localStorage.removeItem('mfl-browse-v1:collections-mag');Object.defineProperty(XMLHttpRequest.prototype,'onload',{get:function(){return null;},set:function(){}});
    HTMLButtonElement.prototype.click=undefined;Element.prototype.getClientRects=undefined;
    window.nativeCalls=[];window.gSTB={EnableSpatialNavigation:function(v){nativeCalls.push(['spatial',v]);},Stop:function(){nativeCalls.push(['stop']);},InitPlayer:function(){nativeCalls.push(['init']);},SetTopWin:function(v){nativeCalls.push(['top',v]);},Play:function(){nativeCalls.push(['play']);},GetPosTime:function(){return 0;},GetMediaLen:function(){return 60;}};
    if(location.search.indexOf('missing-helper')!==-1)Object.defineProperty(window,'BrowsePrefs',{get:function(){return undefined;},set:function(){}});
@@ -47,6 +47,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
   await run(`document.getElementById('home').focus()`);await key(13);await home();
   await open();await listed();await run(`document.getElementById('categories').focus()`);await key(13);await key(122);await home();
   await open('&missing-helper');await until(`document.getElementById('status').textContent.indexOf('Voltar')!==-1`);await key(8);await home();
+  await call('Network.setBlockedURLs',{urls:['https://*','*/collections/player*','*collections.js*']});await open();await key(8);await home();await call('Network.setBlockedURLs',{urls:['https://*','*/collections/player*']});
   await open('&failed-api');await until(`document.getElementById('status').textContent.length>0`);await key(8);await home();
   await open();await listed();await run(`document.getElementById('categories').onclick=function(){throw Error('Simulated UI failure');};document.getElementById('categories').focus()`);await key(13);assert.ok(await run(`document.getElementById('status').textContent.indexOf('Voltar')!==-1`));await key(8);await home();
   for(const client of ['web','tv']){await call('Page.navigate',{url:fixture.url+'/tv/collections.html?client='+client});await listed();await run(`document.getElementById('categories').click()`);assert.equal(await run(`document.getElementById('dialog').style.display`),'');await run(`document.getElementById('dialog-close').click()`);if(client==='web'){await run(`window.MFLFloating.navigating=function(){return true;};window.MFLFloating.browse=function(){window.browsed=true;};document.getElementById('home').click()`);await sleep(150);assert.equal(await run(`window.browsed&&location.pathname==='/tv/collections.html'`),true);}}
