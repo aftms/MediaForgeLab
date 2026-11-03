@@ -1,3 +1,150 @@
+# Ponto de retoma — fim de sessão 03/11/2026
+
+Este checkpoint prevalece sobre pendências/versões históricas abaixo.
+Projeto Gateway **mediaforgelab**, validado por REST com a identidade da .env
+deste workspace. Workspace real **D:\Workspace\MediaForgeLab**; não implementar
+a aplicação em gatewayforgelab. Branch **agent/media-forge-lab-20261103**.
+Código entregue em 3de5e91; confirmação física MAG registada em 8c42ce4.
+
+## Fase e percentagem em falta
+
+Implementação das correções atuais de Coleções concluída: **100%, 0% de código
+conhecido em falta**. Fase atual: validação física e ativação/instalação final.
+Para o pack de fecho abaixo, **2/5 marcos concluídos e 3/5 pendentes: 60% em falta
+por contagem de marcos**, não por estimativa de esforço. Roadmap geral evolutivo
+não tem âmbito fechado que permita uma percentagem global honesta.
+
+| Marco do pack atual | Estado |
+| --- | --- |
+| MAG Coleçõesv12: cartões e saída | Confirmado pelo utilizador na box física |
+| Samsung: capas completas e menu do cartão por comando | Confirmado no dispositivo via inspector |
+| Reprodução e opções durante vídeo na MAG/TV | Validação física final pendente |
+| Xiaomi: instalar e validar APK1.5 | Pacote preparado; TV ausente de adb devices |
+| Categoria Por classificar: ativar backend | Código/testes prontos; restart adiado |
+
+## Estado funcional e versões
+
+- Coleções **v12**, JS/CSS12, nos ficheiros servidos; MAG principal **r31**,
+  web **v27**, Pessoal **v10**, interface TV **r31**.
+- Samsung QE55Q67RATXXC/2019, IP192.168.1.229: aplicação **1.0.31** instalada e
+  lançada normalmente (debug0). Teste físico:7/7capas completas e proporcionais,
+  opções Reproduzir/Favorito navegáveis e Voltar repõe o cartão. Nenhum vídeo
+  aberto nesta verificação; não confundir com teste de reprodução do leitor.
+- MAG324: utilizador confirmou explicitamente **Coleçõesv12 mostra cartões e
+  permite sair**. Não voltar a pedir confirmação destes dois pontos nem tratá-los
+  como bloqueados. Vídeos sociais/imagem/som ainda não confirmados na MAG.
+- Xiaomi MiTV-M00Q1, último IP192.168.1.90: APK AndroidTV **1.5/code6** compilado
+  e assinado; **não instalado**. Última instalada conhecida1.3. adb devices vazio
+  no fecho da fase. Não alegar atualização física nem repetir tentativas em loop.
+- Servidor privado: LAN HTTP192.168.1.240:8090, loopback127.0.0.1:8091,
+  HTTPS8443, gestão8092. Windows/PWA/TV/MAG partilham serviço, dados e atualização.
+- Uma reprodução IPTV simultânea entre dispositivos. Dados do fornecedor,
+  OneDrive, chaves TV e certificados em ficheiros privados ignorados pelo Git.
+  Não expor credenciais em URLs de logs, commits, diagnóstico ou conversa.
+
+## Trabalho concluído e decisões preservadas
+
+Coleções: biblioteca comum de links sociais, categorias/subcategorias, etiquetas
+planas, listas ordenadas com retoma, favoritos em todos os dispositivos. Gestão,
+importação e classificação só web; MAG/TV consultam e alteram favorito/progresso.
+Capas públicas Facebook em cache privado e enquadramento proporcional; quando
+metadata privada/indisponível mantém placeholder. Facebook usa leitor oficial,
+Seguinte manual, sem inventar progresso não confirmado pela API. Hierarquia de
+etiquetas continua proposta, ainda por compatibilizar com categorias.
+
+Correções atuais: capas inteiras em3rácios; títulos compactos2linhas; painel lateral
+do leitor TV com SVG, foco forte e espaçamento; opções do cartão com título e
+Reproduzir/Favorito. CSS Tizen antigo com edges explícitos e fallback de espaçamento.
+Ecrã inteiro TV/MAG não relança vídeo; OK/setas mostram opções e Voltar sai deste
+modo antes de fechar leitor. Janela web destacada permite consultar outras
+bibliotecas e substituir conteúdo; filtros persistentes e origens múltiplas mantidos.
+Pessoal OneDrive, álbuns/favoritos/progresso, grelha compacta e menuv10 preservados.
+
+MAG: v11 falhava na box; v12 converte duas funções declaradas dentro de else em
+expressões válidas/portáteis ES5 strict. Acorn antigo do SDK aceitava esse caso,
+por isso novo teste AST rejeita-o explicitamente. Shell de saída independente em
+player.js anterior a collections.js; scoped só a Coleções, sem interferir com
+Pessoal. Mantém saída mesmo com script principal bloqueado e aviso após8s.
+Pedidos HTTP readyState com prazo manual, OK sem depender button.click, setas
+customizadas, native spatial desligada, Stop independente de erro HTML5 e foco do
+comando fora do iframe. API/catálogos partilhados, sem duplicar serviços por versão.
+
+Categoria **Por classificar** iduncategorized: virtual e permanente mesmo vazia,
+protegida de edição/eliminação, reúne vídeos sem categorias reais e preserva tags,
+favoritos e progresso. Implementada/testada em90b4bc7, frontend compatível; classe
+backend carregada continua antiga porque **não houve restart**. Ainda NÃO declarar
+a categoria ativa. Esta confirmação de MAG não autoriza reiniciar o serviço.
+
+## Pendências, bloqueios e alternativas
+
+1. Validar imagem/som e navegação das opções durante reprodução social na MAG e
+   confirmar aspeto do leitor na Samsung com utilizador. Depende dos dispositivos
+   físicos/utilizador; sem thread externa. Suporte real dos embeds antigos pode
+   limitar YouTube/Facebook/Vimeo. Web continua alternativa funcional.
+2. Xiaomi: depende de ligar TV/rede/ADB autorizado. APK em
+   .runtime/tv-build/MediaForgeLab-AndroidTV.apk, privado; instalar1.5 e testar.
+3. Por classificar: aguarda resposta ao pedido anterior de fechar leitor para
+   restart. Última leitura no fecho: IPTVidle, pessoal sem playback/scan e refresh
+   parado. **Idle observado não substitui a confirmação pendente**. Não reiniciar
+   no fim de sessão nem como efeito lateral de guardar o estado.
+4. HealthForgeLab: importação direta aguarda grant API (capacidade api_services
+   vazia no contexto anterior). Alternativa disponível: links/JSON pela web.
+   Não contornar permissões nem abrir pedido duplicado por correio; não há thread
+   de bloqueio nova nesta sessão. Correio Gateway pending vazio, inbox resolvido.
+5. Etiquetas de2/3níveis: proposta apenas; decidir relação com categorias antes
+   de implementar. Não retomar MediaCatalog antiga nem roadmap arquivado.
+
+## Testes e limites de evidência
+
+Fase implementada: collections-tv-browser.cjs PASS em720p/1080p com inset/gap
+removidos, capas3rácios, opções/foco, todas8opções leitor por setas reais,
+AVPlay mock, ecrã inteiro/Voltar e zero streams fornecedor.
+collections-mag-browser.cjs PASS com limites antigos, boot/API/helper falhados,
+script principal bloqueado, teclado/combo, favorito, native mock/Stop e saída.
+collections-mag-http.cjs PASS: readyState, conclusão única, JSON inválido/null,
+erro/timeout e retry403 limitado. collections-es5.cjs PASS: gramática ES5 + rejeição
+explícita de função em bloco. tv-player.cjs PASS: reset/prepare e guarda scoped.
+navigation.cjs PASS (MAG principal) e collections-management-browser.cjs PASS:
+gestão web, menus apenas consulta TV/MAG e mutações indevidas recusadas.
+22 testes Python Coleções/metadados PASS na fase anterior. Não alegar execução
+integral de toda a suite neste fecho. Pacotes Samsung/Android compilados/assinados.
+
+No fecho só estado/documentação e leituras HTTP/Gateway; nenhum teste de stream,
+reinício ou alteração de catálogos. A confirmação humana MAG valida lista/saída,
+não reprodução. Samsung físico valida7capas/menu, não todo o leitor durante vídeo.
+
+## Ficheiros alterados e artefactos
+
+Fase funcional recente: public/tv/collections.{html,css,js}, public/tv/player.js,
+public/tv/index.html, tv/samsung/config.xml, tv/android/AndroidManifest.xml;
+tests/collections-{mag-browser,mag-http,management-browser,tv-browser,es5}.cjs,
+tests/collections_mag_fixture.py, tests/tv-player.cjs e HANDOFF.md.
+Este fecho altera apenas HANDOFF.md e notas/handoff Gateway.
+Pacotes privados em .runtime/tv-build/; fixtures/Chrome temporários encerrados.
+Dados privados e .env não incluídos em commits. Verificar git status antes de retomar.
+
+## Retoma exata — próximo passo
+
+Ler .env/AGENTS/HANDOFF deste workspace, validar REST /api/projects/{id}/context
+com project_id da .env e consultar pending/inbox. Ler notes media.portal.local.current
+e media.collections.current; este snapshot e a confirmação MAG prevalecem sobre
+histórico. Não reimplementar as correções nem pedir teste de cartões/saída já feito.
+
+Primeiro tratar resposta eventual sobre reprodução ou fecho de leitor; na ausência,
+continuar a validação física de um vídeo público curto/silencioso com utilizador.
+Para testar IPTV, garantir todos os outros leitores parados e exclusão única.
+Quando houver confirmação para reiniciar: usar guarda tmp/activate_collections.py
+no workspace gatewayforgelab; depois tmp/verify_unclassified_live.py. Se startup
+exceder espera, verificar o mesmo processo e aguardar; não criar duplicados.
+Só após API devolver categoria automática corretamente marcar backend ativo e
+atualizar continuidade/commit/push. Em seguida instalar Xiaomi quando disponível.
+
+Não existe objetivo automático ativo nem trabalho agendado a continuar após fim
+de sessão. O serviço local permanece no estado em que estava.
+
+---
+Histórico preservado abaixo (as versões e pendências antigas são históricas).
+
 # Media Forge Lab — continuidade
 
 ## Decisão atual do utilizador — 03/11/2026
