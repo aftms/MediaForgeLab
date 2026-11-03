@@ -17,6 +17,8 @@ public final class MainActivity extends Activity {
  private VideoView player;
  private volatile int position;
  private int generation;
+ private volatile String phase="idle";
+ private volatile long openedAt, preparedMs, frameMs;
  private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
  private final Runnable tick = new Runnable() { public void run() {
    if (player != null) position = player.getCurrentPosition();
@@ -52,20 +54,23 @@ public final class MainActivity extends Activity {
    layout.addView(web,new FrameLayout.LayoutParams(-1,-1));setContentView(layout);
    web.loadUrl(BuildConfig.SERVER+"/tv/");web.requestFocus();handler.post(tick);
  }
- private void stopPlayer(){++generation;player.stopPlayback();player.setVisibility(View.GONE);position=0;getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);}
+ private void stopPlayer(){phase="idle";++generation;player.stopPlayback();player.setVisibility(View.GONE);position=0;getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);}
  private final class Bridge {
    @JavascriptInterface public void play(final String url){
     Uri uri=Uri.parse(url);
-    if(!allowed(uri)||!uri.getPath().matches("/media/hls/[a-f0-9]{48}/index\\.m3u8")||uri.getQuery()!=null||uri.getFragment()!=null)return;
-    runOnUiThread(()->{stopPlayer();final int stamp=generation;player.setVisibility(View.VISIBLE);
-     player.setOnPreparedListener(mp->{if(stamp==generation){getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);player.start();}});
-     player.setOnErrorListener((mp,what,extra)->{if(stamp==generation){stopPlayer();js("MagTV.error()");}return true;});
+    phase="requested";
+    if(!allowed(uri)||!uri.getPath().matches("/media/hls/[a-f0-9]{48}/index\\.m3u8")||uri.getQuery()!=null||uri.getFragment()!=null){phase="rejected";runOnUiThread(()->js("MagTV.error()"));return;}
+    runOnUiThread(()->{stopPlayer();final int stamp=generation;phase="preparing";getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);openedAt=android.os.SystemClock.elapsedRealtime();preparedMs=0;frameMs=0;player.setVisibility(View.VISIBLE);
+     player.setOnPreparedListener(mp->{if(stamp==generation){phase="prepared";preparedMs=android.os.SystemClock.elapsedRealtime()-openedAt;getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);player.start();}});
+     player.setOnInfoListener((mp,what,extra)->{if(stamp==generation&&what==android.media.MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START){phase="playing";frameMs=android.os.SystemClock.elapsedRealtime()-openedAt;}return false;});
+     player.setOnErrorListener((mp,what,extra)->{if(stamp==generation){stopPlayer();phase="error";js("MagTV.error()");}return true;});
      player.setOnCompletionListener(mp->{if(stamp==generation)js("MagTV.ended()");});
      player.setVideoURI(uri);web.requestFocus();
     });
    }
    @JavascriptInterface public void stop(){runOnUiThread(()->stopPlayer());}
    @JavascriptInterface public double position(){return position/1000.0;}
+   @JavascriptInterface public String status(){return phase+":"+preparedMs+":"+frameMs;}
    @JavascriptInterface public void exit(){runOnUiThread(()->finish());}
    @JavascriptInterface public void keyboard(){runOnUiThread(()->{
     web.requestFocus();((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(web,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);

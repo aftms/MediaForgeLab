@@ -73,7 +73,8 @@ class MediaManager:
         with self.lock:
             s = self.session
             return dict(active=bool(s), device=s.get('device', 'MAG' if s['mode']=='mag' else 'Navegador') if s else None,
-                        state=s['state'] if s else 'idle', delivery=dict(self.delivery))
+                        state=s['state'] if s else 'idle', delivery=dict(self.delivery),
+                        startup_ms=dict(s.get('startup_ms',{})) if s else {})
 
     def _get(self, token, ip=None, touch=True):
         s = self.session
@@ -111,7 +112,7 @@ class MediaManager:
                 self._remember_request(owner, ip, request_id)
             token = secrets.token_hex(24)
             s = dict(token=token, owner=owner, ip=ip, mode=mode, id=identifier, kind=item['kind'], request_id=request_id,
-                     seen=time.monotonic(), state='ready' if mode=='mag' else 'preparing',
+                     seen=time.monotonic(), started=time.monotonic(), startup_ms={}, state='ready' if mode=='mag' else 'preparing',
                      url=self.app.catalog.play_url(identifier), position=position if item['kind']!='tv' else 0,
                      duration=0, audio=[], compatibility=bool(data.get('compatibility')), audio_index=audio_index)
             if mode == 'web':
@@ -167,6 +168,7 @@ class MediaManager:
         try:
             raw = 'http://127.0.0.1:%s/media/raw/%s' % (self.app.config['loopback_port'], s['token'])
             fast_tv = s['kind']=='tv' and s.get('device') in ('Samsung TV','Android TV') and not s['compatibility']
+            android_live = fast_tv and s.get('device')=='Android TV'
             info = {'streams':[], 'format':{}}
             if not fast_tv:
                 with self.lock:
@@ -196,12 +198,17 @@ class MediaManager:
                 s['audio'] = [dict(index=i,language=a.get('tags',{}).get('language',''),codec=a.get('codec_name','')) for i,a in enumerate(audio)]
                 ai = max(0, min(len(audio)-1, s['audio_index']))
                 command = [self.ffmpeg,'-hide_banner','-loglevel','quiet','-nostdin','-y','-rw_timeout','15000000']
+                # Android live input needs only enough analysis to identify its tracks.
+                # Keep keyframe-aligned segments and original video; other clients
+                # and compatibility mode retain the established pipeline.
+                if android_live:
+                    command += ['-analyzeduration','1000000','-probesize','1500000']
                 if s['position']:
                     command += ['-ss',str(s['position'])]
                 command += ['-readrate','1','-readrate_initial_burst','12','-i',raw,'-map','0:v:0','-map','0:a:%d?'%ai,'-sn','-dn']
                 command += ['-c:v','copy'] if copy_video else ['-c:v','libx264','-preset','veryfast','-crf','22','-pix_fmt','yuv420p','-g','48','-sc_threshold','0']
                 command += ['-c:a','copy'] if (fast_tv and s.get('device')=='Samsung TV') or (audio and audio[ai].get('codec_name')=='aac') else ['-c:a','aac','-b:a','160k','-ac','2']
-                command += ['-f','hls','-hls_time','4','-hls_list_size','10','-hls_delete_threshold','2',
+                command += ['-f','hls','-hls_time','2' if android_live else '4','-hls_list_size','10','-hls_delete_threshold','2',
                     '-hls_flags','delete_segments+temp_file','-hls_segment_filename',str(folder/'s%06d.ts'),str(folder/'index.m3u8')]
                 s['video_mode'] = 'remux' if copy_video else 'transcode'
                 s['process'] = subprocess.Popen(command, stdout=subprocess.DEVNULL, **process_options())
@@ -211,6 +218,7 @@ class MediaManager:
                         return
                     if (folder/'index.m3u8').exists():
                         s['state']='ready'
+                        s['startup_ms']['playlist_ready']=round((time.monotonic()-s['started'])*1000)
                         return
                     if s['process'].poll() is not None:
                         raise ValueError('media')
@@ -241,7 +249,9 @@ class MediaManager:
                 headers['Range']=byte_range
             opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
             try:
+                s['startup_ms'].setdefault('upstream_open',round((time.monotonic()-s['started'])*1000))
                 response=opener.open(urllib.request.Request(url,headers=headers,method='HEAD' if handler.command=='HEAD' else 'GET'),timeout=10)
+                s['startup_ms'].setdefault('upstream_headers',round((time.monotonic()-s['started'])*1000))
             except urllib.error.HTTPError as error:
                 handler.respond(502,{'error':'O fornecedor não disponibilizou este conteúdo.'})
                 error.close()
@@ -265,9 +275,12 @@ class MediaManager:
                         # FFmpeg traffic is not a browser heartbeat. A crashed
                         # browser must release even a continuously running TV feed.
                         self._get(token, touch=s['mode']=='mag')
-                    chunk=response.read(64*1024)
+                    # Forward available bytes immediately. read(n) waits to fill n and
+                    # can add seconds of latency to sparse/live upstream packets.
+                    chunk=response.read1(64*1024)
                     if not chunk:
                         break
+                    s['startup_ms'].setdefault('first_bytes',round((time.monotonic()-s['started'])*1000))
                     handler.wfile.write(chunk)
         finally:
             self.upstream_lock.release()

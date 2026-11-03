@@ -11,6 +11,7 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.request
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from server import PortalServer
@@ -98,6 +99,41 @@ class PipelineTests(unittest.TestCase):
             finally:
                 app.shutdown();app.server_close();thread.join(2)
                 source.shutdown();source.server_close();source_thread.join(2)
+
+
+class StreamingProxyTests(unittest.TestCase):
+    def test_first_bytes_reach_player_before_next_upstream_burst(self):
+        finish=threading.Event();delivered=threading.Event();received=[]
+        class Source(BaseHTTPRequestHandler):
+            def log_message(self,*args):pass
+            def do_GET(self):
+                self.send_response(200);self.send_header('Content-Length','2048');self.end_headers()
+                self.wfile.write(b'a'*1024);self.wfile.flush()
+                finish.wait(5)
+                try:self.wfile.write(b'b'*1024)
+                except OSError:pass
+        with tempfile.TemporaryDirectory() as temporary:
+            source=ThreadingHTTPServer(('127.0.0.1',0),Source)
+            source_thread=threading.Thread(target=source.serve_forever,daemon=True);source_thread.start()
+            cfg=dict(host='127.0.0.1',port=0,network=ipaddress.ip_network('127.0.0.0/24'),runtime_path=temporary,switch_delay_ms=1000,player_solution='ffmpeg')
+            app=PortalServer(cfg,[dict(id='1',name='Synthetic live',group='PT',url='http://127.0.0.1:%s/live'%source.server_port)],{},'test')
+            thread=threading.Thread(target=app.serve_forever,daemon=True);thread.start()
+            session=app.media.start(dict(id='1',owner='test-streaming-owner'),'127.0.0.1','mag')
+            def read():
+                opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                with opener.open('http://127.0.0.1:%s/media/raw/%s'%(app.server_port,session['token']),timeout=6) as response:
+                    received.append(response.read(1024));delivered.set()
+                    received.append(response.read())
+            reader=threading.Thread(target=read,daemon=True);reader.start()
+            try:
+                self.assertTrue(delivered.wait(2),'Proxy waited for more upstream data instead of forwarding first bytes')
+                self.assertEqual(received[0],b'a'*1024)
+            finally:
+                finish.set();reader.join(7)
+                app.media.release(session,'127.0.0.1')
+                app.shutdown();app.server_close();thread.join(2)
+                source.shutdown();source.server_close();source_thread.join(2)
+            self.assertEqual(b''.join(received),b'a'*1024+b'b'*1024)
 
 
 if __name__=='__main__':unittest.main()

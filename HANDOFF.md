@@ -51,3 +51,23 @@ categorias permite escolher outro país. A pesquisa respeita o país selecionado
 Regressão MAG e compatibilidade ES5 passaram; Chrome verificou PT inicial,
 ES selecionável, entrada/saída das secções e favoritos sem PT. Sem streams.
 Samsung 1.0.8 instalada; Xiaomi recarrega a interface partilhada.
+
+## Demora nos canais Xiaomi — APK 1.2
+
+Fase concluída: proxy sem espera por blocos completos, preparação Android live
+com análise 1 s/1,5 MB e HLS alvo 2 s; vídeo original, keyframes respeitados.
+Diagnóstico de tempos sem segredos; keep-screen-on durante preparação nativa.
+62 testes Python e regressões MAG/TV passaram; APK release 1.2 assinado,
+instalado e aberto. Debug WebView desligado. Serviço atualizado e ativo.
+
+Causa observada depende da variante: RTP1 HD 224/VODAFONE ~15–16 s e segmento
+local com imagem preta; RTP1 HD 500/GENERALISTAS ~4,2–4,8 s e imagem normal
+1080p no segmento. Parâmetros antigos no 500: ~5 s. Não afirmar melhoria de
+15 para 4 s no mesmo stream. Ver TV.md para método/limites. Seleção automática
+não alterada; categoria GENERALISTAS + HD permite escolher a alternativa.
+
+Todos os testes reais sequenciais terminaram; lease livre, conta utilizável.
+Próximo passo: utilizador confirmar som/imagem e tempo de abertura nesta versão
+na Xiaomi. A fonte preta depende do fornecedor; sem pedido por correio, sem
+thread associada. Não iniciar nova reprodução sem assegurar ausência de outros
+leitores. Filmes/séries físicos e integração do legado continuam pendentes.

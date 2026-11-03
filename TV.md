@@ -126,3 +126,44 @@ são mantidos para atualizar a instalação existente e preservar os dados.
 A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
 BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
 seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.
+
+## Arranque Android TV — APK 1.2 (03/11/2026)
+
+O proxy encaminha os bytes disponíveis sem esperar por blocos de 64 KiB.
+Nos canais Android, análise inicial limitada a 1 s/1,5 MB e segmentos HLS
+com alvo de 2 s, sempre alinhados com keyframes. O vídeo continua copiado;
+áudio AAC, ligação única e limpeza ao parar mantêm-se. Samsung, filmes,
+episódios e modo Compatibilidade conservam os parâmetros anteriores.
+O tempo real de cada segmento depende dos keyframes que o fornecedor envia.
+Se uma emissão tiver faixas que só aparecem mais tarde, usar Compatibilidade,
+que mantém a análise completa. Não existe promessa de arranque instantâneo.
+
+A app mantém o ecrã acordado já durante a preparação, assinala URLs recusados
+e disponibiliza apenas estado/tempos do leitor para diagnóstico. O serviço
+expõe tempos de abertura, primeiros bytes e playlist em /api/media/status,
+sem URLs ou credenciais. APK final assinado, instalado e aberto na Xiaomi;
+depuração WebView desativada na versão instalada.
+
+Medições sequenciais autorizadas na MiTV-MOOQ1, sem outros leitores:
+
+- RTP 1 HD, ID 224, categoria PT| VODAFONE: cerca de 15–16 s até relógio
+  nativo >1 s, dos quais ~12 s na preparação. Reduzir buffers não resolveu.
+  Um fotograma descodificado do segmento local estava inteiramente preto;
+  não era apenas a limitação de captura da camada de vídeo Android.
+- RTP 1 HD, ID 500, categoria PT| GENERALISTAS: 4,2–4,8 s até relógio >1 s;
+  playlist pronta em ~1,2–1,3 s. O segmento local continha imagem normal
+  RTP 1, H.264 1080p. Comparação com os parâmetros anteriores no mesmo canal:
+  5,0 s. Amostras pequenas, sujeitas a variações do fornecedor/rede.
+- Estes tempos incluem pelo menos 1 s de reprodução; não são medições óticas
+  do primeiro fotograma no ecrã da TV. Som/imagem física continuam a exigir
+  confirmação humana. Não interpretar 15→4 s como ganho no mesmo stream:
+  a diferença principal foi entre duas versões do fornecedor.
+
+A seleção automática de variantes não foi alterada a partir desta amostra.
+Para escolher a alternativa: Portugal → categoria PT| GENERALISTAS → HD →
+pesquisar RTP 1. Qualidade «Todas» mostra também as variantes repetidas.
+Favoritos e organização mantêm-se. Nenhuma transmissão ficou ativa após os testes.
+
+Validação final: 62 testes Python, incluindo proxy com emissor em duas rajadas,
+FFmpeg real sobre vídeo sintético, exclusão entre dispositivos, falha de origem,
+remux/transcodificação e limpeza; regressões JavaScript MAG/TV passaram.
