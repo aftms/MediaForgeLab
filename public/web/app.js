@@ -1,6 +1,6 @@
 /* Modern browser UI; shares all catalog/favorite/progress/refresh APIs with MAG. */
 (()=>{'use strict';
-const WEB_VERSION='16';
+const WEB_VERSION='17';
 const $=id=>document.getElementById(id),video=$('video'),owner=crypto.randomUUID?crypto.randomUUID():('web-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 const labels={tv:'TV em direto',movie:'Filmes',series:'Séries',favorites:'Favoritos',continue:'Continuar a ver'};
 let action='',section='tv',state={kind:'tv',view:'items',quality:'auto',country:'PT',origin:'',group:'',q:'',favorites:'0',language:''},offset=0,total=0,history=[],rows=[],sequence=0,filterSeq=0,searchTimer,pollTimer,installPrompt;
@@ -96,7 +96,7 @@ function schedulePauseRelease(){
 }
 async function saveProgress(){if(starting||!session||!playingItem||playingItem.kind==='tv')return;const position=Math.max(0,Math.floor(basePosition+(video.currentTime||0)));try{await api('/api/progress',{id:playingItem.id,position,duration:Math.floor(duration),completed:duration>0&&position>=duration-8});}catch{/* Keep playback running if saving fails. */}}
 function detach(){cancelPauseRelease();trackControls.prepare();video.pause();if(hls){hls.destroy();hls=null;}video.removeAttribute('src');video.load();}
-async function stop(){cancelPauseRelease();pausedPosition=null;++playerGeneration;clearTimeout(pollTimer);await saveProgress();detach();const previous=session;session=null;starting=false;trackControls.reset();if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}}
+async function stop(){cancelPauseRelease();if(document.pictureInPictureElement===video){try{await document.exitPictureInPicture();}catch{}}pausedPosition=null;++playerGeneration;clearTimeout(pollTimer);await saveProgress();detach();const previous=session;session=null;starting=false;trackControls.reset();if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}}
 async function play(item,position){if(starting)return;await stop();playingItem=item;compatibility=false;audioIndex=0;subtitleIndex=-1;trackControls.reset();$('player').showModal();text('play-title',item.name);text('play-kind',item.kind==='tv'?'EM DIRETO':item.kind==='episode'?'EPISÓDIO':'FILME');text('plot',item.plot);text('play-favorite',item.favorite?'★ Remover favorito':'☆ Guardar favorito');$('vod-seek').hidden=item.kind==='tv';$('rewind').hidden=$('forward').hidden=item.kind==='tv';await start(position);}
 let hlsLoader=null;
 async function ensureHls(){
@@ -137,6 +137,11 @@ $('country').onchange=()=>{state.country=$('country').value;state.group='';state
 $('back').onclick=()=>{const saved=history.pop();if(saved){state=saved.state;offset=Math.floor(saved.offset/pageSize())*pageSize();load();}};async function turnPage(direction){offset=Math.max(0,offset+direction*pageSize());await load();document.querySelector('.list-heading').scrollIntoView({block:'start'});}
 $('prev').onclick=()=>turnPage(-1);$('next').onclick=()=>turnPage(1);
 $('refresh').onclick=async()=>{try{await api('/api/refresh',{});refreshStatus();}catch(e){message(e);}};
+/* Native PiP keeps the same media element and household playback lease. */
+function updatePipButton(){const supported=!!document.pictureInPictureEnabled&&typeof video.requestPictureInPicture==='function',active=document.pictureInPictureElement===video;const button=$('player-pip');button.hidden=!supported;button.disabled=!supported||(!active&&(video.readyState<2||!video.videoWidth));button.setAttribute('aria-pressed',String(active));button.setAttribute('aria-label',active?'Repor vídeo na página':'Destacar vídeo sempre à frente');button.title=active?'Repor vídeo na página':'Destacar vídeo sempre à frente';text('player-pip-label',active?'Repor':'Destacar');}
+$('player-pip').onclick=async()=>{const serial=playerGeneration;$('player-pip').disabled=true;try{if(document.pictureInPictureElement===video)await document.exitPictureInPicture();else{if(document.fullscreenElement)await document.exitFullscreen();await video.requestPictureInPicture();if(serial!==playerGeneration&&document.pictureInPictureElement===video)await document.exitPictureInPicture();}}catch{if(serial===playerGeneration)text('play-status','Não foi possível destacar o vídeo. Tente novamente depois de começar a reprodução.');}finally{updatePipButton();}};
+for(const event of ['loadeddata','emptied','enterpictureinpicture','leavepictureinpicture'])video.addEventListener(event,updatePipButton);
+updatePipButton();
 /* Window sizing changes presentation only; the same video/HLS session continues. */
 let lastFullscreenChange=0;
 function resizePlayer(delta){const box=$('player');if(document.fullscreenElement)return;const max=innerWidth*.96,min=Math.min(420,max);box.style.width=Math.max(min,Math.min(max,box.getBoundingClientRect().width+delta))+'px';box.style.height='auto';}

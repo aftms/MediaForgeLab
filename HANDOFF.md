@@ -470,3 +470,23 @@ JS syntax e diff check PASS. Sem streams abertos nem restart backend. Samsung
 1.0.15 assinada/instalada após verificar ausência de reprodução Samsung. Xiaomi
 hospedada recebe r15; MAG rootr25 mantém-se, Pessoalv6. Web Ctrl+F5 parav16.
 Próximo: aceitar apresentação discreta; testes físicos anteriores continuam pendentes.
+
+
+## Janela sempre à frente — webv17 (2026-11-03)
+
+Pedido Windows: destacar vídeo sobre outras apps. Botão Destacar/Repor usa
+Picture-in-Picture nativo Chrome no mesmo elemento/sessão; deteta suporte,
+aguarda loadeddata, atualiza enter/leave, fecha PiP explicitamente ao fechar
+leitor. Não copia vídeo nem abre stream adicional. CSS pequeno no cabeçalho.
+Teste real Chrome sintético web-pip-browser.cjs PASS: enter/exit, avanço do
+relógio sem novo start/stop, destaque durante pausa não retoma e fecho sai PiP.
+web-player regressão PASS. Posição física always-on-top/mover/redimensionar
+entre apps Windows requer confirmação utilizador. Sem restart/backend/fornecedor.
+
+Durante teste o utilizador ouviu tom semelhante a beep: vídeo sintético tinha
+sine440Hz e Chrome não estava mudo. Assumida responsabilidade, servidor e
+browser isolados imediatamente fechados. Repetição concluída com --mute-audio
+E video.muted=true. TODOS os testes de vídeo futuros devem usar ambas as
+proteções; não emitir áudio sintético. Nunca fechar browser pessoal do utilizador.
+Próximo: Ctrl+F5 webv17, reproduzir, botão Destacar; manter separador aberto.
+TV/MAG/Pessoal não alterados nesta funcionalidade específica do Windows web.

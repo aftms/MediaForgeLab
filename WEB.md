@@ -369,3 +369,17 @@ não fecha o diálogo através de um evento cancel simultâneo.
 Áudio e legendas fica fechado por defeito, incluindo ao abrir outro conteúdo.
 Um botão pequeno abre os seletores compactos, sem caixa colorida ou moldura.
 O mesmo estilo aplica-se às TVs e Pessoal; o foco do comando continua visível.
+
+
+## Vídeo flutuante no Windows — web v17
+
+No cabeçalho do leitor, **Destacar** abre a janela Imagem na imagem do Chrome,
+que pode ser movida/redimensionada e fica sobre outras aplicações. **Repor**
+regressa à página. Mantém o mesmo vídeo e a mesma ligação; vídeo pausado fica
+pausado. Fechar o leitor da aplicação fecha também a janela flutuante. Manter
+o separador aberto; o botão aparece quando a API é suportada e ativa quando
+há vídeo preparado. Teste Chrome confirmou entrada/saída e continuidade;
+posição da janela sobre outras apps deve ser confirmada no Windows físico.
+
+Testes de vídeo sintético devem iniciar o Chrome com **--mute-audio** e definir
+video.muted=true antes da reprodução. Os tons de teste não devem ser audíveis.
