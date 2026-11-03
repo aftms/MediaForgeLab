@@ -1,0 +1,11 @@
+{
+  "host": "192.168.1.240",
+  "port": 8090,
+  "allowed_network": "192.168.1.0/24",
+  "playlist": "C:/Users/Utilizador/OneDrive/Comum/iptv/canais-completos.m3u",
+  "movies_playlist": "C:/Users/Utilizador/OneDrive/Comum/iptv/filmes-completos.m3u",
+  "provider_metadata": true,
+  "export_dir": "D:/Workspace/share/IPTV",
+  "switch_delay_ms": 1000,
+  "player_solution": "ffmpeg"
+}

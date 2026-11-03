@@ -1,0 +1,113 @@
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:Arial,Helvetica,sans-serif; color:#e6ecee; }
+#menu { position:absolute; top:0; left:0; width:100%; height:100%; background:#101d29; }
+#header { position:absolute; top:5%; left:4%; right:4%; height:12%; border-bottom:1px solid #2a3942; }
+#brand { font-size:135%; font-weight:bold; letter-spacing:0.3px; color:#f1f5f7; }
+#brand span { color:#7ad4c5; }
+#brand-logo { width:1.65em; height:1.65em; vertical-align:middle; margin-right:0.45em; }
+#device { position:absolute; right:0; bottom:15%; color:#a6bbc6; font-size:55%; letter-spacing:1px; }
+#library-counts { font-size:56%; color:#b6cbd3; margin-top:1%; letter-spacing:0.3px; }
+button { font-family:Arial,Helvetica,sans-serif; cursor:pointer; }
+#navigation { position:absolute; top:23%; left:4%; width:17%; height:35%; }
+.nav-label { font-size:52%; letter-spacing:2px; color:#aac4ce; margin-bottom:8%; }
+.nav-tab { display:block; position:relative; width:100%; height:22%; padding:0 2% 0 30%; margin:0 0 3% 0; border:1px solid #22333e; border-left:3px solid #22333e; background:#15252f; text-align:left; font-size:85%; color:#e5f0f3; }
+.nav-tab img { position:absolute; left:7%; top:20%; width:19%; height:auto; }
+.nav-tab small { display:block; margin-top:3%; font-size:52%; font-weight:normal; color:#b4c9d2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-tab.active { background:#23434a; border-left-color:#7ad4c5; color:#f5e7c9; }
+.nav-tab.active small { color:#b8c9cd; }
+#group { position:absolute; top:22.5%; left:24%; width:45%; height:4%; color:#f2f5f4; font-size:82%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#counter { position:absolute; left:24%; top:27%; width:45%; color:#b0c3cc; font-size:52%; letter-spacing:0.3px; }
+#list { position:absolute; top:32%; left:24%; width:45%; height:51%; }
+.row { position:relative; height:9%; margin-bottom:0.6%; padding:0 2%; overflow:hidden; white-space:nowrap; background:#152630; border-left:3px solid #152630; cursor:pointer; }
+.row .number { display:inline-block; width:7%; color:#a5bbc7; font-size:58%; vertical-align:middle; }
+.row-icon { display:inline-block; width:1.1em; height:1.1em; margin-right:3%; vertical-align:middle; }
+.row .name { display:inline-block; max-width:80%; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; font-size:78%; }
+.row.directory-row .name { max-width:61%; }
+.row-count { position:absolute; right:3%; top:0; font-size:62%; color:#abc6cf; }
+.row.selected { background:#285057; border-left-color:#e5c28b; color:#fff3d9; }
+.row.selected .number, .row.selected .row-count { color:#d7bf91; }
+#aside { position:absolute; top:22.5%; left:73%; right:4%; height:60%; }
+#art-panel { position:absolute; top:0; width:100%; height:26%; background:#152a36; overflow:hidden; border:1px solid #2b414c; }
+#section-art { position:absolute; width:100%; height:auto; top:0; left:0; }
+#art-label { position:absolute; bottom:10%; right:6%; color:#cbb78f; font-size:48%; letter-spacing:2px; }
+#selected-name { position:absolute; top:30%; width:100%; font-size:100%; line-height:1.08; max-height:3.24em; overflow:hidden; }
+#selected-group { position:absolute; top:51%; width:100%; color:#b1ccd4; font-size:60%; max-height:9%; overflow:hidden; }
+#item-quality { position:absolute; top:61%; color:#e5c28b; font-size:55%; }
+#notice { position:absolute; top:68%; color:#c5d2d6; font-size:58%; }
+#epg-title { position:absolute; top:78%; color:#e5c28b; font-size:54%; letter-spacing:1px; }
+#epg { position:absolute; top:84%; width:100%; font-size:56%; line-height:1.5; white-space:pre-line; height:17%; overflow:hidden; color:#c0d1d8; }
+#actions { position:absolute; top:65%; left:4%; width:17%; height:18%; }
+#actions button { display:block; background-color:transparent; background-repeat:no-repeat; background-position:5% center; background-size:1.25em 1.25em; color:#c0d3dc; border:0; border-top:1px solid #263943; width:100%; height:25%; text-align:left; padding:0 0 0 22%; font-size:55%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#search-button { background-image:url('/assets/search.png?v=10'); }
+#favorite-button { background-image:url('/assets/all.png?v=10'); }
+#quality-button { background-image:url('/assets/quality.png?v=10'); }
+#options-button { background-image:url('/assets/options.png?v=10'); }
+#status { position:absolute; top:84%; left:24%; width:45%; color:#a6beca; font-size:48%; line-height:1.3; }
+#footer { position:absolute; bottom:5.5%; left:4%; right:4%; font-size:60%; border-top:1px solid #2a3942; padding-top:1.3%; color:#b6c7ce; }
+#footnote { position:absolute; bottom:2.4%; left:4%; right:4%; color:#a4bdcb; font-size:48%; }
+.red { color:#ce8286; } .green { color:#94bd9e; } .yellow { color:#e5c28b; } .blue { color:#88adc8; }
+#osd { display:none; position:absolute; left:5%; right:5%; bottom:7%; background:#152630; padding:2%; border-left:4px solid #e5c28b; }
+#osd-title { font-size:110%; color:#f0e2c6; }
+#osd-hint { font-size:65%; padding-top:1%; color:#a2b9c3; }
+#osd-time { font-size:65%; color:#e5c28b; padding-top:1%; }
+#osd-progress { display:none; height:5px; margin-top:1%; background:#285057; }
+#osd-progress-fill { width:0; height:100%; background:#e5c28b; }
+.dialog { display:none; position:absolute; top:7%; bottom:7%; left:8%; right:8%; padding:3%; background:#192c37; border:1px solid #58707a; border-top:3px solid #7ad4c5; font-size:80%; line-height:1.4; overflow:hidden; }
+.dialog h2 { margin:0 0 2% 0; font-size:120%; color:#f0dfbb; font-weight:bold; }
+.dialog p { font-size:75%; clear:both; padding-top:2%; color:#a0b5be; }
+#search-query { background:#101d29; padding:2%; min-height:1.5em; margin-bottom:3%; color:#f0e2c6; }
+#search-panel { top:22.5%; bottom:auto; left:72%; right:3%; padding:1.3%; font-size:70%; }
+#search-panel h2 { font-size:105%; margin-bottom:5%; }
+#search-panel p { font-size:70%; line-height:1.5; margin:3% 0 0; padding-top:3%; }
+#search-query { padding:5%; margin-bottom:5%; height:2em; min-height:0; overflow:hidden; word-wrap:break-word; font-size:85%; }
+.search-key { display:inline-block; width:15%; margin:0 1.5% 2% 0; text-align:center; padding:1% 0; background:#283f4a; font-size:85%; line-height:1.2; cursor:pointer; }
+.search-key.search-action { width:31.5%; font-size:60%; padding:2% 0; }
+.search-key.selected { background:#e5c28b; color:#17232a; }
+#picker { left:17%; right:17%; top:12%; bottom:12%; padding:2%; background:#142630; }
+#picker-heading-icon { position:absolute; left:4%; top:5%; width:1.8em; height:1.8em; }
+#picker h2 { position:absolute; left:12%; top:4%; margin:0; font-size:120%; }
+#picker-subtitle { position:absolute; left:12%; top:11%; font-size:65%; color:#b9c9d8; }
+#picker-list { position:absolute; left:4%; right:4%; top:20%; height:59%; }
+.picker-row { position:relative; height:11%; margin-bottom:2px; padding:0 3% 0 11%; border-left:3px solid #213843; background:#1b303b; font-size:90%; cursor:pointer; }
+.picker-icon { position:absolute; left:3%; top:20%; height:60%; width:auto; }
+.picker-label { position:absolute; left:11%; top:18%; max-width:70%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.picker-badge { position:absolute; right:3%; top:24%; font-size:65%; color:#91adb8; }
+.picker-row.selected { background:#285057; border-left-color:#e5c28b; color:#fff3d9; }
+.picker-row.selected .picker-badge { color:#e5c28b; }
+#picker-description { position:absolute; left:5%; right:5%; top:81%; max-height:9%; overflow:hidden; font-size:70%; line-height:1.4; color:#b3c6ce; }
+#picker p { position:absolute; left:5%; bottom:3%; padding:0; margin:0; font-size:65%; color:#b3c6d0; }
+#info-text { white-space:pre-line; font-size:90%; max-height:80%; overflow:auto; }
+#update-button { position:absolute; right:4%; top:5%; padding:0.7% 1.3% 0.7% 3.2%; background:#172a35 url('/assets/refresh.png?v=10') no-repeat 7% center; background-size:1.3em; color:#b6c9d1; border:1px solid #314650; font-size:55%; }
+#update-status { position:absolute; right:4%; top:11%; width:48%; text-align:right; color:#abc3cd; font-size:46%; line-height:1.4; max-height:4%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+#source-input { width:95%; padding:2%; font-size:90%; background:#101d29; color:#fff; border:1px solid #58707a; }
+#source-save { padding:1% 3%; font-size:90%; color:#17232a; background:#e5c28b; border:0; }
+
+/* Media Forge Lab: stronger TV typography and restrained section colours. */
+#menu { border-top:3px solid #467f82; }
+#brand { font-size:125%; }
+#library-counts { margin-top:0.7%; }
+.nav-tab, #group, #selected-name, .row .name, .picker-label, #osd-title { font-weight:bold; }
+#group { color:#d3eee9; }
+#tab-movie.active { background:#413a2d; border-left-color:#e5c28b; }
+#tab-series.active { background:#35364e; border-left-color:#b9ace5; }
+#tab-all.active { background:#413a2d; border-left-color:#efca83; }
+#actions button, #update-button, #epg-title, #item-quality, #art-label { font-weight:bold; }
+#actions button { background-size:1.5em 1.5em; }
+#update-button { background-color:#203d43; color:#d0eee8; border-color:#477674; }
+#art-label { color:#f0dfbb; }
+.row.selected { border-left-width:4px; }
+.row.selected .name { color:#fff7e5; }
+#picker-heading-icon { width:2em; height:2em; }
+.picker-icon { top:15%; height:70%; }
+#osd-progress { height:6px; }
+#osd-progress-fill { background:#7ad4c5; }
+
+#favorite-tabs { display:none; position:absolute; top:27%; left:24%; width:45%; height:4.5%; white-space:nowrap; }
+.favorite-tab { display:inline-block; width:32%; height:100%; margin-right:1%; padding:0; background:#152630; color:#bdcdd5; border:1px solid #304752; font-size:58%; font-weight:bold; }
+.favorite-tab img { width:1em; height:1em; margin-right:0.5em; vertical-align:middle; }
+.favorite-tab.active { background:#23434a; color:#f5e7c9; border-bottom:2px solid #7ad4c5; }
+.favorite-tab.focused { background:#37575c; border:2px solid #e5c28b; }
+.favorites-view #counter { top:32%; }
+.favorites-view #list { top:36%; height:47%; }
+
+/* Remote focus is distinct from the currently open section. */
+#navigation .nav-tab.remote-focus, #actions button.remote-focus { outline:2px solid #e5c28b; outline-offset:1px; background-color:#37575c; color:#fff3d9; }

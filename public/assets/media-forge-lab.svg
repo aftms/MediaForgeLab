@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Media Forge Lab">
+<rect width="512" height="512" rx="100" fill="#101d29"/>
+<rect x="108" y="124" width="232" height="176" rx="20" fill="#183b42" stroke="#7ad4c5" stroke-width="16"/>
+<rect x="167" y="191" width="234" height="178" rx="21" fill="#152935" stroke="#e5f0f3" stroke-width="14"/>
+<path d="M252 226v108l86-54z" fill="#e5c28b"/>
+</svg>
