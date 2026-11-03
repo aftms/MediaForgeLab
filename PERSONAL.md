@@ -79,7 +79,10 @@ pesquisa, largura móvel e navegação simulada de comando.
 
 Os testes sintéticos não equivalem à reprodução física MAG/Samsung/Xiaomi.
 A autorização, indexação piloto e fotografias OneDrive reais já foram verificadas;
-a reprodução de vídeo com imagem/som e os dispositivos físicos continuam pendentes.
+o MP4 piloto também foi descodificado no Chrome até ao fim, com arranque em cerca
+de 5 segundos e sem recompressão. Som audível e dispositivos físicos continuam
+por confirmar. A página Pessoal v2 prefere HLS.js/MSE quando disponível, mantendo
+HLS nativo como alternativa para navegadores sem MSE.
 Dependem ainda da conta, codecs, rede, firmware e capacidade do PC. MAG tem saída
 até 1080p. HEIC/RAW e outros formatos de imagem usam miniatura do OneDrive quando
 não são diretamente convertíveis; não se garante apresentação do original em

@@ -306,3 +306,25 @@ sido registado pelo leitor; não reposto sem evidência do valor anterior.
 
 Próximo: aceitação das fotos pelo utilizador; vídeo com imagem/som e reprodução
 nas TVs/MAG físicos ainda por validar. Sem bloqueio da fotografia reportada.
+
+## MP4 pessoal no Chrome — Pessoal v2 (2026-11-03)
+
+Reprodução real do MP4 piloto reproduziu o problema: servidor prepara em poucos
+segundos, Chrome declara canPlayType HLS=maybe mas o leitor nativo emite error4
+logo após loadedmetadata/playing; currentTime fica0. Interface ignorava onerror e
+continuava a mostrar formato adaptado. Correção: HLS.js/MSE já incluído passa a
+ter prioridade, fallback HLS nativo se MSE indisponível, erros explícitos e guardas
+contra callbacks depois de fechar/cancelar. JS ES5, sem alterar adaptadores nativos
+MAG/Samsung/Android. Página/JS Pessoal v2; ativa sem restart/backend ou reinstalar
+TVs, pois esta correção aplica-se ao leitor de navegador.
+
+Teste real Chrome isolado com clique de rato: primeiro avanço de vídeo cerca de
+4,5s após escolher; 848x478, readyState4, currentTime avançou até17,6s e evento ended
+sem erro (duração17,8s). Pipeline remux, sem recompressão; sem captura/exportação de
+conteúdo pessoal nem streams IPTV. Ligação pessoal idle no fim; o vídeo pode agora
+estar marcado concluído por ter chegado ao fim no teste. Som audível não verificado.
+Novo teste JS cobre prioridade MSE mesmo com native=maybe, fallback, erro explícito,
+cancelamento e manifest tardio. Regressões web-player e tv-player passaram.
+
+Próximo: utilizador Ctrl+F5 na página Pessoal (v2), abrir o MP4 e confirmar imagem/
+som. Aceitação nas TVs/MAG continua pendente; sem bloqueio conhecido no Chrome.
