@@ -91,8 +91,13 @@ class HttpTests(unittest.TestCase):
             connection.request('GET','/api/health');response=connection.getresponse();response.read()
             self.assertEqual(response.status,200);self.assertIs(connection.sock,transport)
             connection.request('GET','/api/health',body=b'unread')
-            response=connection.getresponse();response.read()
-            self.assertEqual(response.getheader('Connection'),'close')
+            try:
+                response=connection.getresponse();response.read()
+                self.assertEqual(response.getheader('Connection'),'close')
+            except (ConnectionResetError,http.client.RemoteDisconnected):
+                # Windows may send RST when closing with an unread request body.
+                # Either outcome closes the unsafe connection instead of reusing it.
+                pass
         finally:connection.close()
 
     def fetch(self, path, headers=None, method='GET', body=None):

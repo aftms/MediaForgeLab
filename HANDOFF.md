@@ -93,3 +93,24 @@ Testes reais autorizados terminados; lease livre. Utilizador pode voltar a
 reproduzir. Próximo passo: Ctrl+F5 e confirmar a experiência no navegador habitual.
 Sem bloqueios desta fase; pendentes anteriores de validação física TV/legado
 mantêm-se. Não abrir outras transmissões usando a autorização já concluída.
+
+## Filtro por origem — concluído
+
+Web v9, TV r9, MAG r21; Samsung 1.0.9 instalada. Backend partilhado calcula
+origin (VO/MEO/NOS/VIP/PT/OTHER); endpoint /api/catalog?view=origins&kind=tv
+enumera antes de deduplicar. origin filtra antes de Auto e combina com pesquisa,
+país/categoria/qualidade/favoritos. PT atual: MEO 223, PT 179, VIP 155, VO 120,
+não indicada 99 entradas brutas. Sem remoção nem exclusão automática de VO.
+MAG em Opções → Origem dos canais; web/TV no seletor superior. Filmes/séries
+sem filtro; ao voltar a TV todas as origens. Identificação vem dos rótulos do
+catálogo, não de análise técnica da origem do stream.
+
+66 testes Python e regressões JS passaram. Chrome verificou seleção/pesquisa,
+reset e visibilidade/encaixe web390px/TV1280×720. Corrigida instabilidade de dois
+testes de rejeição: Windows pode encerrar com RST ao recusar corpo não lido;
+a ausência de execução da ação continua verificada. Nenhuma alteração nesses
+controlos de autorização em produção. Hashes de dados privados preservados.
+
+Próximo passo: utilizador reabrir Xiaomi/Samsung, Ctrl+F5 na web ou Restart portal
+na MAG e escolher origem. Sem bloqueios. Não foram iniciadas transmissões nem
+alterados favoritos. Pendentes anteriores de validação física/legado mantêm-se.

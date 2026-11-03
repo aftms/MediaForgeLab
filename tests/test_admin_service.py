@@ -24,13 +24,20 @@ class ManagerTests(unittest.TestCase):
     def post(self, action, headers):
         connection=http.client.HTTPConnection(*self.server.server_address,timeout=3)
         connection.request('POST','/action',body=json.dumps({'action':action}),headers=headers)
-        response=connection.getresponse();body=json.loads(response.read());connection.close()
-        return response.status,body
+        try:
+            response=connection.getresponse();body=json.loads(response.read())
+            return response.status,body
+        finally:connection.close()
 
     def test_actions_need_same_origin_and_token(self):
         with patch.object(manager.control,'live',return_value=None),patch.object(manager.control,'start',return_value=0) as start:
-            self.assertEqual(self.post('start',{})[0],403)
-            self.assertEqual(self.post('start',{'X-MAG-Control-Action':manager.ACTION,'Origin':'https://foreign.invalid'})[0],403)
+            for headers in ({},{'X-MAG-Control-Action':manager.ACTION,'Origin':'https://foreign.invalid'}):
+                try:self.assertEqual(self.post('start',headers)[0],403)
+                except (ConnectionResetError,http.client.RemoteDisconnected):
+                    # Denial before reading the body can close with RST on Windows.
+                    # The action must remain unexecuted in either case.
+                    pass
+                start.assert_not_called()
             start.assert_not_called()
             self.assertEqual(self.post('start',{'X-MAG-Control-Action':manager.ACTION})[0],200)
             start.assert_called_once()

@@ -40,6 +40,7 @@ function harness(native=true, opts={}) {
     if(url.startsWith('/api/catalog?')) {
       const p=new URL('http://fixture.invalid'+url).searchParams;let rows;
       if(p.get('view')==='countries')rows=[{id:'country:PT',name:'Portugal',kind:'country',group:'12 canais',count:12}];
+      else if(p.get('view')==='origins')rows=[{id:'origin:MEO',name:'MEO',kind:'origin',count:6},{id:'origin:VO',name:'VO · Vodafone',kind:'origin',count:6}];
       else if(p.get('view')==='groups')rows=[{id:'group:',name:'Todos os títulos',kind:'group',group:'',count:12}];
       else if(p.get('view')==='seasons')rows=Array.from(new Set(episodes.map(e=>e.season))).map(season=>({id:'season:'+season,season,kind:'season',name:'Temporada '+season,group:'Uma série',count:episodes.filter(e=>e.season===season).length}));
       else if(p.get('view')==='episodes')rows=episodes.filter(e=>!p.get('season')||e.season===p.get('season'));
@@ -146,7 +147,7 @@ h=harness();h.click('tab-series');h.key(13);assert.equal(h.nodes['selected-name'
 h=harness();h.enterTV();h.flush(650);assert.match(h.nodes.epg.value,/Programa real/);assert(!h.requests.some(r=>r.url==='/api/media/mag'));
 h.key(89);assert.equal(h.nodes['info-panel'].style.display,'block');assert.match(h.nodes['info-text'].value,/Programa real/);h.key(8);
 h.key(13);h.flush(1000);h.ctx.stbEvent.onEvent(2);assert.equal(h.nodes.menu.style.display,'none');h.ctx.stbEvent.onEvent(5);h.flush(0);assert.equal(h.nodes.menu.style.display,'block');
-h=harness();h.key(122);for(let i=0;i<6;i++)h.key(40);h.key(13);assert.equal(h.nodes.help.style.display,'block');h.key(8);assert.equal(h.nodes.help.style.display,'none');
+h=harness();h.key(122);for(let i=0;i<7;i++)h.key(40);h.key(13);assert.equal(h.nodes.help.style.display,'block');h.key(8);assert.equal(h.nodes.help.style.display,'none');
 
 let delay=false;h=harness(false,{defer:u=>delay&&u.startsWith('/api/catalog')});delay=true;h.click('tab-movie');h.click('tab-series');h.pending[1].complete();h.pending[0].complete();assert.match(h.nodes.group.value,/Séries/);assert(!h.requests.some(r=>r.url==='/api/media/mag'));
 // Catalog refresh never stops/restarts the player or changes the selected page.
@@ -159,7 +160,7 @@ assert.match(h.nodes['update-status'].value,/12 canais, 35 filmes e 4 séries/);
 assert.equal(h.requests.find(r=>r.url==='/api/refresh'&&r.method==='POST').headers['X-MAG-Action'],'fixture-action');
 h=harness(false,{refreshStatus:{running:false,error:'Falha. Catálogo preservado.',last_success:'2026-11-01T20:00:00Z'}});
 assert.match(h.nodes['update-status'].value,/preservado/);assert.match(h.nodes['update-status'].value,/2026-11-01/);
-h.key(122);for(let i=0;i<9;i++)h.key(40);h.key(13);
+h.key(122);for(let i=0;i<10;i++)h.key(40);h.key(13);
 assert.equal(h.nodes['source-panel'].style.display,'block');assert.match(html,/id="source-input" type="password"/);
 h.nodes['source-input'].value='http://fixture.invalid/get.php?username=fixture&password=secret';h.key(13);
 assert.equal(h.nodes['source-input'].value,'');assert.equal(h.nodes['source-panel'].style.display,'none');
@@ -359,3 +360,10 @@ console.log('PASS: sidebar/list arrows, all section/action buttons, stable selec
 // Portugal is only the default live-TV country; the world and other sections remain accessible.
 h=harness(false);assert(h.requests[0].url.includes("country=PT"));h.key(8);assert(h.requests.at(-1).url.includes("view=countries"));h.click("tab-movie");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-series");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-all");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-tv");assert(h.requests.at(-1).url.includes("country=PT"));h.click("options-button");for(let i=0;i<4;i++)h.key(40);h.key(13);assert(h.requests.at(-1).url.includes("view=countries"));
 console.log("PASS: default Portugal for live TV, BACK/MENU world browsing and unchanged movies/series/favorites.");
+
+h=harness(false);h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);
+assert.equal(h.nodes['picker-title'].value,'Origem dos canais');h.key(40);h.key(13);
+assert(h.requests.at(-1).url.includes('origin=MEO'));assert.match(h.nodes.group.value,/Origem: MEO/);
+h.click('tab-movie');assert(!h.requests.at(-1).url.includes('origin='));
+h.click('tab-tv');assert(!h.requests.at(-1).url.includes('origin='));
+console.log('PASS: MAG origins picker uses remote, sends origin filter and resets outside TV.');

@@ -167,3 +167,26 @@ Favoritos e organização mantêm-se. Nenhuma transmissão ficou ativa após os 
 Validação final: 62 testes Python, incluindo proxy com emissor em duas rajadas,
 FFmpeg real sobre vídeo sintético, exclusão entre dispositivos, falha de origem,
 remux/transcodificação e limpeza; regressões JavaScript MAG/TV passaram.
+
+## Filtro de origem dos canais — web v9 / TV r9 / MAG r21
+
+Web e TVs: seletor «Todas as origens» junto de país/categoria/qualidade.
+MAG: Opções → Origem dos canais. Filtra os canais e os favoritos de canais;
+filmes e séries não têm este filtro. Entrar novamente na secção TV repõe
+Todas as origens. País, categoria, pesquisa e qualidade podem ser combinados.
+
+Classificação comum no servidor: prefixos VO/VODAFONE, MEO, NOS, VIP; quando
+falta prefixo usa a identificação explícita nas categorias. PT identifica a
+lista geral do fornecedor; os restantes ficam em Origem não indicada. Só são
+apresentadas origens existentes no país. Não é uma identificação técnica da
+rede do stream. Nenhuma fonte foi apagada, excluída automaticamente ou testada
+para reprodução nesta fase. As origens são enumeradas antes da deduplicação;
+a seleção por origem também precede Auto, preservando versões alternativas.
+Favoritos continuam associados à família do canal.
+
+Validação: 66 testes Python, regressões JS MAG/web/TV e Chrome real sobre o
+catálogo local, em 1280×720 e 390px. Verificados MEO/VO/PT, pesquisa combinada,
+filtro oculto nos filmes e reposição ao entrar em TV. Hashes de catálogo,
+favoritos, organização e progresso iguais antes/depois do reinício.
+Samsung 1.0.9 assinada e instalada. Xiaomi usa a UI partilhada r9 ao reabrir,
+sem novo APK (continua 1.2). Recarregar a web com Ctrl+F5 e reiniciar portal MAG.

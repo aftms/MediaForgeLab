@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from catalog import Catalog, quality, country_for, family_key
+from catalog import Catalog, quality, country_for, family_key, origin_for
 from provider import Provider, decode_epg
 
 
@@ -51,6 +51,29 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(quality('CANAL Full HD'),'FHD')
         self.assertEqual(quality('Canal sem indicação'),'UNKNOWN')
         self.assertEqual(family_key(dict(kind='tv',name='VO: RTP 1 HD',country='PT')),family_key(dict(kind='tv',name='VIP: RTP 1 SD',country='PT')))
+
+    def test_origins_filter_before_quality_dedup_and_keep_favorites(self):
+        cat=Catalog([tv(1,'VO: RTP 1 FHD','PT| VODAFONE'),tv(2,'MEO: RTP 1 HD','PT| MEO'),
+                     tv(3,'PT: RTP 1 HD'),tv(4,'VODAFONE: RTP 2 HD','ES| Vodafone'),
+                     tv(5,'Canal sem prefixo','PT| VODAFONE HD'),tv(6,'VIP: Porto HD','PT| VIP'),
+                     tv(7,'NOS: Outro HD'),tv(8,'Sem origem')],self.config)
+        origins=cat.browse(dict(view='origins',kind='tv',country='PT',quality='auto'))['items']
+        self.assertEqual({o['id'] for o in origins},{'origin:VO','origin:MEO','origin:PT','origin:VIP','origin:NOS','origin:OTHER'})
+        self.assertEqual(next(o['count'] for o in origins if o['id']=='origin:VO'),2)
+        self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='MEO'))['items'][0]['id'],'2')
+        self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='VO'))['items'][0]['id'],'1')
+        self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='MEO',quality='FHD'))['total'],0)
+        cat.favorite('1',True)
+        alternative=cat.browse(dict(kind='tv',favorites='1',origin='MEO'))['items']
+        self.assertEqual([i['id'] for i in alternative],['2']);self.assertTrue(alternative[0]['favorite'])
+        groups=cat.browse(dict(view='groups',kind='tv',country='PT',origin='MEO'))['items']
+        self.assertEqual([g['group'] for g in groups],['','PT| MEO'])
+        self.assertEqual(cat.browse(dict(view='origins',kind='tv',country='ES'))['total'],1)
+        cat.add(dict(id='m1',kind='movie',name='VO: Filme',group='PT| VODAFONE'))
+        self.assertEqual(cat.browse(dict(kind='movie',origin='MEO'))['total'],1)
+        self.assertEqual(cat.browse(dict(view='origins',kind='movie'))['total'],0)
+        self.assertEqual(origin_for(dict(kind='tv',name='TV Vodafone News',group='PT| Noticias')),'OTHER')
+        self.assertEqual(origin_for(dict(kind='tv',name='Canal',group='PT| PORTUGALⱽᴵᴾ ᴿᴬᵂ')),'VIP')
 
     def test_large_web_pages_are_complete_without_changing_mag_limits(self):
         for i in range(301):

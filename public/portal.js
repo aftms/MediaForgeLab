@@ -1,6 +1,6 @@
 /* ES5, old MAG WebKit. Browsers never obtain a media URL or start streams. */
 var MagPortal = (function () {
-    var state = { kind:"tv", view:"groups", country:"PT", countryName:"Portugal", group:"", q:"", quality:"auto", favorites:"0", series:"", season:"", seasonName:"" };
+    var state = { kind:"tv", view:"groups", country:"PT", countryName:"Portugal", origin:"", originName:"", group:"", q:"", quality:"auto", favorites:"0", series:"", season:"", seasonName:"" };
     var stack=[], items=[], selected=0, offset=0, total=0, pageSize=10;
     var nativePlayer=null, playerReady=false, initialized=false, playing=false, playingItem=null, paused=false, meta={};
     var playSeq=0, loadSeq=0, detailSeq=0, pageRequest=null, playRequest=null;
@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:19,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:21,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);
@@ -70,7 +70,7 @@ var MagPortal = (function () {
         for(i=0;i<3;i+=1){el("favorites-"+types[i]).className="favorite-tab"+(types[i]===state.kind?" active"+(favoriteTabsFocus?" focused":""):"");}
         text(el("footnote"),menuFocus==="sidebar"?"↑ ↓ Escolher opção · OK Abrir · → / BACK Lista":favoriteTabsVisible()?(favoriteTabsFocus?"← → Canais / Filmes / Séries · ↓ / OK Lista · TAB Menu":"← Menu · ↑ No primeiro: tipos · CH+ / CH− Página · OK Abrir"):"← Menu lateral · ↑ ↓ Escolher · CH+ / CH− Página · OK Abrir · BACK Voltar");
         for(i=0;i<sidebarButtons.length;i+=1){var button=el(sidebarButtons[i]);button.className=button.className.replace(/ ?remote-focus/g,"")+(menuFocus==="sidebar"&&sidebarIndex===i?" remote-focus":"");}
-        text(el("group"),(state.favorites==="1"?"Favoritos / "+(state.kind==="tv"?"Canais":labels[state.kind]):labels[state.kind])+(state.countryName?" / "+state.countryName:"")+(state.group?" / "+state.group:"")+(state.seasonName?" / "+state.seasonName:"")+(state.q?" · Pesquisa: "+state.q:""));
+        text(el("group"),(state.favorites==="1"?"Favoritos / "+(state.kind==="tv"?"Canais":labels[state.kind]):labels[state.kind])+(state.countryName?" / "+state.countryName:"")+(state.group?" / "+state.group:"")+(state.seasonName?" / "+state.seasonName:"")+(state.originName?" · Origem: "+state.originName:"")+(state.q?" · Pesquisa: "+state.q:""));
         text(el("quality-button"),"Qualidade: "+(state.quality==="auto"?"Auto":qualities[state.quality]));
         text(el("search-button"),state.q?"Pesquisa: "+state.q:"Pesquisar");
         for(i=0;i<items.length;i+=1){
@@ -327,7 +327,7 @@ var MagPortal = (function () {
     function favoriteTabsVisible(){return state.favorites==="1"&&state.view==="items";}
     function selectFavoriteKind(kind,focus){
         if(playing){stop();}closeOverlay();stack=[];menuFocus="list";sidebarIndex=3;favoriteTabsFocus=!!focus;
-        state.kind=kind;state.favorites="1";state.view="items";state.country="";state.countryName="";state.group="";state.q="";state.series="";state.season="";state.seasonName="";loadPage(0,false);
+        state.kind=kind;state.origin="";state.originName="";state.favorites="1";state.view="items";state.country="";state.countryName="";state.group="";state.q="";state.series="";state.season="";state.seasonName="";loadPage(0,false);
     }
     function favoriteKindPicker(){picker("Favoritos",[
         {label:"Canais",icon:"tv",description:"Os seus canais favoritos.",action:function(){selectFavoriteKind("tv",false);}},
@@ -343,7 +343,7 @@ var MagPortal = (function () {
     function selectKind(kind,allCountries){
         if(kind==="all"){selectFavoriteKind("tv",false);return;}menuFocus="list";sidebarIndex=kind==="movie"?1:kind==="series"?2:0;favoriteTabsFocus=false;
         if(playing){stop();}closeOverlay();stack=[];state.kind=kind;state.view=kind==="tv"&&allCountries?"countries":"groups";
-        state.country=kind==="tv"&&!allCountries?"PT":"";state.countryName=state.country==="PT"?"Portugal":"";state.group="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites="0";loadPage(0,false);
+        state.origin="";state.originName="";state.country=kind==="tv"&&!allCountries?"PT":"";state.countryName=state.country==="PT"?"Portugal":"";state.group="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites="0";loadPage(0,false);
     }
     function nextKind(){var kinds=["tv","movie","series","all"],i;for(i=0;i<kinds.length;i+=1){if((state.favorites==="1"?"all":state.kind)===kinds[i]){selectKind(kinds[(i+1)%kinds.length]);return;}}}
     function back(){
@@ -388,6 +388,17 @@ var MagPortal = (function () {
         for(key in qualities){if(qualities.hasOwnProperty(key)){options.push((function(k){return {label:qualities[k],icon:"quality",current:k===state.quality,description:descriptions[k],action:function(){state.quality=k;try{window.localStorage.setItem("mag-quality-v2",k);}catch(ignore){}loadPage(0,false);}};}(key)));}}
         if(playing){stop();}picker("Qualidade da TV",options,"Escolha a versão dos canais");
     }
+    function originPicker(){
+        var stamp=loadSeq;
+        status("A consultar origens…");
+        xhr("/api/catalog?"+queryString({view:"origins",kind:"tv",country:state.country,limit:30}),function(data){
+            if(stamp!==loadSeq||state.kind!=="tv"){return;}
+            if(!data){status("Não foi possível consultar as origens.");return;}
+            var options=[],sources=[{id:"origin:",name:"Todas as origens"}].concat(data.items),i;
+            for(i=0;i<sources.length;i+=1){options.push((function(row){var code=row.id.slice(7);return {label:row.name,icon:"tv",current:code===state.origin,description:"Filtra os canais pela identificação de origem na lista do fornecedor.",action:function(){state.origin=code;state.originName=code?row.name:"";state.group="";stack=[];loadPage(0,false);}};}(sources[i])));}
+            status("");picker("Origem dos canais",options,"Todas ou apenas uma origem");
+        });
+    }
     function help(){closeOverlay();overlay="help";el("help").style.display="block";}
     function renderInfo(){
         var item=playing?playingItem:current(),lines=[],i,p;text(el("info-title"),item?item.name:"Informação");
@@ -396,7 +407,7 @@ var MagPortal = (function () {
         if(item&&item.kind==="tv"&&!detailPrograms.length){lines.push("Programação não disponibilizada para este canal.");}text(el("info-text"),lines.join("\n\n"));
     }
     function showInfo(){finishSeek();closeOverlay();overlay="info";renderInfo();el("info-panel").style.display="block";}
-    function optionsMenu(){if(playing){finishSeek();playbackMenu();return;}picker("Opções",[
+    function optionsMenu(){if(playing){finishSeek();playbackMenu();return;}var menu=[
         {label:"Pesquisar",icon:"search",description:"Abra o teclado no ecrã. Use as setas e OK; escolha Ver lista para ver os resultados.",action:search},
         {label:favoriteLabel(current()),icon:"all",description:"Guarde ou remova o canal, filme ou série selecionado. Primeiro escolha um título na lista.",action:favorite},
         {label:"Abrir favoritos",icon:"all",description:"Veja os canais, filmes e séries que guardou.",action:function(){selectKind("all");}},
@@ -407,7 +418,7 @@ var MagPortal = (function () {
         {label:"Programação e detalhes",icon:"tv",badge:"INFO",description:"Veja o EPG do canal selecionado ou a descrição do filme ou episódio.",action:showInfo},
         {label:"Atualizar catálogo",icon:"refresh",description:"Consulte novidades de canais, filmes e séries no serviço, em segundo plano.",action:checkUpdates},
         {label:"Origem do catálogo",icon:"group",description:"Altere o URL do serviço. Os dados de acesso permanecem ocultos.",action:sourceSettings}
-    ]);}
+    ];if(state.kind==="tv"){menu.splice(5,0,{label:"Origem dos canais",icon:"tv",badge:state.originName||"Todas",description:"Escolha VO/Vodafone, MEO ou outra origem indicada pelo fornecedor.",action:originPicker});}picker("Opções",menu);}
     function updateStatus(data){
         window.clearTimeout(updateTimer);
         if(!data){text(el("update-status"),"Não foi possível consultar a atualização. Tente novamente.");return;}

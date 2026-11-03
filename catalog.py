@@ -39,6 +39,23 @@ def quality(name, group=''):
     return 'UNKNOWN'
 
 
+ORIGINS = {'VO':'VO · Vodafone','MEO':'MEO','NOS':'NOS','VIP':'VIP','PT':'PT · Lista geral','OTHER':'Origem não indicada'}
+
+
+def origin_for(item):
+    if item.get('kind') != 'tv':
+        return ''
+    name = normalized(item.get('name',''))
+    prefix = re.match(r'^(VO|VODAFONE|MEO|NOS|VIP)\s*[:|]',name)
+    if prefix:
+        return 'VO' if prefix[1]=='VODAFONE' else prefix[1]
+    groups = normalized(' '.join(item.get('groups') or [item.get('group','')]))
+    for code, pattern in [('VO',r'\bVODAFONE\b'),('MEO',r'\bMEO\b'),('NOS',r'\bNOS\b'),('VIP',r'VIP\b')]:
+        if re.search(pattern,groups):
+            return code
+    return 'PT' if re.match(r'^PT\s*[:|]',name) else 'OTHER'
+
+
 def country_for(group):
     group = normalized(group)
     code = group.split('|', 1)[0].strip() if '|' in group else 'OTHER'
@@ -140,6 +157,7 @@ class Catalog:
         item['id'] = str(item['id'])
         item.setdefault('country', '')
         item['quality'] = quality(item['name'], item['group'])
+        item['origin'] = origin_for(item)
         item['key'] = item.get('favorite_key') or family_key(item)
         item['_search'] = normalized(item['name'] + ' ' + item['group'])
         if item['id'] not in self.by_id:
@@ -157,7 +175,7 @@ class Catalog:
         return item
 
     def public(self, item):
-        result = {k: item[k] for k in ('id', 'name', 'group', 'kind', 'country', 'quality') if k in item}
+        result = {k: item[k] for k in ('id', 'name', 'group', 'kind', 'country', 'quality', 'origin') if k in item}
         result['favorite'] = item['key'] in self.favorites
         result['plot'] = str(item.get('plot', ''))[:1000]
         if 'season' in item:
@@ -173,7 +191,8 @@ class Catalog:
         terms = normalized(params.get('q', '')[:100]).split()
         qual, favorites = params.get('quality', 'auto'), params.get('favorites') == '1'
         language=params.get('language','')
-        cache_key = (kind, country, group, tuple(terms), qual, favorites, language)
+        origin=params.get('origin','') if kind in ('tv','all') else ''
+        cache_key = (kind, country, group, tuple(terms), qual, favorites, language, origin)
         with self.lock:
             if cache_key in self.cache:
                 self.cache.move_to_end(cache_key)
@@ -199,6 +218,8 @@ class Catalog:
                     continue
                 if terms and not all(term in item['_search'] for term in terms):
                     continue
+                if item['kind'] == 'tv' and origin and item['origin'] != origin:
+                    continue
                 if item['kind'] == 'tv' and qual not in ('auto', 'all') and item['quality'] != qual:
                     continue
                 selected.append(item)
@@ -216,17 +237,23 @@ class Catalog:
 
     def directory(self, params):
         view, kind = params.get('view'), params.get('kind', 'tv')
-        key = (view, kind, params.get('country', ''), params.get('quality', 'auto'))
+        key = (view, kind, params.get('country', ''), params.get('quality', 'auto'), params.get('origin',''), params.get('group',''))
         with self.lock:
             if key in self.summaries:
                 self.summaries.move_to_end(key)
                 return self.summaries[key]
-        if view == 'countries':
+        if view == 'origins':
+            # Enumerate sources before quality/family deduplication so Auto cannot
+            # hide an alternative origin of the same channel.
+            selected = self.selection(dict(kind='tv',country=params.get('country',''),group=params.get('group',''),quality='all')) if kind=='tv' else []
+            counter = collections.Counter(i['origin'] for i in selected)
+            rows = [dict(id='origin:'+k,name=ORIGINS[k],kind='origin',count=v) for k,v in sorted(counter.items(),key=lambda pair:(pair[0]=='OTHER',pair[0]))]
+        elif view == 'countries':
             counter = collections.Counter(i['country'] for i in self.selection(dict(kind='tv', quality=params.get('quality','auto'))))
             rows = [{'id': 'country:' + k, 'name': COUNTRIES.get(k, k), 'kind': 'country', 'group': str(v) + ' canais', 'count': v}
                     for k, v in sorted(counter.items(), key=lambda kv: (kv[0] != 'PT', normalized(COUNTRIES.get(kv[0], kv[0]))))]
         else:
-            selection = (self.selection(dict(kind=kind, country=params.get('country', ''), quality=params.get('quality','auto')))
+            selection = (self.selection(dict(kind=kind, country=params.get('country', ''), quality=params.get('quality','auto'), origin=params.get('origin','')))
                          if kind == 'tv' else self.by_kind.get(kind, ()))
             counter = collections.Counter(group for i in selection for group in (i.get('groups') or [i['group']]))
             rows = [{'id': 'group:', 'name': 'Todos os títulos' if kind != 'tv' else 'Todos os canais', 'kind':'group','group':'','count':len(selection)}]
@@ -242,7 +269,7 @@ class Catalog:
         view, kind = params.get('view', 'items'), params.get('kind', 'tv')
         offset = max(0, min(1000000, int(params.get('offset', '0'))))
         limit = max(1, min(240 if params.get('client') == 'web' else 30, int(params.get('limit', '10'))))
-        if view in ('countries', 'groups'):
+        if view in ('countries', 'groups', 'origins'):
             rows = self.directory(params)
         elif view in ('seasons', 'episodes'):
             identifier = params.get('series', '')
