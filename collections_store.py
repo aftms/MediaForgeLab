@@ -14,6 +14,9 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qs, urlencode
 
 
+UNCATEGORIZED='uncategorized'
+
+
 class CollectionError(Exception):
     def __init__(self, message, status=400):
         super().__init__(message)
@@ -159,7 +162,8 @@ class Collections:
         with self.lock:return self.public(self.require('items',id))
     def browse(self,p):
         with self.lock:
-            categories=[dict(r) for r in self.db.execute('SELECT * FROM categories ORDER BY name COLLATE NOCASE')]
+            unclassified=self.db.execute('SELECT count(*) FROM items i WHERE NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.item=i.id)').fetchone()[0]
+            categories=[dict(id=UNCATEGORIZED,name='Por classificar',parent=None,system=True,count=unclassified)]+[dict(r) for r in self.db.execute('SELECT * FROM categories ORDER BY name COLLATE NOCASE')]
             tags=[dict(r) for r in self.db.execute('SELECT t.id,t.name,count(it.item) count FROM tags t LEFT JOIN item_tags it ON it.tag=t.id GROUP BY t.id ORDER BY t.name COLLATE NOCASE')]
             playlists=[dict(r) for r in self.db.execute('SELECT p.*,(SELECT count(*) FROM entries e WHERE e.playlist=p.id) count FROM playlists p ORDER BY name COLLATE NOCASE')]
             if p.get('operation')=='item':return self.get(p.get('id'))
@@ -170,7 +174,9 @@ class Collections:
             limit=max(1,min(60,int(p.get('limit',24))));offset=max(0,int(p.get('offset',0)));where=[];args=[];join='';order='i.title COLLATE NOCASE,i.id';fields='i.*'
             if p.get('playlist'):
                 self.require('playlists',p['playlist']);join='JOIN entries e ON e.item=i.id';where.append('e.playlist=?');args.append(p['playlist']);order='e.ordinal,e.id';fields+=',e.id entry_id,e.position entry_position,e.duration entry_duration,e.completed entry_completed'
-            if p.get('category'):
+            if p.get('category')==UNCATEGORIZED:
+                where.append('NOT EXISTS (SELECT 1 FROM item_categories c WHERE c.item=i.id)')
+            elif p.get('category'):
                 self.require('categories',p['category'])
                 where.append('i.id IN (WITH RECURSIVE tree(id) AS (SELECT ? UNION ALL SELECT c.id FROM categories c JOIN tree t ON c.parent=t.id) SELECT item FROM item_categories WHERE category IN (SELECT id FROM tree))');args.append(p['category'])
             if p.get('tag'):where.append('i.id IN (SELECT item FROM item_tags WHERE tag=?)');args.append(p['tag'])
@@ -192,6 +198,7 @@ class Collections:
         if 'categories' in d:
             cats=d['categories']
             if not isinstance(cats,list) or len(cats)>30:raise CollectionError('Selecione até 30 categorias.')
+            cats=[category for category in cats if category!=UNCATEGORIZED]
             for category in cats:self.require('categories',category)
             self.db.execute('DELETE FROM item_categories WHERE item=?',(s['id'],))
             self.db.executemany('INSERT OR IGNORE INTO item_categories VALUES(?,?)',[(s['id'],str(c)) for c in cats])
@@ -213,6 +220,7 @@ class Collections:
         return dict(id=s['id'],added=not bool(existing))
     def update(self,d):
         op=d.get('operation');id=str(d.get('id',''))
+        if op in ('category-save','category-delete') and (id==UNCATEGORIZED or d.get('parent')==UNCATEGORIZED):raise CollectionError('A categoria «Por classificar» é automática e não pode ser alterada nem ter subcategorias.')
         if op=='metadata-preview':
             result=metadata(d.get('url'))
             if not result.get('title'):raise CollectionError('Não foi possível obter o título. Pode escrevê-lo manualmente.')

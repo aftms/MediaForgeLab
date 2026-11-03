@@ -981,3 +981,31 @@ TV1920/MAG1280 com fonte/peso/altura corretos, limite2linhas, tooltip completo e
 sem overflow. Screenshot inspecionada após corrigir bleed do padding. Sem novos
 testes unitários para CSS. Próximo Ctrl+F5 em Coleções, confirmarv8. Commit/push
 e notas Gateway no fecho; sem bloqueio novo.
+
+
+## Categoria automática Por classificar — Coleçõesv9 / TVr30 (2026-11-03)
+
+Pedido: categoria predefinida que exista sempre para vídeos não classificados.
+Categoria virtual id=uncategorized, nome Por classificar, system=true; devolvida
+em primeiro lugar pela API, mesmo vazia. SQL NOT EXISTS item_categories reúne
+vídeos sem categorias reais; etiquetas não contam como categoria. Atribuir uma
+categoria retira-o automaticamente; remover a última ou eliminar a categoria
+devolve-o. Sem migração, associações artificiais, cópias ou alteração de favoritos,
+tags, listas e progresso. Contagem global própria. Filtro combina com favoritos,
+pesquisa, plataforma e listas existentes; API category=uncategorized.
+
+API impede editar/eliminar esta categoria e usá-la como mãe. UI gestão mostra-a
+como Automática, sem ações de edição; editores excluem-na dos pais/checkboxes.
+Sem categorias marcadas guarda Por classificar implicitamente; importação com
+este destino também é suportada. Preferência de filtro continua persistente.
+
+15 testes Coleções +7 metadadosFacebook PASS: presença vazia/permanente, inclusão
+automática, transições, filtros, proteção, importação, reabrirDB e dados preservados.
+Chrome sintético web/TV/MAG PASS: opção sempre visível, reload, classificar sai da
+lista, editor/gestão protegidos e eliminar última categoria devolve vídeos. Sem
+reproduções/fornecedor/OneDrive real. Pacote Samsung1.0.30/TVr30 preparado.
+
+Ativação exige reiniciar backend. Guarda inicial adiou porque começou reprodução
+Navegador após a leitura idle. Solicitada confirmação de fechar o leitor; não
+reiniciar até essa confirmação. Coleçõesv9, web27/MAGr31/Pessoal10 mantidos.
+Próximo ativar após confirmação e Ctrl+F5; instalação/commit/push/Gateway no fecho.

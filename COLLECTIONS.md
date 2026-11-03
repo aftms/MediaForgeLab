@@ -1,4 +1,4 @@
-# Coleções — módulo v8
+# Coleções — módulo v9
 
 Biblioteca partilhada de links para vídeos, organizada por categorias/subcategorias
 e listas de reprodução. Os dados pertencem ao serviço MediaForgeLab; web, MAG e
@@ -10,7 +10,7 @@ TVs usam a mesma API e base SQLite, sem bibliotecas separadas.
   `http://192.168.1.240:8090/web/collections/?client=web` nos outros dispositivos.
   A entrada Coleções está no menu da aplicação/PWA. Também funciona sob o HTTPS
   já configurado no portal, dentro do âmbito `/web/` da PWA.
-- Samsung: abrir Media Forge Lab, versão TV r29 / pacote 1.0.29, e escolher Coleções.
+- Samsung: abrir Media Forge Lab, versão TV r30 / pacote 1.0.30, e escolher Coleções.
 - MAG: Restart portal, confirmar r29 e escolher Coleções. O menu, a biblioteca e
   a organização estão incluídos; leitores externos dependem do WebKit da box.
 - Xiaomi: requer APK 1.4 para os leitores externos. O pacote está construído em
@@ -222,3 +222,14 @@ de janela. YouTube retoma a posição, Facebook continua com controlos próprios
 
 A v8 usa títulos compactos de duas linhas (web12px, MAG13px, TV14px), com nome
 completo ao passar o rato. Os nomes guardados permanecem completos.
+
+
+## Por classificar
+
+Categoria automática que aparece sempre, mesmo vazia. Reúne vídeos sem categorias;
+atribuir uma categoria retira-os daqui, remover a última volta a incluí-los. Ter
+etiquetas não altera esta regra. Pode combinar este filtro com pesquisa e favoritos.
+A categoria não pode ser editada, apagada ou usada como mãe de subcategorias.
+No editor, deixar todas as categorias desmarcadas equivale a Por classificar.
+API: GET `/api/collections?category=uncategorized`; o nó é virtual (`system:true`),
+não fica gravado nas associações do vídeo. Nomes, favoritos e progresso preservados.

@@ -31,6 +31,27 @@ class StoreTests(unittest.TestCase):
   with self.assertRaises(CollectionError):self.put('category-delete',id=root)
   self.assertEqual(self.store.browse({'q':'receita'})['total'],1)
   self.put('category-delete',id=child);self.put('category-delete',id=root);self.assertEqual(self.store.get(id)['categories'],[])
+ def test_unclassified_is_permanent_automatic_and_preserves_data(self):
+  category='uncategorized';fixed=self.store.browse({})['categories'][0]
+  self.assertEqual(fixed['id'],category);self.assertTrue(fixed['system']);self.assertEqual(fixed['count'],0)
+  a=self.item(title='Sem tema',tags=['Mobilidade']);b=self.item('https://vimeo.com/76979871',title='Receita')
+  self.put('favorite',id=a,favorite=True);self.put('progress',id=a,position=12,duration=120)
+  root=self.put('category-save',name='Culinária')['id'];self.item('https://vimeo.com/76979871',categories=[root])
+  self.assertEqual([i['id'] for i in self.store.browse({'category':category})['items']],[a])
+  self.assertEqual(self.store.browse({'category':category,'favorites':'1','q':'Mobilidade'})['total'],1)
+  self.item(categories=[root]);self.assertEqual(self.store.browse({'category':category})['total'],0)
+  self.put('category-delete',id=root);self.assertEqual(self.store.browse({'category':category})['total'],2)
+  row=self.store.get(a);self.assertTrue(row['favorite']);self.assertEqual(row['position'],12);self.assertEqual(row['tags'][0]['name'],'Mobilidade');self.assertEqual(row['categories'],[])
+  self.store.close();self.store=Collections(self.temp.name)
+  self.assertEqual(len([c for c in self.store.browse({})['categories'] if c.get('system')]),1)
+  self.assertEqual(self.store.browse({'category':category})['total'],2)
+ def test_unclassified_cannot_be_edited_deleted_or_parented(self):
+  for op,data in [('category-save',dict(id='uncategorized',name='Outro')),('category-save',dict(name='Filha',parent='uncategorized')),('category-delete',dict(id='uncategorized'))]:
+   with self.assertRaises(CollectionError):self.put(op,**data)
+  id=self.item(categories=['uncategorized']);self.assertEqual(self.store.get(id)['categories'],[])
+  result=self.put('import',items=['https://vimeo.com/76979871'],category='uncategorized');self.assertEqual(result['added'],1)
+  self.assertEqual(self.store.browse({'category':'uncategorized'})['total'],2)
+
  def test_import_is_atomic_and_deduplicated(self):
   with self.assertRaises(CollectionError):self.put('import',items=[YT,'javascript:alert(1)'])
   self.assertEqual(self.store.browse({})['total'],0)
