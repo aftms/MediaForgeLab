@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:25,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:26,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);
@@ -409,7 +409,7 @@ var MagPortal = (function () {
             if(stamp!==loadSeq||state.kind!=="tv"){return;}
             if(!data){status("Não foi possível consultar as origens.");return;}
             var options=[],sources=[{id:"origin:",name:"Todas as origens"}].concat(data.items),i;
-            for(i=0;i<sources.length;i+=1){options.push((function(row){var code=row.id.slice(7);return {label:row.name,icon:"tv",current:code===state.origin,description:"Filtra os canais pela identificação de origem na lista do fornecedor.",action:function(){state.origin=code;state.originName=code?row.name:"";state.group="";stack=[];loadPage(0,false);}};}(sources[i])));}
+            for(i=0;i<sources.length;i+=1){options.push((function(row){var code=row.id.slice(7);return {label:row.name,icon:"tv",current:code===state.origin,description:"Filtra os canais pela identificação de origem na lista do fornecedor.",action:function(){state.origin=code;state.originName=code?row.name:"";stack=[];loadPage(0,false);}};}(sources[i])));}
             status("");picker("Origem dos canais",options,"Todas ou apenas uma origem");
         });
     }

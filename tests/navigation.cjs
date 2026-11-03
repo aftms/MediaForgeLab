@@ -42,7 +42,7 @@ function harness(native=true, opts={}) {
       if(p.get('view')==='countries')rows=[{id:'country:PT',name:'Portugal',kind:'country',group:'12 canais',count:12}];
       else if(p.get('view')==='genres')rows=[{id:'genre:Drama',name:'Drama',kind:'genre',count:1}];
       else if(p.get('view')==='origins')rows=[{id:'origin:MEO',name:'MEO',kind:'origin',count:6},{id:'origin:VO',name:'VO · Vodafone',kind:'origin',count:6}];
-      else if(p.get('view')==='groups')rows=[{id:'group:',name:'Todos os títulos',kind:'group',group:'',count:12}];
+      else if(p.get('view')==='groups')rows=opts.groups||[{id:'group:',name:'Todos os títulos',kind:'group',group:'',count:12}];
       else if(p.get('view')==='seasons')rows=Array.from(new Set(episodes.map(e=>e.season))).map(season=>({id:'season:'+season,season,kind:'season',name:'Temporada '+season,group:'Uma série',count:episodes.filter(e=>e.season===season).length}));
       else if(p.get('view')==='episodes')rows=episodes.filter(e=>!p.get('season')||e.season===p.get('season'));
       else {
@@ -385,3 +385,11 @@ const filteredSeries=h.requests.filter(r=>r.url.includes('/api/catalog?')).at(-1
 assert.ok(filteredSeries.includes('kind=series')&&filteredSeries.includes('genre=Drama')&&filteredSeries.includes('view=items'));
 assert.equal(new URL('http://fixture.invalid'+filteredSeries).searchParams.get('group')||'','');
 console.log('PASS: MAG genre filter from seasons returns to series without treating series title as category.');
+
+// Switching source preserves the selected semantic category, even with no matches.
+h=harness(false,{groups:[{id:'group:Desporto',name:'Desporto',kind:'group',group:'Desporto',count:12}]});
+h.key(13);assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('group'),'Desporto');
+h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);h.key(40);h.key(13);
+assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('group'),'Desporto');
+assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'),'MEO');
+console.log('PASS: MAG source switch preserves selected category.');

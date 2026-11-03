@@ -490,3 +490,20 @@ E video.muted=true. TODOS os testes de vídeo futuros devem usar ambas as
 proteções; não emitir áudio sintético. Nunca fechar browser pessoal do utilizador.
 Próximo: Ctrl+F5 webv17, reproduzir, botão Destacar; manter separador aberto.
 TV/MAG/Pessoal não alterados nesta funcionalidade específica do Windows web.
+
+
+## Origem preserva categoria — webv18 / MAGr26 / TVr16 (2026-11-03)
+
+Pedido: mudar combo Origem não deve mexer na combo Categoria. Web e TV deixam
+de limpar state.group e de reconstruir filtros ao alterar/limpar origem.
+Listagem de categorias independente da origem, mantendo opções estáveis; pesquisa
+de itens continua a combinar categoria+origem, incluindo resultado vazio sem
+reset. MAG originPicker também preserva categoria atual. Mudança de país mantém
+reset dependente existente. Sem alteração de backend/catálogo/reprodução.
+
+Testes origin-category.cjs web/TV: MEO, NOWO, todas preservam valor/opções,
+paginação reinicia; país continua a limpar. navigation.cjs regressões + teste
+MAG com categoria Desporto e origem MEO PASS. JS syntax/diff check PASS.
+Nenhum stream/áudio aberto. Estáticos ativos sem restart. Samsung1.0.16
+assinada/instalada após guarda de reprodução; Xiaomi hospedada TVr16. Pessoalv6
+inalterado. Próximo: Ctrl+F5 webv18; MAG Restart portalr26 se necessário.
