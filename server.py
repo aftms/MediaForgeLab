@@ -404,6 +404,8 @@ class PortalHandler(BaseHTTPRequestHandler):
             try:
                 data=json.loads(payload)
                 if not isinstance(data,dict):raise ValueError()
+                if (data.get('client') in ('tv','mag') or self.app.tv_access.authorized(self.path,self.headers)) and data.get('operation') not in ('favorite','progress'):
+                    raise CollectionError('A gestão de Coleções está disponível na versão web.',403)
                 self.respond(200,self.app.collections.update(data))
             except CollectionError as error:self.respond(error.status,{'error':str(error)})
             except (ValueError,TypeError,KeyError):self.respond(400,{'error':'Pedido inválido.'})

@@ -1,4 +1,4 @@
-# Coleções — módulo v2
+# Coleções — módulo v3
 
 Biblioteca partilhada de links para vídeos, organizada por categorias/subcategorias
 e listas de reprodução. Os dados pertencem ao serviço MediaForgeLab; web, MAG e
@@ -10,12 +10,17 @@ TVs usam a mesma API e base SQLite, sem bibliotecas separadas.
   `http://192.168.1.240:8090/web/collections/?client=web` nos outros dispositivos.
   A entrada Coleções está no menu da aplicação/PWA. Também funciona sob o HTTPS
   já configurado no portal, dentro do âmbito `/web/` da PWA.
-- Samsung: abrir Media Forge Lab, versão TV r20 / pacote 1.0.20, e escolher Coleções.
+- Samsung: abrir Media Forge Lab, versão TV r21 / pacote 1.0.21, e escolher Coleções.
 - MAG: Restart portal, confirmar r29 e escolher Coleções. O menu, a biblioteca e
   a organização estão incluídos; leitores externos dependem do WebKit da box.
 - Xiaomi: requer APK 1.4 para os leitores externos. O pacote está construído em
   `.runtime/tv-build/MediaForgeLab-AndroidTV.apk`; instalação pendente porque a TV
   estava desligada. O APK antigo mantém os pedidos externos bloqueados.
+
+A **gestão fica apenas na web**: guardar/importar/editar/eliminar vídeos,
+categorias, etiquetas e listas. MAG e TVs permitem consultar, pesquisar, filtrar
+e reproduzir. **Guardar/retirar favoritos funciona em todas as versões**, assim
+como a gravação automática do progresso. Não é necessário classificar nas TVs.
 
 Em **Guardar vídeo**, colar um link público e, opcionalmente, título/notas e
 categorias. YouTube e Vimeo tentam obter título/autor pelo oEmbed oficial. Os títulos em
@@ -30,7 +35,7 @@ não elimina os vídeos; primeiro é necessário mover/eliminar as subcategorias
 Em **Listas de reprodução**, criar uma lista. Nas **Opções** de cada vídeo,
 adicioná-lo a uma lista; dentro da lista, usar **Subir**, **Descer** ou **Retirar**.
 Uma lista suporta até 500 entradas. Pode repetir um vídeo numa sequência, com
-posição guardada separadamente para cada ocorrência. O vídeo existe uma única
+posição guardada separadamente para cada ocorrência. A edição da lista é feita na web. O vídeo existe uma única
 vez na biblioteca. A ordem em reprodução é uma fotografia da lista ao abri-la.
 
 **Reproduzir lista** retoma a última entrada; Anterior, Seguinte e o seletor do
@@ -51,6 +56,11 @@ vírgulas, por exemplo `workout, exercício, mobilidade` ou
 `culinária, receita, sobremesa`. Um vídeo pode ter até 20 etiquetas. Diferenças
 de maiúsculas e acentos não duplicam a mesma etiqueta. Pode selecionar uma
 etiqueta no filtro ou clicar nela no cartão; a pesquisa também encontra etiquetas.
+Em **Gerir etiquetas**, pode criar uma etiqueta antes de a atribuir, renomeá-la
+globalmente ou eliminá-la. Renomear mantém as associações e o identificador;
+eliminar retira apenas a classificação, preservando vídeos, favoritos e progresso.
+Nomes que colidem com uma etiqueta existente são recusados, sem fundir dados.
+
 Categorias e etiquetas podem ser combinadas. As etiquetas são partilhadas entre
 web, MAG e TVs. Editar/retirar etiquetas num vídeo preserva os restantes vídeos.
 
@@ -143,3 +153,15 @@ Referência PiP: [Document Picture-in-Picture](https://developer.chrome.com/docs
 Evolução proposta (ainda não implementada): grupos/subetiquetas até três níveis,
 com filtro por pai a incluir descendentes. A versão atual usa etiquetas planas e
 categorias hierárquicas, preservando a liberdade de combinar vários temas.
+
+
+Validação adicional da v3: 12 testes Coleções passaram, incluindo renomeação global
+de etiquetas, dados preservados e recusa de gestão nos modos TV/MAG, com favoritos
+e progresso permitidos. No Chrome, gestão web e modos de consulta TV/MAG simulados
+passaram sem reproduzir vídeos. A chave da app Samsung não pode alterar a biblioteca
+por esta API; os pedidos dos clientes hospedados também indicam o modo de utilização.
+
+Categorias versus etiquetas: a proposta atual é usar categorias para temas amplos
+(Exercício, Culinária...) e etiquetas para características combináveis (Mobilidade,
+Força, Glúteos, Sobremesa...). Não foi reorganizado automaticamente o conteúdo do
+utilizador. A hierarquia de etiquetas e filtros com descendentes continua em análise.

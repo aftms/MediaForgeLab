@@ -695,3 +695,38 @@ Culinária→Tipo de prato→Refeição/Sobremesa), múltiplas etiquetas por ví
 de pai incluindo descendentes. Etiquetas atuais são planas, categorias já hierárquicas.
 Próximo desenvolvimento se autorizado: hierarquia de etiquetas preservando IDs
 e associações existentes. Não apresentar esta proposta como funcionalidade entregue.
+
+
+## Coleções v3 — gestão web; consulta MAG/TV; favoritos em todas (2026-11-03)
+
+Fase anterior committed/pushed d767996. Utilizador esclareceu: gestão sóweb;
+MAG/TV consulta, mas favoritos escolhidos/retirados em todas. Implementado:
+oculta importar/guardar/editor/opções dos vídeos nas TVs; categorias/listas
+abrem seletores de consulta, sem criar/editar/eliminar; pesquisa/filtros/teclado
+e progressos mantidos. API recusa gestão de clientes tv/mag e de chaveSamsung,
+permitindo favorite/progress. Web inclui Gerir etiquetas com criar/renomear/delete,
+normalização de nomes, IDs/associações preservados e confirmação antes de eliminar.
+
+12 testes módulo PASS, incluindo shared rename/no data loss/readonly request guard.
+Chrome sem streams: criação/atribuição/renomeação/eliminação de tag e limparfiltro,
+modo web por pathname semquery, consulta TV/MAG e favoritos com foco PASS.
+Módulov3; TVr21/Samsung1.0.21; web24/MAGr29; APK1.4 igual (hosted UI), instalação
+Xiaomi continua pendente por desligada. Atualizar docs/versões Gateway no fecho.
+
+Nova discussão: alinhar tags e categorias. Resposta: categorias=temas amplos;
+tags=características combináveis; evitar duplicar Workout como categoria e tag.
+Grupos/subníveis poderiam organizar tags (Zona muscular→Pernas→Glúteos) e filtro
+da categoria mostrar tags relevantes. Acordado continuar apenas separação web/TV
+enquanto se define organização. NÃO implementada hierarquia de tags nem
+reclassificação automática nem restrição de tags por categoria. Guardar isto como
+proposta em análise, não como funcionalidade entregue. Favoritos são exceção explícita
+à consulta nas TVs. Nenhuma alteração aos favoritos IPTV ou à biblioteca Pessoal.
+
+
+Ativação v3 concluída: backend reiniciado após guarda idle; cliente web/MAG hospedado
+recebe módulo3 ao recarregar. Samsung1.0.21 instalada exit0. Durante instalação
+final havia playback device=Navegador (verificado no status), por isso apenas o
+pacote Samsung foi instalado; não se reiniciou o serviço nem interrompeu o leitor.
+Primeira tentativa conservadora recusou instalação por qualquer playback ativo;
+identificou-se explicitamente Navegador antes de prosseguir. Testes desta segunda
+fase sem transmissões. Xiaomi continua desligada; não instalada APK1.4.

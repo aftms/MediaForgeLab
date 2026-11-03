@@ -121,7 +121,7 @@ class Collections:
         self.closed.set()
         with self.lock:self.db.close()
     def require(self,table,id):
-        assert table in ('items','categories','playlists','entries')
+        assert table in ('items','categories','playlists','entries','tags')
         row=self.db.execute('SELECT * FROM '+table+' WHERE id=?',(str(id),)).fetchone()
         if not row:raise CollectionError('Entrada não encontrada.',404)
         return row
@@ -138,7 +138,7 @@ class Collections:
     def browse(self,p):
         with self.lock:
             categories=[dict(r) for r in self.db.execute('SELECT * FROM categories ORDER BY name COLLATE NOCASE')]
-            tags=[dict(r) for r in self.db.execute('SELECT t.id,t.name,count(it.item) count FROM tags t JOIN item_tags it ON it.tag=t.id GROUP BY t.id ORDER BY t.name COLLATE NOCASE')]
+            tags=[dict(r) for r in self.db.execute('SELECT t.id,t.name,count(it.item) count FROM tags t LEFT JOIN item_tags it ON it.tag=t.id GROUP BY t.id ORDER BY t.name COLLATE NOCASE')]
             playlists=[dict(r) for r in self.db.execute('SELECT p.*,(SELECT count(*) FROM entries e WHERE e.playlist=p.id) count FROM playlists p ORDER BY name COLLATE NOCASE')]
             if p.get('operation')=='item':return self.get(p.get('id'))
             if p.get('operation')=='queue':
@@ -218,7 +218,16 @@ class Collections:
                     added+=self.save_item(item)['added']
                 self.db.commit();self._enqueue_titles()
                 return dict(saved=True,added=added,existing=len(rows)-added)
-            if op in ('category-save','playlist-save'):
+            if op=='tag-save':
+                name=' '.join(clean(d.get('name'),40).split())
+                if not name:raise CollectionError('Indique um nome para a etiqueta.')
+                normalized=''.join(c for c in unicodedata.normalize('NFKD',name.casefold()) if not unicodedata.combining(c))
+                if id:self.require('tags',id)
+                id=id or uuid.uuid4().hex
+                existing=self.db.execute('SELECT id FROM tags WHERE normalized=?',(normalized,)).fetchone()
+                if existing and existing['id']!=id:raise CollectionError('Já existe uma etiqueta com esse nome. Escolha outro nome ou use a existente.')
+                self.db.execute('INSERT INTO tags VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,normalized=excluded.normalized',(id,name,normalized))
+            elif op in ('category-save','playlist-save'):
                 name=clean(d.get('name'),80)
                 if not name:raise CollectionError('Indique um nome.')
                 table='categories' if op=='category-save' else 'playlists';new=not id;id=id or uuid.uuid4().hex
@@ -233,8 +242,8 @@ class Collections:
                     if self.db.execute('SELECT id FROM categories WHERE name=? COLLATE NOCASE AND parent IS ? AND id!=?',(name,parent,id)).fetchone():raise CollectionError('Já existe uma categoria com esse nome neste nível.')
                     self.db.execute('INSERT INTO categories VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,parent=excluded.parent',(id,name,parent))
                 else:self.db.execute('INSERT INTO playlists(id,name) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name',(id,name))
-            elif op in ('category-delete','playlist-delete','item-delete'):
-                table={'category-delete':'categories','playlist-delete':'playlists','item-delete':'items'}[op];self.require(table,id)
+            elif op in ('category-delete','playlist-delete','item-delete','tag-delete'):
+                table={'category-delete':'categories','playlist-delete':'playlists','item-delete':'items','tag-delete':'tags'}[op];self.require(table,id)
                 if table=='categories' and self.db.execute('SELECT 1 FROM categories WHERE parent=?',(id,)).fetchone():raise CollectionError('Mova ou elimine primeiro as subcategorias. Os vídeos serão preservados.')
                 self.db.execute('DELETE FROM '+table+' WHERE id=?',(id,))
             elif op=='favorite':
