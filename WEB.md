@@ -318,3 +318,31 @@ Diagnóstico Chrome isolado em http://127.0.0.1:8091/web/: getInstallabilityErro
 vazio, manifesto sem erros, service worker activated e controller presente. Não
 prova que o navegador/endereço do utilizador tem o mesmo estado. Ajuda verificada
 com agentes de utilizador Chrome/Edge/Android simulados; não foi instalada PWA.
+
+
+## Áudio e legendas — web v14
+
+O painel **Áudio e legendas**, logo abaixo do vídeo, apresenta sempre ambos
+os controlos. Áudio único ou inexistente é indicado; o seletor só permite trocar
+quando há alternativas. Legendas podem ficar Desligadas ou usar uma faixa de
+texto incluída no ficheiro. Nomes de idioma são apresentados em português.
+As faixas não são tradução automática nem pesquisa/download de legendas externas.
+Legendas de imagem (PGS/DVD/DVB) aparecem como não suportadas nesta versão;
+texto já gravado na imagem não pode ser desligado.
+
+Alterar uma faixa reinicia a preparação na posição atual, mantendo apenas uma
+ligação. Se o vídeo estiver em pausa, a escolha só entra em reprodução ao retomar.
+Uma única instância FFmpeg lê a origem e produz HLS e o WebVTT escolhido. Vídeo
+compatível continua em remux. O sidecar é temporário, apagado ao terminar, e não
+é servido diretamente nem colocado em cache offline. Cues de texto delimitados
+são entregues pelo pulse autenticado da sessão; o navegador usa TextTrack/VTTCue
+para suportar também o ecrã inteiro. As TVs/Pessoal usam o mesmo componente ES5,
+com sobreposição quando o leitor é nativo. A MAG IPTV mantém as opções nativas
+MENU → Áudio/Legendas; Pessoal na MAG usa o novo componente partilhado.
+
+Validação sintética: duas faixas AAC com tons distintos (seleção confirmada por
+análise do áudio de saída), dois idiomas de legendas, seek, desligar, limpeza,
+rejeição de outro dispositivo e preservação de sessão perante parâmetros inválidos.
+Chrome confirmou texto PT/EN efetivamente visível, pausa sem ligação, retoma e
+biblioteca pessoal móvel. Conteúdos do fornecedor e TVs/MAG físicos ainda
+precisam de confirmação humana para estas novas opções.

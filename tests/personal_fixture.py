@@ -20,10 +20,17 @@ from test_personal import FakeCloud
 from media import process_options
 
 class Fixture:
-    def __init__(self):
+    def __init__(self,tracks=False):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         subprocess.run([shutil.which('ffmpeg'),'-v','quiet','-f','lavfi','-i','testsrc2=size=320x180:rate=24','-f','lavfi','-i','sine=frequency=440','-t','20','-c:v','libx264','-pix_fmt','yuv420p','-g','48','-c:a','aac','-movflags','+faststart',str(self.root/'video.mp4')],check=True,**process_options())
-        raw=(self.root/'video.mp4').read_bytes()
+        video=self.root/'video.mp4'
+        if tracks:
+            for language,line in (('pt','Legenda portuguesa'),('en','English caption')):
+                (self.root/(language+'.srt')).write_text('1\n00:00:02,000 --> 00:00:08,000\n'+line+'\n\n2\n00:00:12,000 --> 00:00:18,000\n'+line+' final\n\n',encoding='utf-8')
+            multi=self.root/'multilingual.mp4'
+            subprocess.run([shutil.which('ffmpeg'),'-v','quiet','-i',str(video),'-f','lavfi','-i','sine=frequency=880','-i',str(self.root/'pt.srt'),'-i',str(self.root/'en.srt'),'-map','0:v:0','-map','0:a:0','-map','1:a:0','-map','2:s:0','-map','3:s:0','-t','20','-c:v','copy','-c:a','aac','-c:s','mov_text','-metadata:s:a:0','language=por','-metadata:s:a:1','language=eng','-metadata:s:s:0','language=por','-metadata:s:s:1','language=eng','-movflags','+faststart',str(multi)],check=True,timeout=20,**process_options())
+            video=multi
+        raw=video.read_bytes()
         class Source(BaseHTTPRequestHandler):
             def log_message(self,*args):pass
             def do_HEAD(self):self.do_GET()
@@ -57,7 +64,7 @@ class Fixture:
         self.app.shutdown();self.app.server_close();self.source.shutdown();self.source.server_close();self.temp.cleanup()
 
 if __name__=='__main__':
-    f=Fixture()
+    f=Fixture(tracks="--tracks" in sys.argv)
     Path(sys.argv[1]).write_text(json.dumps(dict(url=f.url,video=f.video,photo=f.photo)))
     stop=Path(sys.argv[1]+'.stop');stop.unlink(missing_ok=True)
     print('Synthetic personal server ready',flush=True)

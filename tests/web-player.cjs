@@ -1,13 +1,13 @@
 const assert=require('assert/strict'),fs=require('fs'),vm=require('vm');
 const source=fs.readFileSync(require('path').join(__dirname,'../public/web/app.js'),'utf8');
 const nodes=new Map(),requests=[];let nextStart,phase='analysis';
-const context={Hls:{},setTimeout(){return 1;},clearTimeout(){},console,Option:function(){},
+const context={trackControls:{prepare(){},reset(){},feed(){},update(){}},Hls:{},setTimeout(){return 1;},clearTimeout(){},console,Option:function(){},
  $:id=>{if(!nodes.has(id))nodes.set(id,{value:0,textContent:'',disabled:false,replaceChildren(){},add(){}});return nodes.get(id)},
  api:async(path,data)=>{requests.push({path,data});if(path==='/api/media/web')return nextStart;if(path==='/api/media/pulse')return {token:'test',state:'preparing',stage:phase,duration:phase==='remux'?1200:0};return {};},
  document:{activeElement:null}};
 context.text=(id,value)=>context.$(id).textContent=value;
 vm.createContext(context);
-vm.runInContext(`let session=null,playingItem={id:'m1',kind:'movie'},hls=null,basePosition=600,duration=1200,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,compatibility=false,pausedPosition=null,pollTimer;
+vm.runInContext(`let session=null,playingItem={id:'m1',kind:'movie'},hls=null,basePosition=600,duration=1200,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,subtitleIndex=-1,compatibility=false,pausedPosition=null,pollTimer;
 const owner='test-owner';const video={currentTime:600,pause(){},removeAttribute(){},load(){}};
 function fmt(t){return Math.floor(t/60).toString().padStart(2,'0')+':'+Math.floor(t%60).toString().padStart(2,'0');}
 `+source.slice(source.indexOf('function updateTime()'),source.indexOf('async function refreshStatus()')),context);

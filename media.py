@@ -1,5 +1,6 @@
 """One household playback lease, private upstream proxy and bounded HLS output."""
 import json
+import html
 from collections import OrderedDict
 import os
 from pathlib import Path
@@ -12,6 +13,29 @@ import threading
 import time
 import urllib.request
 import urllib.error
+
+
+TEXT_SUBTITLES = {'subrip','srt','ass','ssa','webvtt','mov_text','text'}
+
+def subtitle_cues(path):
+    """Read only completed cues from a bounded tail of FFmpeg's growing sidecar."""
+    try:
+        with path.open('rb') as stream:
+            stream.seek(0, 2);size=stream.tell();stream.seek(max(0,size-262144))
+            data=stream.read(262144).decode('utf-8',errors='replace').replace('\r','')
+    except OSError:return []
+    blocks=data.split('\n\n')
+    if size>262144:blocks=blocks[1:]
+    def seconds(value):
+        parts=value.split(':');return sum(float(n)*60**i for i,n in enumerate(reversed(parts)))
+    cues=[]
+    for block in (blocks if data.endswith('\n') else blocks[:-1]):
+        match=re.search(r'(\d{2,}:\d{2}(?::\d{2})?\.\d{3}) --> (\d{2,}:\d{2}(?::\d{2})?\.\d{3})[^\n]*\n([\s\S]*)',block)
+        if not match:continue
+        start,end=seconds(match[1]),seconds(match[2])
+        text=html.unescape(re.sub(r'<[^>]*>','',match[3])).strip()[:4000]
+        if text and 0<=start<end:cues.append(dict(start=start,end=end,text=text))
+    return cues[-1000:]
 
 
 class MediaError(Exception):
@@ -114,10 +138,11 @@ class MediaManager:
             resume = self.app.progress.get(identifier, {})
             position = float(data.get('position', resume.get('position',0) if not resume.get('completed') else 0))
             audio_index = int(data.get('audio',0))
-            if not 0 <= position <= 604800 or not 0 <= audio_index <= 100:
+            subtitle_index = int(data.get('subtitle',-1))
+            if not 0 <= position <= 604800 or not 0 <= audio_index <= 100 or not -1 <= subtitle_index <= 100:
                 raise ValueError()
         except (ValueError, TypeError, OverflowError):
-            raise MediaError('Posição ou faixa de áudio inválida.', 400) from None
+            raise MediaError('Posição, áudio ou legenda inválida.', 400) from None
         with self.lock:
             request_id = int(data.get('request_id') or 0)
             if request_id and request_id <= self.requests.get((owner, ip), 0):
@@ -132,7 +157,7 @@ class MediaManager:
             s = dict(token=token, owner=owner, ip=ip, mode=mode, id=identifier, kind=item['kind'], request_id=request_id,
                      seen=time.monotonic(), started=time.monotonic(), startup_ms={}, state='ready' if mode=='mag' else 'preparing',
                      stage='ready' if mode=='mag' else 'source', url=self.app.catalog.play_url(identifier), position=position if item['kind']!='tv' else 0,
-                     duration=0, audio=[], compatibility=bool(data.get('compatibility')), audio_index=audio_index)
+                     duration=0, audio=[], subtitles=[], subtitle_index=subtitle_index, tracks_known=False, compatibility=bool(data.get('compatibility')), audio_index=audio_index)
             if mode == 'web':
                 s['device'] = {'samsung':'Samsung TV','androidtv':'Android TV','tv':'TV'}.get(data.get('device'), 'Navegador')
             self.last_failure = None
@@ -146,7 +171,7 @@ class MediaManager:
             return self._public(s)
 
     def _public(self, s):
-        return {k:s[k] for k in ('token','id','kind','state','position','duration','audio','stage')}
+        return {k:s[k] for k in ('token','id','kind','state','position','duration','audio','stage','subtitles','subtitle_index','audio_index','tracks_known')}
 
     def pulse(self, data, ip):
         with self.lock:
@@ -159,6 +184,7 @@ class MediaManager:
             if s['mode']=='web':
                 result['url'] = '/'+self.namespace+'/hls/'+s['token']+'/index.m3u8'
                 result['video_mode'] = s.get('video_mode')
+                if s['subtitle_index']>=0:result['cues']=subtitle_cues(self.root/s['token']/'captions.vtt')
             return result
 
     def release(self, data, ip):
@@ -226,6 +252,7 @@ class MediaManager:
                             self.probe_cache.popitem(last=False)
             videos = [v for v in info.get('streams',[]) if v.get('codec_type')=='video']
             audio = [v for v in info.get('streams',[]) if v.get('codec_type')=='audio']
+            subtitles = [v for v in info.get('streams',[]) if v.get('codec_type')=='subtitle']
             if not fast_tv and not videos:
                 raise ValueError('video')
             # Native TV decoders receive original video in HLS without a separate
@@ -240,8 +267,14 @@ class MediaManager:
                     return
                 folder.mkdir(parents=True, exist_ok=True)
                 s['duration'] = float(info.get('format',{}).get('duration') or 0)
-                s['audio'] = [dict(index=i,language=a.get('tags',{}).get('language',''),codec=a.get('codec_name','')) for i,a in enumerate(audio)]
+                s['audio'] = [dict(index=i,language=a.get('tags',{}).get('language',''),title=a.get('tags',{}).get('title','')[:200],codec=a.get('codec_name','')) for i,a in enumerate(audio)]
+                s['tracks_known'] = not fast_tv
+                s['subtitles'] = [dict(index=i,language=t.get('tags',{}).get('language',''),title=t.get('tags',{}).get('title','')[:200],codec=t.get('codec_name',''),supported=t.get('codec_name') in TEXT_SUBTITLES) for i,t in enumerate(subtitles)]
+                si=s['subtitle_index']
+                if si>=len(subtitles) or (si>=0 and subtitles[si].get('codec_name') not in TEXT_SUBTITLES):si=-1
+                s['subtitle_index']=si
                 ai = max(0, min(len(audio)-1, s['audio_index']))
+                s['audio_index']=ai
                 command = [self.ffmpeg,'-hide_banner','-loglevel','quiet','-nostdin','-y','-rw_timeout','15000000']
                 # Android live input needs only enough analysis to identify its tracks.
                 # Keep keyframe-aligned segments and original video; other clients
@@ -260,6 +293,10 @@ class MediaManager:
                 command += ['-c:a','copy'] if (fast_tv and s.get('device')=='Samsung TV') or (audio and audio[ai].get('codec_name')=='aac') else ['-c:a','aac','-b:a','160k','-ac','2']
                 command += ['-f','hls','-hls_time','2' if android_live or browser_vod else '4','-hls_list_size','10','-hls_delete_threshold','2',
                     '-hls_flags','delete_segments+temp_file','-hls_segment_filename',str(folder/'s%06d.ts'),str(folder/'index.m3u8')]
+                # The same demuxer/source produces captions: never a second supplier connection.
+                # Separate output keeps sparse subtitles from holding up HLS startup.
+                if si>=0:
+                    command += ['-map','0:s:%d'%si,'-c:s','webvtt','-f','webvtt','-flush_packets','1',str(folder/'captions.vtt')]
                 s['video_mode'] = 'remux' if copy_video else 'transcode'
                 s['stage'] = s['video_mode']
                 s['startup_ms']['processing_started'] = round((time.monotonic()-s['started'])*1000)

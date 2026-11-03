@@ -388,3 +388,39 @@ hospedada ao reabrir. MAG Restart portal para r25 e Pessoal v4. Testes no PC
 não confirmam o comando/hardware MAG: falta aceitação física pelo utilizador.
 Próximo: confirmar navegação natural entre conteúdos na MAG. Restante plano
 OneDrive mantém piloto e validação de reprodução nas TVs/MAG pendente.
+
+
+## Áudio e legendas — web v14 / Pessoal v5 / TV r14 (2026-11-03)
+
+Pedido: tornar áudio/legendas disponíveis na web. Implementado componente ES5
+public/tv/track-controls.* comum à web IPTV, TVs e Pessoal (incluindo MAG).
+Painel sempre identificável: áudio único/ausente, idiomas, desligar legendas,
+faixas incompatíveis desativadas. Expandido na web IPTV, compacto nas TVs/Pessoal.
+OK/setas/OK confirma seleção por comando, BACK cancela; controlos não desaparecem
+com foco. Troca preserva posição; em pausa guarda escolha sem iniciar stream.
+MAG IPTV mantém opções nativas existentes (sem alterar a solução de seek).
+
+Backend MediaManager identifica áudio/subtítulos; aceita subtitle=-1/off ou
+índice. Mesmo FFmpeg/demuxer/origem produz HLS e WebVTT progressivo em ficheiro
+privado temporário, sem segunda ligação nem recompressão só por ativar legendas.
+Pulse devolve cues completos de uma cauda limitada262KB/1000cues, com validação
+de token/IP e texto simples. Última legenda termina em newline simples (FFmpeg)
+e é lida corretamente. Suporta subrip/srt/ass/ssa/webvtt/mov_text/text; PGS/DVD/DVB
+não suportados/indicados. Não procura legendas externas nem gera tradução.
+Chrome usa TextTrack/VTTCue para fullscreen; TVs nativas usam overlay com relógio
+local. Trocas/stop removem cues, callbacks de pulse tardios não apagam sessão nova.
+
+Testes: test_tracks.py2/2 (FFmpeg real; AAC880Hz escolhido, PT/EN, seek10s,
+remux, off, limpeza, exclusão entre dispositivos e input inválido preserva lease),
+test_media7/7, test_media_pipeline3/3; regressões JS web/MAG/TV/API/Pessoal/slider
+PASS. Chrome sintético: texto PT/EN efetivamente visível, pausa+mudança sem lease,
+retoma, desligar, comando e casos sem suporte, vídeo pessoal390px; capturas revistas.
+Nenhum vídeo pessoal real ou fornecedor aberto nesta fase. Aceitação física
+TV/MAG e faixas concretas do fornecedor permanecem pendentes.
+
+Ativação: esperou pela catalogação OneDrive em curso, que terminou com31144
+itens vistos (31125 novos,19 atualizados), sem erro. Reinício controlado apenas
+após ambas as reproduções idle, scan/refresh parados. Rotas dos novos assets e
+aliases PWA HTTP200. Samsung1.0.14/r14 assinada/instalada sem reprodução Samsung;
+Xiaomi APK1.3 carrega UI hospedada; MAG rootr25 mantém-se, Pessoalv5. Web Ctrl+F5
+para v14. Próximo: utilizador confirmar idiomas/legendas no filme e nos dispositivos.

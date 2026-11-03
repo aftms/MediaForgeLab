@@ -114,3 +114,13 @@ contínua/delta. Não inclui IA, reconhecimento facial ou edição de originais.
   caminho JSON para publicar o endereço; criar `<caminho>.stop` termina-o.
 - `tests/personal-browser.cjs <fixture.json> <perfil-Chrome-CDP>`: teste real no
   Chrome isolado com DevToolsActivePort. Fecha esse navegador ao terminar.
+
+
+## Áudio e legendas — Pessoal v5
+
+Durante um vídeo, abrir **Áudio e legendas** nos controlos. O painel é compacto
+por defeito. Selecionar a faixa existente; no comando, OK entra na escolha,
+setas alteram e OK confirma; BACK cancela a escolha. Ao mudar durante a pausa,
+o vídeo permanece parado até Retomar. Inclui legendas de texto incorporadas;
+formatos de imagem aparecem como não suportados. Usa o mesmo leitor/serviço
+partilhado da web e TVs, sem uma segunda ligação ao OneDrive.
