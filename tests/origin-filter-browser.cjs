@@ -8,10 +8,13 @@ async function key(code){await call('Input.dispatchKeyEvent',{type:'keyDown',win
 async function choice(code){await run(`document.querySelector('[data-origin="${code}"]').click()`);}
 try{await call('Page.enable');await call('Runtime.enable');await call('Network.enable');
 for(const client of ['web','tv']){
+ await call('DOMStorage.clear',{storageId:{securityOrigin:fixture.url,isLocalStorage:true}});
  await call('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/':'/tv/index.html')});
  const category=client==='web'?'category':'group';await until(`Array.from(document.getElementById('${category}').options).some(o=>o.value==='Desporto')&&document.querySelector('[data-origin="VO"]')`);
  await run(`document.getElementById('${category}').value='Desporto';document.getElementById('${category}').onchange()`);await until("(document.getElementById('cards')||document.getElementById('items')).children.length===3");
  await run("document.getElementById('origin').click()");await choice('MEO');await until("(document.getElementById('cards')||document.getElementById('items')).children.length===1");await choice('VO');await until("(document.getElementById('cards')||document.getElementById('items')).children.length===2");
+ await call('Page.reload');await until("document.getElementById('origin')&&document.getElementById('origin').value==='MEO,VO'");await until(`document.getElementById('${category}').value==='Desporto'`);
+ await run("document.querySelector('[data-section=movie]').click()");await until("document.getElementById('origin').hidden");await run("document.querySelector('[data-section=tv]').click()");await until("document.getElementById('origin').value==='MEO,VO'");await until(`document.getElementById('${category}').value==='Desporto'`);await run("document.getElementById('origin').click()");
  assert.equal(await run(`document.getElementById('${category}').value`),'Desporto');assert.equal(await run("document.getElementById('origin').value"),'MEO,VO');assert.equal(await run("document.querySelectorAll('[data-origin][aria-checked=true]').length"),2);
  assert.ok(await run("(document.getElementById('cards')||document.getElementById('items')).textContent.includes('MEO:')&&(document.getElementById('cards')||document.getElementById('items')).textContent.includes('VO:')&&!(document.getElementById('cards')||document.getElementById('items')).textContent.includes('NOS:')"));
  if(client==='web'){fs.writeFileSync(profile+'/origins-desktop.png',Buffer.from((await call('Page.captureScreenshot')).data,'base64'));await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false});await sleep(200);assert.ok(await run("(()=>{var r=document.getElementById('origin-options').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight})()"));fs.writeFileSync(profile+'/origins-mobile.png',Buffer.from((await call('Page.captureScreenshot')).data,'base64'));}
@@ -20,5 +23,5 @@ for(const client of ['web','tv']){
  if(client==='tv'){await key(13);await key(40);await key(13);await key(40);await key(13);await until("(document.getElementById('cards')||document.getElementById('items')).children.length===2");assert.equal(await run("document.getElementById('origin').value"),'MEO,NOS');assert.equal(await run("document.getElementById('group').value"),'Desporto');await key(10009);assert.equal(await run("document.getElementById('origin').getAttribute('aria-expanded')"),'false');}
  console.log('PASS '+client+': multiple origins, removal, All, category preserved, keyboard/remote focus.');
 }
-assert.deepEqual(errors,[]);assert.deepEqual(streams,[]);console.log('PASS desktop/mobile layout; no playback started.');
+assert.deepEqual(errors,[]);assert.deepEqual(streams,[]);console.log('PASS desktop/mobile layout, reload and per-section persistence; no playback started.');
 }finally{socket.close();}})().catch(e=>{console.error(e.message);process.exit(1)});

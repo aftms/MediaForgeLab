@@ -79,7 +79,7 @@ function harness(native=true, opts={}) {
   }
   const ctx={window,document:{body:{style:{}},documentElement:{clientHeight:576},getElementById:id=>{assert(nodes[id],'Missing actual HTML id '+id);return nodes[id];},createElement:tag=>new Element(tag),createTextNode:value=>({value})},XMLHttpRequest:XHR};
   ctx.Date=class extends Date{constructor(...args){super(...(args.length?args:[clock]));}};
-  vm.createContext(ctx);vm.runInContext(mediaTracks,ctx);if(!opts.missingScript)vm.runInContext(source,ctx);vm.runInContext(boot,ctx);
+  vm.createContext(ctx);vm.runInContext(fs.readFileSync('public/tv/browse-prefs.js','utf8'),ctx);vm.runInContext(mediaTracks,ctx);if(!opts.missingScript)vm.runInContext(source,ctx);vm.runInContext(boot,ctx);
   return {nodes,calls,requests,pending,favorites,storage,ctx,
     key(code,extra={}){ctx.MagPortal.keydown({keyCode:code,preventDefault(){},...extra});},
     release(code){ctx.document.onkeyup({keyCode:code,preventDefault(){}});},
@@ -359,7 +359,7 @@ let late=false;h=harness(true,{defer:u=>late&&u.startsWith('/api/catalog')});lat
 console.log('PASS: sidebar/list arrows, all section/action buttons, stable selection, held OK protection, search return, empty/slow lists and CH page navigation.');
 
 // Portugal is only the default live-TV country; the world and other sections remain accessible.
-h=harness(false);assert(h.requests[0].url.includes("country=PT"));h.key(8);assert(h.requests.at(-1).url.includes("view=countries"));h.click("tab-movie");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-series");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-all");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-tv");assert(h.requests.at(-1).url.includes("country=PT"));h.click("options-button");for(let i=0;i<4;i++)h.key(40);h.key(13);assert(h.requests.at(-1).url.includes("view=countries"));
+h=harness(false);assert(h.requests[0].url.includes("country=PT"));h.key(8);assert(h.requests.at(-1).url.includes("view=countries"));h.click("tab-movie");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-series");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-all");assert(!h.requests.at(-1).url.includes("country=PT"));h.click("tab-tv");assert(h.requests.at(-1).url.includes("view=countries"));assert(!h.requests.at(-1).url.includes("country=PT"));h.click("options-button");for(let i=0;i<4;i++)h.key(40);h.key(13);assert(h.requests.at(-1).url.includes("view=countries"));
 console.log("PASS: default Portugal for live TV, BACK/MENU world browsing and unchanged movies/series/favorites.");
 
 h=harness(false);h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);
@@ -414,3 +414,9 @@ h=moviePlaying();h.key(8);h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Au
 h=harness();h.enterTV();h.key(13);h.flush(1000);h.ctx.stbEvent.onEvent(4);h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Audio').length,0,'Live TV unchanged');
 let reads=0;h=moviePlaying({player:{GetAudioPIDsEx:()=>{reads++;return reads>1?'[{pid:103,lang:["eng"]}]':'[]';}}});h.flush(250);h.flush(250);assert.deepEqual(h.calls.at(-1),['Audio',103]);
 console.log('PASS automatic PT-PT / English preference, original fallback, deferred native selection, manual override, delayed descriptors, stop and live TV protection.');
+
+// Filters survive a fresh portal instance and section switches, without autoplay.
+h=harness(false);h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);h.key(40);h.key(13);h.release(13);h.key(40);h.key(13);h.key(8);
+const savedPreferences=h.storage;h=harness(false,{storage:savedPreferences});assert.equal(new URL('http://fixture.invalid'+h.requests.find(r=>r.url.startsWith('/api/catalog?')).url).searchParams.get('origin'),'MEO,VO');
+h.click('tab-movie');h.click('tab-tv');assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'),'MEO,VO');assert.equal(h.calls.filter(c=>c[0]==='Play').length,0);
+console.log('PASS: MAG multiple origins restored across portal instances and section switches; no autoplay.');

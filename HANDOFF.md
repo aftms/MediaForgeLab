@@ -808,3 +808,42 @@ construída e instalação registada no fecho da fase. Xiaomi continua desligada
 APK1.4 pendente: sem tentativa de instalação. Coleçõesv5 e Pessoalv6 inalterados.
 Próximo Ctrl+F5 na web, reabrir app TV ou Restart portal na MAG. Validar o comando
 físico quando conveniente. Commit/push e notas Gateway no fecho.
+
+
+## Preferências de navegação persistentes — 03/11/2026
+
+Pedido: manter escolhas/filtros entre sessões sempre que possível. Implementação
+comum ES5 public/tv/browse-prefs.js, armazenamento local por interface/dispositivo
+e origem HTTP (endereço/porta). Catálogo web26/MAGr31/TVr25: última secção/tipo,
+país, origens múltiplas, categoria, género, qualidade, PT/BR, pesquisa e pasta de
+favoritos. Memória independente por secção/tipo; mudar Filmes→TV recupera os filtros
+da TV. Portugal é o valor inicial sem preferências. O tamanho/tipo cartões/lista
+web já tinha persistência própria e mantém-se. Reabre na primeira página e não
+retoma reprodução nem guarda a pilha interna de temporadas/episódios.
+
+Coleçõesv6 guarda categoria, etiqueta, plataforma, lista, favoritos/continuar e
+pesquisa. Pessoalv7 guarda vista, tipo, ano, pasta, álbum e pesquisa por vista.
+Referências removidas em Coleções/Pessoal e pastas de favoritos desaparecidas
+recuperam sem bloquear a interface. Texto de pesquisa guardado imediatamente;
+resposta de um filtro anterior já não apaga texto escrito durante a espera.
+
+Preferências localStorage com schema1, campos permitidos e validação simples;
+JSON inválido ou storage indisponível não bloqueia a app. Sem campos de tokens,
+URLs de reprodução ou leases. Limpeza dos dados do navegador remove preferências;
+outro navegador/endereço/dispositivo tem preferências próprias. Favoritos e
+progresso continuam partilhados no servidor. MAG depende do armazenamento do WebKit.
+
+Testes PASS: helper (defaults, corrupção, storage bloqueado, campos/valores), MAG
+novo portal com as mesmas preferências e troca de secção; regressões MAG/TV;
+Chrome web/TV reload e troca de secção; Coleções/Pessoal e recuperação de referências
+removidas; fecho completo/reabertura do Chrome com o mesmo perfil restaurou
+MEO+VO/Desporto/HD/SPORT sem autoplay. 16 testes portal + 13 Coleções passaram.
+Não foram iniciadas transmissões. Fixtures isoladas; dados reais não alterados.
+
+Serviço reiniciado com guarda idle. control.start excedeu a espera enquanto o
+processo construía a biblioteca; não foi iniciado outro processo nem terminado o
+existente. O processo acabou por ficar pronto; identidade e HTTP confirmados.
+Samsung1.0.25 construída/instalada exit0. Xiaomi continua desligada; APK1.4 de
+Coleções pendente como antes. Validação física de persistência nas TVs/MAG pendente.
+Próximo: atualizar web/reabrir TV/Restart portal; escolhas feitas desde esta versão
+ficam guardadas. Commit/push e notas Gateway no fecho. Sem novo bloqueio.

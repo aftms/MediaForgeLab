@@ -16,6 +16,9 @@ var MagPortal = (function () {
     var fastDirection=0,fastLevel=0,fastTimer=null,fastDuration=0,fastLastPress=0;
     var seekInFlight=null, seekCheckTimer=null, resumeTimer=null, endTimer=null;
     var diagnosticSession=new Date().getTime().toString(36)+"-"+Math.floor(Math.random()*1000000).toString(36),diagnosticSeq=0,bootReported=false;
+    var browsePrefs=window.BrowsePrefs.create('catalog-mag',['kind','view','country','countryName','origin','originName','group','genre','q','quality','language','favorites','folder']);
+    function browseSlot(){return (state.favorites==="1"?"favorites":state.kind)+":"+state.kind;}
+    function restoreBrowse(){state=browsePrefs.read(browseSlot(),state);}
     var overlay="", choices=[], choiceIndex=0, searchDraft="", searchIndex=0, physicalTyping=false, detailPrograms=[];
     var keys="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("").concat(["ESPAÇO","APAGAR","LIMPAR","PESQUISAR","CANCELAR"]);
     var labels={tv:"TV",movie:"Filmes",series:"Séries",all:"Favoritos"};
@@ -109,6 +112,7 @@ var MagPortal = (function () {
         },650);
     }
     function loadPage(position,autoplay){
+        if(state.view!=="seasons"&&state.view!=="episodes"){browsePrefs.write(browseSlot(),state);}
         var serial=++loadSeq,params=copy(state);params.offset=Math.max(0,Math.floor(position/pageSize)*pageSize);params.limit=pageSize;
         if(pageRequest){pageRequest.onreadystatechange=function(){};pageRequest.abort();}
         text(el("group"),state.view==="countries"?labels[state.kind]+" · A carregar países…":state.view==="groups"?labels[state.kind]+" · A carregar categorias…":state.view==="seasons"?"A carregar temporadas…":"A carregar esta página…");
@@ -341,7 +345,7 @@ var MagPortal = (function () {
     function favoriteTabsVisible(){return state.favorites==="1"&&state.view==="items";}
     function selectFavoriteKind(kind,focus){
         if(playing){stop();}closeOverlay();stack=[];menuFocus="list";sidebarIndex=3;favoriteTabsFocus=!!focus;
-        state.kind=kind;state.origin="";state.originName="";state.favorites="1";state.view="items";state.country="";state.countryName="";state.group="";state.genre="";state.q="";state.series="";state.season="";state.seasonName="";loadPage(0,false);
+        state.kind=kind;state.origin="";state.originName="";state.favorites="1";state.view="items";state.country="";state.countryName="";state.group="";state.genre="";state.q="";state.series="";state.season="";state.seasonName="";restoreBrowse();loadPage(0,false);
     }
     function favoriteKindPicker(){picker("Favoritos",[
         {label:"Canais",icon:"tv",description:"Os seus canais favoritos.",action:function(){selectFavoriteKind("tv",false);}},
@@ -357,7 +361,7 @@ var MagPortal = (function () {
     function selectKind(kind,allCountries){
         if(kind==="all"){selectFavoriteKind("tv",false);return;}menuFocus="list";sidebarIndex=kind==="movie"?1:kind==="series"?2:0;favoriteTabsFocus=false;
         if(playing){stop();}closeOverlay();stack=[];state.kind=kind;state.view=kind==="tv"&&allCountries?"countries":"groups";
-        state.origin="";state.originName="";state.country=kind==="tv"&&!allCountries?"PT":"";state.countryName=state.country==="PT"?"Portugal":"";state.group="";state.genre="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites="0";loadPage(0,false);
+        state.origin="";state.originName="";state.country=kind==="tv"&&!allCountries?"PT":"";state.countryName=state.country==="PT"?"Portugal":"";state.group="";state.genre="";state.q="";state.series="";state.season="";state.seasonName="";state.favorites="0";if(!allCountries){restoreBrowse();}loadPage(0,false);
     }
     function nextKind(){var kinds=["tv","movie","series","all"],i;for(i=0;i<kinds.length;i+=1){if((state.favorites==="1"?"all":state.kind)===kinds[i]){selectKind(kinds[(i+1)%kinds.length]);return;}}}
     function back(){
@@ -577,6 +581,7 @@ var MagPortal = (function () {
             if(window.gSTB&&window.gSTB.Play&&window.gSTB.Stop){nativePlayer=window.gSTB;}else if(window.stb&&window.stb.Play&&window.stb.Stop){nativePlayer=window.stb;}
         }catch(ignore){nativePlayer=null;}
         try{var saved=window.localStorage.getItem("mag-quality-v2");if(qualities[saved]){state.quality=saved;}}catch(ignore){}
+        var last=browsePrefs.last("tv:tv").split(":");if(["tv","movie","series","favorites"].indexOf(last[0])!==-1&&["tv","movie","series"].indexOf(last[1])!==-1){state.kind=last[1];state.favorites=last[0]==="favorites"?"1":"0";state.country=last[0]==="tv"?"PT":"";state.countryName=state.country?"Portugal":"";}restoreBrowse();sidebarIndex=state.favorites==="1"?3:state.kind==="movie"?1:state.kind==="series"?2:0;
         document.onkeydown=keydown;document.onkeyup=keyup;document.onkeypress=keypress;window.onresize=resize;
         window.onunload=function(){saveProgress();releaseLease();if(nativePlayer){try{nativePlayer.Stop();}catch(ignore){}}};
         el("favorites-tv").onclick=function(){selectFavoriteKind("tv",false);};el("favorites-movie").onclick=function(){selectFavoriteKind("movie",false);};el("favorites-series").onclick=function(){selectFavoriteKind("series",false);};

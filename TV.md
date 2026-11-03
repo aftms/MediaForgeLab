@@ -205,3 +205,11 @@ Todas as origens limpa a seleção. Desmarcar a última também regressa a Todas
 Comando: setas, OK para marcar/desmarcar, Voltar para fechar. Na MAGr30, MENU →
 Origem dos canais usa as mesmas regras. Qualidade Auto continua a escolher uma
 versão por canal entre as origens selecionadas. Não há alteração de favoritos.
+
+
+Preferências persistentes (web26 / MAGr31 / TVr25): os filtros e a pesquisa ficam
+guardados por secção e são recuperados ao regressar ou reabrir a aplicação. Inclui
+origens múltiplas, país, categoria, género, qualidade, PT/BR e pasta de favoritos.
+Cada navegador/dispositivo/endereço tem as suas preferências. Apagar os dados do
+navegador remove-as; favoritos e progresso no servidor permanecem. Sem preferências,
+TV começa em Portugal. A biblioteca volta à primeira página, sem iniciar reprodução.

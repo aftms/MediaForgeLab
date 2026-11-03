@@ -42,11 +42,11 @@ for asset in (BASE/'public'/'tv').glob('*'):
 STATIC['/tv/']=('tv/index.html','text/html')
 # Same files, kept under the installed PWA scope; no personal content is cached.
 STATIC['/web/personal/']=('tv/personal.html','text/html')
-for name in ('personal.css','personal.js','config.js','player.js','brand.png','track-controls.js','track-controls.css'):
+for name in ('personal.css','personal.js','config.js','player.js','brand.png','track-controls.js','track-controls.css','browse-prefs.js'):
     STATIC['/web/personal/'+name]=STATIC['/tv/'+name]
 STATIC['/web/collections/']=('tv/collections.html','text/html')
 STATIC['/collections/player']=('tv/collection-player.html','text/html')
-for name in ('collections.css','collections.js','config.js','player.js','brand.png'):
+for name in ('collections.css','collections.js','config.js','player.js','brand.png','browse-prefs.js'):
     STATIC['/web/collections/'+name]=STATIC['/tv/'+name]
 STATIC.update({"/assets/"+p.name:("assets/"+p.name,"image/png")
                for p in (BASE / 'public' / 'assets').glob('*.png')})
