@@ -1105,3 +1105,8 @@ normalmente (debug0), sem abrir conteúdos. AndroidTV APK1.5/code6 compilado e
 assinado, com Coleçõesv12; adb devices vazio, pelo que Xiaomi não foi instalada.
 Browser do utilizador continuou ativo e backend não foi reiniciado. Confirmação
 MAGv12 ainda não recebida; não confundir testes de simulação com validação física.
+
+
+## Confirmação física MAG Coleçõesv12 — 2026-11-03
+
+Confirmação física do utilizador em 03/11/2026: na MAG com Coleções v12 aparecem os cartões e consegue sair. Carregamento/lista e saída validados na box; retirar pendência desses dois pontos. Reprodução social/imagem/som na MAG ainda não confirmados. Sem alterações de código, restart ou streams neste checkpoint. Mantêm-se instalação Xiaomi pendente (APK1.5 preparado) e ativação backend Por classificar dependente de fecho confirmado do leitor; esta resposta não autoriza restart.
