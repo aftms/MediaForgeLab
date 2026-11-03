@@ -393,3 +393,19 @@ h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);h.key(40);h.ke
 assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('group'),'Desporto');
 assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'),'MEO');
 console.log('PASS: MAG source switch preserves selected category.');
+
+// Same language fixtures as the shared backend, plus native lifecycle protection.
+for(const [rows,expected] of JSON.parse(fs.readFileSync(path.join(__dirname,'audio-preference-cases.json'),'utf8'))){
+ const tracks=rows.map((t,i)=>({pid:100+i,lang:[t.language],title:t.title||''}));
+ const selected=h.ctx.MagTracks.preferred(tracks);assert.equal(selected?selected.pid-100:null,expected);
+}
+h=moviePlaying();assert.equal(h.calls.filter(c=>c[0]==='Audio').length,0,'Never switch from inside native callback');
+h.flush(250);assert.deepEqual(h.calls.at(-1),['Audio',102]);
+h.ctx.stbEvent.onEvent(4);h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Audio').length,1,'Seek does not override selected audio');
+h=moviePlaying();playbackOption(h,2);h.key(13);h.flush(250);assert.deepEqual(h.calls.filter(c=>c[0]==='Audio'),[['Audio',101]],'Manual choice cancels pending auto');
+h=moviePlaying({audioTracks:'[{pid:101,lang:["eng"]},{pid:103,lang:["por"],title:"Português Portugal"}]'});h.flush(250);assert.deepEqual(h.calls.at(-1),['Audio',103]);
+h=moviePlaying({audioTracks:'[{pid:101,lang:["spa"]},{pid:103,lang:["por"]}]'});h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Audio').length,0,'Unmatched languages preserve native original');
+h=moviePlaying();h.key(8);h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Audio').length,0,'Closing cancels preference');
+h=harness();h.enterTV();h.key(13);h.flush(1000);h.ctx.stbEvent.onEvent(4);h.flush(250);assert.equal(h.calls.filter(c=>c[0]==='Audio').length,0,'Live TV unchanged');
+let reads=0;h=moviePlaying({player:{GetAudioPIDsEx:()=>{reads++;return reads>1?'[{pid:103,lang:["eng"]}]':'[]';}}});h.flush(250);h.flush(250);assert.deepEqual(h.calls.at(-1),['Audio',103]);
+console.log('PASS automatic PT-PT / English preference, original fallback, deferred native selection, manual override, delayed descriptors, stop and live TV protection.');

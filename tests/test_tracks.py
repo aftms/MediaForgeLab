@@ -35,10 +35,13 @@ class TrackPipelineTests(unittest.TestCase):
    self.assertTrue(any('portuguesa' in c['text'] for c in first['cues']))
    self.assertEqual(m.session['process'].args.count('-i'),1)
    with self.assertRaises(MediaError):m.start(dict(id='fixture-vod',owner='another-device-1'),'127.0.0.2','web')
+   for invalid_audio in (-1,101,'bad'):
+    with self.assertRaises(MediaError):m.start(dict(id='fixture-vod',owner='fixture-track-owner',audio=invalid_audio),'127.0.0.1','web')
+    self.assertEqual(m.session['token'],first['token'])
    for invalid in (-2,101,'bad'):
     with self.assertRaises(MediaError):m.start(dict(id='fixture-vod',owner='fixture-track-owner',subtitle=invalid),'127.0.0.1','web')
     self.assertEqual(m.session['token'],first['token'])
-   second=start(1,1,10)
+   second=start('auto',1,10)
    self.assertEqual(second['position'],10);self.assertEqual(second['audio_index'],1)
    self.assertTrue(any('English' in c['text'] and 1<=c['start']<=3 for c in second['cues']),second['cues'])
    self.assertFalse((m.root/first['token']).exists())
@@ -46,7 +49,7 @@ class TrackPipelineTests(unittest.TestCase):
    pcm=subprocess.run([shutil.which('ffmpeg'),'-v','quiet','-i',str(segment),'-vn','-t','1','-ac','1','-ar','16000','-f','s16le','pipe:1'],stdout=subprocess.PIPE,check=True,timeout=10,**process_options()).stdout
    samples=array.array('h',pcm);crossings=sum(a<=0<b for a,b in zip(samples,samples[1:]));frequency=crossings/(len(samples)/16000)
    self.assertTrue(800<frequency<960,frequency)
-   off=start(1,-1,0);self.assertNotIn('cues',off);self.assertFalse((m.root/off['token']/'captions.vtt').exists())
+   off=start(0,-1,0);self.assertEqual(off['audio_index'],0);self.assertNotIn('cues',off);self.assertFalse((m.root/off['token']/'captions.vtt').exists())
    m.release(off,'127.0.0.1');self.assertFalse(m.status()['active'])
   finally:fixture.close()
 

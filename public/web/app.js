@@ -1,6 +1,6 @@
 /* Modern browser UI; shares all catalog/favorite/progress/refresh APIs with MAG. */
 (()=>{'use strict';
-const WEB_VERSION='19';
+const WEB_VERSION='20';
 const $=id=>document.getElementById(id),video=$('video'),owner=crypto.randomUUID?crypto.randomUUID():('web-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 const labels={tv:'TV em direto',movie:'Filmes',series:'Séries',favorites:'Favoritos',continue:'Continuar a ver'};
 let action='',section='tv',state={kind:'tv',view:'items',quality:'auto',country:'PT',origin:'',group:'',q:'',favorites:'0',language:''},offset=0,total=0,history=[],rows=[],sequence=0,filterSeq=0,searchTimer,pollTimer,installPrompt;
@@ -123,7 +123,7 @@ function schedulePauseRelease(){
 async function saveProgress(){if(starting||!session||!playingItem||playingItem.kind==='tv')return;const position=Math.max(0,Math.floor(basePosition+(video.currentTime||0)));try{await api('/api/progress',{id:playingItem.id,position,duration:Math.floor(duration),completed:duration>0&&position>=duration-8});}catch{/* Keep playback running if saving fails. */}}
 function detach(){cancelPauseRelease();trackControls.prepare();video.pause();if(hls){hls.destroy();hls=null;}video.removeAttribute('src');video.load();}
 async function stop(){cancelPauseRelease();if(document.pictureInPictureElement===video){try{await document.exitPictureInPicture();}catch{}}pausedPosition=null;++playerGeneration;clearTimeout(pollTimer);await saveProgress();detach();const previous=session;session=null;starting=false;trackControls.reset();if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}}
-async function play(item,position,keepList=false){if(starting||selectionBusy)return;selectionBusy=true;const stamp=++listGeneration;if(!keepList)capturePlaybackList(item);renderPlaybackList();try{await stop();if(stamp!==listGeneration)return;playingItem=item;compatibility=false;audioIndex=0;subtitleIndex=-1;trackControls.reset();if(!$('player').open)$('player').showModal();text('play-title',item.name);text('play-kind',item.kind==='tv'?'EM DIRETO':item.kind==='episode'?'EPISÓDIO':'FILME');text('plot',item.plot);text('play-favorite',item.favorite?'★ Remover favorito':'☆ Guardar favorito');$('vod-seek').hidden=item.kind==='tv';$('rewind').hidden=$('forward').hidden=item.kind==='tv';await start(position);}finally{selectionBusy=false;renderPlaybackList();}}
+async function play(item,position,keepList=false){if(starting||selectionBusy)return;selectionBusy=true;const stamp=++listGeneration;if(!keepList)capturePlaybackList(item);renderPlaybackList();try{await stop();if(stamp!==listGeneration)return;playingItem=item;compatibility=false;audioIndex=item.kind==='tv'?0:'auto';subtitleIndex=-1;trackControls.reset();if(!$('player').open)$('player').showModal();text('play-title',item.name);text('play-kind',item.kind==='tv'?'EM DIRETO':item.kind==='episode'?'EPISÓDIO':'FILME');text('plot',item.plot);text('play-favorite',item.favorite?'★ Remover favorito':'☆ Guardar favorito');$('vod-seek').hidden=item.kind==='tv';$('rewind').hidden=$('forward').hidden=item.kind==='tv';await start(position);}finally{selectionBusy=false;renderPlaybackList();}}
 
 let hlsLoader=null;
 async function ensureHls(){

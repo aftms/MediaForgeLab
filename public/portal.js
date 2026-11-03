@@ -11,7 +11,7 @@ var MagPortal = (function () {
     var sidebarButtons=["tab-tv","tab-movie","tab-series","tab-all","personal-button","search-button","favorite-button","quality-button","options-button"];
     var favoritePending=false,favoriteLastId="",favoriteLastAttempt=0;
     var searchTimer=null, searchOrigin=null, searchPending=false;
-    var seekTimer=null, seekTarget=null, osdTickTimer=null, tracksReady=false, subtitleEnabled=null, pickerSubtitle="";
+    var seekTimer=null, seekTarget=null, osdTickTimer=null, tracksReady=false, autoAudioDone=false, autoAudioTimer=null, autoAudioAttempts=0, subtitleEnabled=null, pickerSubtitle="";
     var seekDirection=0, seekStarted=0, seekLast=0;
     var fastDirection=0,fastLevel=0,fastTimer=null,fastDuration=0,fastLastPress=0;
     var seekInFlight=null, seekCheckTimer=null, resumeTimer=null, endTimer=null;
@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:26,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:27,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);
@@ -124,7 +124,7 @@ var MagPortal = (function () {
         });
     }
     function savePosition(){stack.push({state:copy(state),selected:selected});}
-    function cancelPending(){playSeq+=1;window.clearTimeout(switchTimer);switchTimer=null;window.clearTimeout(seekTimer);window.clearTimeout(seekCheckTimer);window.clearTimeout(resumeTimer);window.clearTimeout(endTimer);window.clearTimeout(fastTimer);fastDirection=0;seekInFlight=null;seekTarget=null;seekDirection=0;if(playRequest){playRequest.onreadystatechange=function(){};playRequest.abort();playRequest=null;}}
+    function cancelPending(){playSeq+=1;window.clearTimeout(autoAudioTimer);autoAudioTimer=null;window.clearTimeout(switchTimer);switchTimer=null;window.clearTimeout(seekTimer);window.clearTimeout(seekCheckTimer);window.clearTimeout(resumeTimer);window.clearTimeout(endTimer);window.clearTimeout(fastTimer);fastDirection=0;seekInFlight=null;seekTarget=null;seekDirection=0;if(playRequest){playRequest.onreadystatechange=function(){};playRequest.abort();playRequest=null;}}
     function releaseLease(){var token=leaseToken;leaseToken="";window.clearTimeout(leaseTimer);xhr("/api/media/stop",function(){},{token:token,owner:diagnosticSession,request_id:leaseRequest});}
     function pulseLease(){var token=leaseToken;if(!playing||!token){return;}xhr("/api/media/pulse",function(data){if(token!==leaseToken){return;}if(!data||data.error){stop();status("A sessão de reprodução terminou. Volte a abrir o conteúdo.");return;}leaseTimer=window.setTimeout(pulseLease,20000);},{token:token});}
     function stop(){
@@ -231,6 +231,20 @@ var MagPortal = (function () {
     function volumeChange(delta){var volume=mediaNumber("GetVolume");if(volume===null||!setNative("SetVolume",Math.max(0,Math.min(100,volume+delta)))){showOsd("Volume indisponível. Use o comando da TV.");return;}showOsd("Volume: "+Math.max(0,Math.min(100,volume+delta))+"%");}
     function toggleMute(){var muted=optional("GetMute");if(muted===null||!setNative("SetMute",muted?0:1)){showOsd("Silêncio indisponível neste firmware.");return;}showOsd(muted?"Som ligado":"Sem som");}
     function playbackNotice(message){picker("Reprodução",[{label:"Voltar ao vídeo",icon:"episode",description:message,action:function(){showOsd();}}],"Disponibilidade no ficheiro");}
+    function preferAudio(){
+        if(autoAudioDone||autoAudioTimer||!playing||!playingItem||playingItem.kind==="tv"){return;}
+        var serial=playSeq;
+        // Native callbacks can run inline inside Play/seek. Change tracks only later.
+        autoAudioTimer=window.setTimeout(function(){
+            autoAudioTimer=null;if(!playing||serial!==playSeq||autoAudioDone){return;}
+            if(seekInFlight){preferAudio();return;}
+            var tracks=MagTracks.read(optional("GetAudioPIDsEx"));if(!tracks.length){tracks=MagTracks.read(optional("GetAudioPIDs"));}
+            autoAudioAttempts+=1;
+            if(!tracks.length&&autoAudioAttempts<6){preferAudio();return;}
+            autoAudioDone=true;var selected=MagTracks.preferred(tracks);
+            if(selected&&Number(optional("GetAudioPID"))!==selected.pid){setNative("SetAudioPID",selected.pid);}
+        },250);
+    }
     function trackPicker(audio){
         if(!playing){return;}if(!tracksReady){playbackNotice("As faixas ainda estão a carregar. Tente novamente após o vídeo iniciar.");return;}
         var tracks=MagTracks.read(optional(audio?"GetAudioPIDsEx":"GetSubtitlePIDs")),options=[],i,currentPID=optional(audio?"GetAudioPID":"GetSubtitlePID"),serial=playSeq;
@@ -238,7 +252,7 @@ var MagPortal = (function () {
         if(!audio){options.push({label:"Desligar legendas",icon:"options",current:subtitleEnabled===false,description:"Oculta as legendas selecionáveis. Texto gravado na imagem não pode ser removido.",action:function(){if(playing&&serial===playSeq&&setNative("SetSubtitles",false)){subtitleEnabled=false;showOsd("Legendas desligadas");}else{showOsd("Não foi possível desligar as legendas.");}}});}
         for(i=0;i<tracks.length;i+=1){options.push((function(track,index){var name=MagTracks.label(track,index,audio);return {label:name,icon:audio?"options":"group",current:currentPID!==null&&Number(currentPID)===track.pid&&(audio||subtitleEnabled===true),description:"Faixa disponibilizada pelo ficheiro. Selecionar não reinicia o vídeo.",action:function(){
             if(!playing||serial!==playSeq){return;}
-            var ok=setNative(audio?"SetAudioPID":"SetSubtitlePID",track.pid);if(ok&&!audio){ok=setNative("SetSubtitles",true);if(ok){subtitleEnabled=true;}}
+            var ok=setNative(audio?"SetAudioPID":"SetSubtitlePID",track.pid);if(ok&&audio){autoAudioDone=true;window.clearTimeout(autoAudioTimer);autoAudioTimer=null;}if(ok&&!audio){ok=setNative("SetSubtitles",true);if(ok){subtitleEnabled=true;}}
             showOsd(ok?(audio?"Áudio: ":"Legendas: ")+name:"O leitor não conseguiu selecionar esta faixa.");
         }};}(tracks[i],i)));}
         if(!tracks.length){options.push({label:"Sem faixas disponíveis",icon:"group",description:audio?"O leitor não informou faixas de áudio selecionáveis.":"O leitor não informou legendas selecionáveis neste ficheiro.",action:function(){showOsd(audio?"Sem faixas de áudio selecionáveis.":"Sem legendas selecionáveis neste ficheiro.");}});}
@@ -270,7 +284,7 @@ var MagPortal = (function () {
     function playSelected(){
         var item=current();if(!item){return;}if(!nativePlayer){status("Pré-visualização no computador. A reprodução só é ativada na MAG.");return;}
         saveProgress();progressActive=false;window.clearTimeout(progressTimer);resumePosition=0;completed=false;
-        tracksReady=false;subtitleEnabled=null;
+        tracksReady=false;subtitleEnabled=null;autoAudioDone=false;autoAudioAttempts=0;
         cancelPending();var serial=playSeq;
         window.clearTimeout(leaseTimer);leaseToken="";
         playing=false;
@@ -572,7 +586,7 @@ var MagPortal = (function () {
     function nativeEvent(code){
         var serial=playSeq;
         if(playing&&/^(1|2|4|5|7)$/.test(String(code))){diagnostic("native_event",{event:Number(code)});}
-        if(playing&&!switchTimer&&Number(code)===2){tracksReady=true;}
+        if(playing&&!switchTimer&&Number(code)===2){tracksReady=true;preferAudio();}
         else if(playing&&!switchTimer&&Number(code)===5){window.clearTimeout(endTimer);endTimer=window.setTimeout(function(){if(playing&&serial===playSeq){stop();status("Sem reprodução. Verifique ligação única, formato e disponibilidade.");}},0);}
         // Event 1 also means stream discontinuity, not just end of film.
         // Never Stop or seek from inside a native event callback.
@@ -581,7 +595,7 @@ var MagPortal = (function () {
             window.clearTimeout(endTimer);endTimer=window.setTimeout(function(){if(!playing||serial!==playSeq||seekInFlight){return;}var pos=mediaNumber("GetPosTime"),len=mediaNumber("GetMediaLen");completed=len>0&&pos!==null&&pos>=len-3;stop();status(completed?"Reprodução terminada.":"A transmissão foi interrompida. Pode voltar a abrir o título.");},300);
         }
         else if(playing&&!switchTimer&&Number(code)===4){
-            tracksReady=true;window.clearTimeout(endTimer);
+            tracksReady=true;preferAudio();window.clearTimeout(endTimer);
             if(seekInFlight){seekInFlight.started=true;return;}
             progressActive=true;window.clearTimeout(progressTimer);progressTimer=window.setTimeout(progressTick,30000);
             if(resumePosition>0){var target=resumePosition;resumePosition=0;window.clearTimeout(resumeTimer);resumeTimer=window.setTimeout(function(){if(playing&&serial===playSeq&&!seekInFlight){requestSeek(target);}},200);}

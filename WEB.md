@@ -395,3 +395,19 @@ consultar outros conteúdos sem iniciar reprodução. São carregados apenas os
 metadados da página necessária. No início/fim, a direção indisponível fica inativa.
 Trocar conteúdo termina a sessão anterior antes de iniciar a próxima e guarda
 o progresso do filme/episódio. Fechar o leitor invalida pedidos de lista tardios.
+
+
+## Idioma inicial de filmes e episódios — web v20 / TV r17 / MAG r27
+
+Ao abrir um filme ou episódio, a preferência de áudio é: português identificado
+como de Portugal; inglês; por fim, a faixa original/default do ficheiro.
+Português genérico (`por`/`pt`) não é assumido como PT-PT, porque pode ser brasileiro.
+Só são selecionadas faixas existentes; não traduz nem troca por outro título.
+A escolha manual em Áudio e legendas mantém-se durante pausas, retomas e avanços.
+Abrir outro título ou reabrir o mesmo volta a aplicar a preferência inicial.
+TV em direto, vídeos pessoais e legendas mantêm o comportamento anterior.
+
+Web, Samsung e Xiaomi usam a mesma seleção no servidor, com os metadados já
+obtidos para reproduzir, sem consulta extra ao fornecedor. MAG usa os idiomas
+informados pelo leitor nativo e só muda a faixa fora dos callbacks do firmware.
+Se não houver informação suficiente na MAG, mantém o áudio que o leitor escolheu.

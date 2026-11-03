@@ -529,3 +529,27 @@ paginar sem iniciar stream, seleção direta, stop antes de cada start, limites,
 largura390px e libertação ao fechar; reprodução inicial e após última troca.
 Sem fornecedor/ficheiros reais, sem restart backend; estáticos webv19 confirmados.
 Próximo: Ctrl+F5 e experimentar a lista acima do vídeo; aceitação pelo utilizador.
+
+
+## Preferência de áudio PT-PT / inglês — webv20 / TVr17 / MAGr27 (2026-11-03)
+
+Pedido: filmes e episódios abrem em PT-PT quando explicitamente identificado;
+caso contrário inglês, depois faixa original/default. Português genérico não
+assumido como europeu. Web/TV enviam audio=auto na abertura, backend seleciona
+com metadados do probe existente; índice efetivo fica numérico para preservar
+alteração manual em pausa/retoma/seek/compatibilidade. Sem alteração na TV em
+direto, pessoais, legendas, catálogo ou filtros. MAG seleciona PID em timer fora
+dos callbacks nativos, com retries limitados para descritores atrasados; cancela
+ao fechar/trocar e nunca reaplica após escolha manual ou eventos de seek.
+
+Testes: fixtures de idiomas comuns a Python/MAG, origem default, unidade media,
+navigation (callback diferido, escolha manual, stop, TV), regressões web/lista/
+origem/TV PASS. Pipeline FFmpeg sintético confirmou faixa inglesa pelo áudio
+descodificado, sem saída audível; só um input e uma lease, inválidos preservam
+sessão. Chrome --mute-audio + video.muted=true: vídeo real local começa em inglês,
+alteração manual para português preservada após pausa/retoma, reabrir repõe inglês,
+fechar liberta sessão. Sem streams do fornecedor. Aceitação em hardware pendente.
+Ativação concluída: utilizador confirmou fecho do leitor; guarda de playback/scan/refresh
+verificou idle, backend reiniciado. HTTP webv20/MAGr27/TVr17 confirmado. Samsung
+1.0.17 instalada (exit 0); Xiaomi recebe UI hospedada ao reabrir. Pessoalv6 inalterado.
+Próximo: Ctrl+F5 web / reabrir TVs / Restart portal MAG; confirmar em dispositivos físicos.

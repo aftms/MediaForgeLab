@@ -13,9 +13,24 @@ import threading
 import time
 import urllib.request
 import urllib.error
+import unicodedata
 
 
 TEXT_SUBTITLES = {'subrip','srt','ass','ssa','webvtt','mov_text','text'}
+
+def preferred_audio(tracks, fallback=0):
+    """Only explicit European Portuguese outranks English; generic por is ambiguous."""
+    ranked=[]
+    for index,track in enumerate(tracks):
+        code=str(track.get('language') or '').lower().replace('_','-')
+        title=''.join(c for c in unicodedata.normalize('NFD',str(track.get('title') or '').lower()) if not unicodedata.combining(c))
+        brazil=bool(re.search(r'^(?:pt|por)-br(?:-|$)',code) or re.search(r'\b(?:brazil\w*|brasil\w*|brasileir\w*|pt[-_ ]br)\b',title))
+        portuguese=bool(re.match(r'^(?:pt|por)(?:-|$)',code) or re.search(r'\bportugu[e]?s(?:e)?\b',title))
+        european=not brazil and (bool(re.match(r'^(?:pt|por)-pt(?:-|$)',code)) or (portuguese and bool(re.search(r'\b(?:portugal|european|europeu|europeia)\b',title))) or bool(re.search(r'\bpt[-_ ]pt\b',title)))
+        english=bool(re.match(r'^(?:en|eng)(?:-|$)',code) or re.search(r'\b(?:english|ingles)\b',title))
+        if european or english:ranked.append((0 if european else 1,index))
+    return min(ranked)[1] if ranked else fallback
+
 
 def subtitle_cues(path):
     """Read only completed cues from a bounded tail of FFmpeg's growing sidecar."""
@@ -137,7 +152,8 @@ class MediaManager:
         try:
             resume = self.app.progress.get(identifier, {})
             position = float(data.get('position', resume.get('position',0) if not resume.get('completed') else 0))
-            audio_index = int(data.get('audio',0))
+            audio_auto = data.get('audio') == 'auto' and item['kind'] in ('movie','episode')
+            audio_index = 0 if data.get('audio') == 'auto' else int(data.get('audio',0))
             subtitle_index = int(data.get('subtitle',-1))
             if not 0 <= position <= 604800 or not 0 <= audio_index <= 100 or not -1 <= subtitle_index <= 100:
                 raise ValueError()
@@ -157,7 +173,7 @@ class MediaManager:
             s = dict(token=token, owner=owner, ip=ip, mode=mode, id=identifier, kind=item['kind'], request_id=request_id,
                      seen=time.monotonic(), started=time.monotonic(), startup_ms={}, state='ready' if mode=='mag' else 'preparing',
                      stage='ready' if mode=='mag' else 'source', url=self.app.catalog.play_url(identifier), position=position if item['kind']!='tv' else 0,
-                     duration=0, audio=[], subtitles=[], subtitle_index=subtitle_index, tracks_known=False, compatibility=bool(data.get('compatibility')), audio_index=audio_index)
+                     duration=0, audio=[], subtitles=[], subtitle_index=subtitle_index, tracks_known=False, compatibility=bool(data.get('compatibility')), audio_index=audio_index, audio_auto=audio_auto)
             if mode == 'web':
                 s['device'] = {'samsung':'Samsung TV','androidtv':'Android TV','tv':'TV'}.get(data.get('device'), 'Navegador')
             self.last_failure = None
@@ -273,7 +289,9 @@ class MediaManager:
                 si=s['subtitle_index']
                 if si>=len(subtitles) or (si>=0 and subtitles[si].get('codec_name') not in TEXT_SUBTITLES):si=-1
                 s['subtitle_index']=si
-                ai = max(0, min(len(audio)-1, s['audio_index']))
+                fallback = next((i for i,a in enumerate(audio) if a.get('disposition',{}).get('default')),0)
+                chosen = preferred_audio(s['audio'],fallback) if s.get('audio_auto') else s['audio_index']
+                ai = max(0, min(len(audio)-1, chosen))
                 s['audio_index']=ai
                 command = [self.ffmpeg,'-hide_banner','-loglevel','quiet','-nostdin','-y','-rw_timeout','15000000']
                 # Android live input needs only enough analysis to identify its tracks.

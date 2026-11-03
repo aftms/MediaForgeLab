@@ -1,0 +1,151 @@
+[
+  [
+    [
+      {
+        "language": "por"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "eng"
+      },
+      {
+        "language": "pt-PT"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "en-US"
+      },
+      {
+        "language": "pt_BR"
+      }
+    ],
+    0
+  ],
+  [
+    [
+      {
+        "language": "spa"
+      },
+      {
+        "language": "por",
+        "title": "Português (Portugal)"
+      },
+      {
+        "language": "en"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "por",
+        "title": "Português brasileiro"
+      },
+      {
+        "language": "en-GB"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "por",
+        "title": "Portuguese - European"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    0
+  ],
+  [
+    [
+      {
+        "language": "und",
+        "title": "PT-PT"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    0
+  ],
+  [
+    [
+      {
+        "language": "pt-BR",
+        "title": "Português Portugal"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "spa"
+      },
+      {
+        "language": "por"
+      }
+    ],
+    null
+  ],
+  [
+    [
+      {
+        "language": "und"
+      },
+      {
+        "language": "und",
+        "title": "Inglês"
+      }
+    ],
+    1
+  ],
+  [
+    [
+      {
+        "language": "eng"
+      },
+      {
+        "language": "eng"
+      },
+      {
+        "language": "por",
+        "title": "Português europeu"
+      }
+    ],
+    2
+  ],
+  [
+    [
+      {
+        "language": "eng"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    0
+  ],
+  [
+    [],
+    null
+  ]
+]

@@ -55,5 +55,18 @@ var MagTracks = (function () {
         var codecs={1:"MP2",2:"MP3",3:"AC3",4:"AAC",5:"PCM",6:"OGG",7:"DTS",8:"EAC3"};
         if(track.title){name+=" · "+track.title;}if(audio&&codecs[track.type]){name+=" · "+codecs[track.type];}return name;
     }
-    return {read:tracks,label:label};
+    function preferred(rows) {
+        var best=null,rank=3,i,t,code,title,brazil,portuguese,european,english,current;
+        for(i=0;i<rows.length;i+=1){
+            t=rows[i];code=(t.lang[0]||t.lang[1]||"").toLowerCase().replace(/_/g,"-");
+            title=(t.title||"").toLowerCase().replace(/[áàâãä]/g,"a").replace(/[éèêë]/g,"e").replace(/[íìîï]/g,"i").replace(/[óòôõö]/g,"o").replace(/[úùûü]/g,"u").replace(/ç/g,"c");
+            brazil=/^(pt|por)-br(-|$)/.test(code)||/\b(brazil\w*|brasil\w*|brasileir\w*|pt[-_ ]br)\b/.test(title);
+            portuguese=/^(pt|por)(-|$)/.test(code)||/\bportugu[e]?s(e)?\b/.test(title);
+            european=!brazil&&(/^(pt|por)-pt(-|$)/.test(code)||(portuguese&&/\b(portugal|european|europeu|europeia)\b/.test(title))||/\bpt[-_ ]pt\b/.test(title));
+            english=/^(en|eng)(-|$)/.test(code)||/\b(english|ingles)\b/.test(title);
+            current=european?0:english?1:3;if(current<rank){best=t;rank=current;}
+        }
+        return best;
+    }
+    return {read:tracks,label:label,preferred:preferred};
 }());
