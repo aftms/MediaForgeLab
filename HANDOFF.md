@@ -328,3 +328,33 @@ cancelamento e manifest tardio. Regressões web-player e tv-player passaram.
 
 Próximo: utilizador Ctrl+F5 na página Pessoal (v2), abrir o MP4 e confirmar imagem/
 som. Aceitação nas TVs/MAG continua pendente; sem bloqueio conhecido no Chrome.
+
+## Barra de posição pessoal — Pessoal v3 / TV r12 (2026-11-03)
+
+Pedido: escolher o ponto do vídeo com slider. Implementado na interface pessoal
+ES5 comum web/PWA, MAG e TVs. Barra com tempo atual/total, preview ao arrastar,
+um pedido apenas ao confirmar/largar; comando ←/→ escolhe em segundos e OK
+confirma. BACK cancela seleção, cima/baixo regressa aos controlos. Integração
+MagTV.remote evita abrir teclado Android ao confirmar a barra. Mantém pausa se
+alterada durante pausa, desativa enquanto prepara/sem duração e limita ao fim.
+Usa o mecanismo existente de reinício HLS na posição, sem SetPosTime nativo MAG.
+Limpa temporizadores ao fechar/reiniciar. Fundo preto no vídeo web e contador
+único; barra mantém-se visível enquanto tem foco/seleção.
+
+Testes JS novos: preview sem requests, commit único, clamp/arredondamento de
+segundos, cancelamento, pausa e duração desconhecida/preparing. Regressões de
+leitores pessoal/web/TV e navegação/API MAG/TV passaram. Chrome com vídeo sintético
+verificou reprodução após mudar posição, arrastar sem múltiplos pedidos,
+setas/OK/BACK pela ponte Android, pausa preservada e libertação da sessão.
+Capturas1280x720/390x844 revistas. Uma repetição ultrapassou35s a aguardar vídeo;
+repetição com diagnóstico passou, mostrando demora no processamento/ranges do
+pipeline sintético, não pedidos repetidos da barra. Não prometer seek instantâneo;
+o novo ponto precisa de preparação pelo servidor. Reprodução física ainda pendente.
+
+Ativo sem restart do backend; reprodução pessoal em curso no navegador do
+utilizador não foi interrompida. Samsung1.0.12/r12 compilada/assinada/instalada,
+com guarda contra instalação durante reprodução Samsung. Xiaomi APK1.3 recebe
+interface hospedada r12 ao reabrir; MAG entrar novamente em Pessoal (v3).
+Nenhum stream IPTV ou vídeo pessoal aberto nesta fase: só servidor sintético,
+encerrado no fim. Testes não comprovam funcionamento do slider em hardware físico.
+Próximo: Ctrl+F5 na web, Pessoal v3, experimentar arrastar; aceitar nas TVs/MAG.

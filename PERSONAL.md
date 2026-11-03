@@ -36,7 +36,12 @@ Referências oficiais:
 Fotografias/vídeos, pesquisa por nome/pasta, filtros por ano e pasta, favoritos,
 álbuns manuais e continuar a ver. Criar, renomear ou apagar álbuns não altera
 os ficheiros originais. Fotografias em ecrã inteiro, anterior/seguinte e
-apresentação automática; vídeos com pausa/retomar e avanço/recuo de 10 segundos.
+apresentação automática; vídeos com pausa/retomar, avanço/recuo de 10 segundos
+e barra de posição. No computador/telemóvel, arrastar e largar escolhe o ponto.
+No comando, focar a barra com as setas, usar ←/→ e confirmar com OK; BACK cancela
+a seleção. Se estiver em pausa, escolher outra posição mantém a pausa. Durante
+a preparação ou sem duração conhecida, a barra fica desativada. A mudança pode
+precisar de alguns segundos para preparar o novo ponto no servidor.
 O comando permite usar setas, OK, BACK e teclado no ecrã. CH +/− muda de página.
 
 Web Windows: `http://127.0.0.1:8091/web/personal/?client=web`.
