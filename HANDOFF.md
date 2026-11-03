@@ -507,3 +507,25 @@ MAG com categoria Desporto e origem MEO PASS. JS syntax/diff check PASS.
 Nenhum stream/áudio aberto. Estáticos ativos sem restart. Samsung1.0.16
 assinada/instalada após guarda de reprodução; Xiaomi hospedada TVr16. Pessoalv6
 inalterado. Próximo: Ctrl+F5 webv18; MAG Restart portalr26 se necessário.
+
+
+## Lista ativa dentro do leitor web — webv19 (2026-11-03)
+
+Pedido no leitor web: selecionar diretamente outro canal/filme e Anterior/Seguinte.
+Barra compacta acima do vídeo com botões, seletor e posição/total. Contexto de
+filtros/secção/pasta fica capturado ao abrir; metadados paginados sob pedido,
+sem descarregar catálogo inteiro. Seletor permite navegar páginas sem reproduzir;
+adjacentes atravessam páginas automaticamente. Suporta tv/movie/episode,
+favoritos e continuar a ver. Mantém categorias/origens/qualidade/pesquisa/ordem.
+Troca usa stop antes de start, guarda progresso, bloqueia reentrância durante
+preparação; fechar invalida resposta tardia e não deixa play em espera reabrir.
+Backend e interfaces TV/MAG/Pessoal não alterados nesta melhoria do leitor web.
+
+Testes playback-list.cjs: filtros capturados, paginação, seleção direta, limites,
+busy, falha preserva seleção, resposta tardia descartada e pasta favoritos PASS.
+web-player.cjs e origin-category.cjs regressões PASS. Chrome sintético silencioso
+(--mute-audio e video.muted=true):61 filmes, próximo/anterior entre páginas,
+paginar sem iniciar stream, seleção direta, stop antes de cada start, limites,
+largura390px e libertação ao fechar; reprodução inicial e após última troca.
+Sem fornecedor/ficheiros reais, sem restart backend; estáticos webv19 confirmados.
+Próximo: Ctrl+F5 e experimentar a lista acima do vídeo; aceitação pelo utilizador.

@@ -383,3 +383,15 @@ posição da janela sobre outras apps deve ser confirmada no Windows físico.
 
 Testes de vídeo sintético devem iniciar o Chrome com **--mute-audio** e definir
 video.muted=true antes da reprodução. Os tons de teste não devem ser audíveis.
+
+
+## Mudar conteúdo dentro do leitor — web v19
+
+Acima do vídeo: **Anterior**, seleção da **lista ativa** e **Seguinte**. Mantêm
+os filtros, pesquisa, origem, categoria, qualidade, pasta de favoritos e ordem
+da lista de onde abriu o conteúdo. Funciona para canais, filmes e episódios.
+Anterior/Seguinte atravessa páginas; no seletor, Página anterior/seguinte permite
+consultar outros conteúdos sem iniciar reprodução. São carregados apenas os
+metadados da página necessária. No início/fim, a direção indisponível fica inativa.
+Trocar conteúdo termina a sessão anterior antes de iniciar a próxima e guarda
+o progresso do filme/episódio. Fechar o leitor invalida pedidos de lista tardios.

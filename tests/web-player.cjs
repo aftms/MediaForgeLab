@@ -1,7 +1,7 @@
 const assert=require('assert/strict'),fs=require('fs'),vm=require('vm');
 const source=fs.readFileSync(require('path').join(__dirname,'../public/web/app.js'),'utf8');
 const nodes=new Map(),requests=[];let nextStart,phase='analysis';
-const context={trackControls:{prepare(){},reset(){},feed(){},update(){}},Hls:{},setTimeout(){return 1;},clearTimeout(){},console,Option:function(){},
+const context={renderPlaybackList(){},trackControls:{prepare(){},reset(){},feed(){},update(){}},Hls:{},setTimeout(){return 1;},clearTimeout(){},console,Option:function(){},
  $:id=>{if(!nodes.has(id))nodes.set(id,{value:0,textContent:'',disabled:false,replaceChildren(){},add(){}});return nodes.get(id)},
  api:async(path,data)=>{requests.push({path,data});if(path==='/api/media/web')return nextStart;if(path==='/api/media/pulse')return {token:'test',state:'preparing',stage:phase,duration:phase==='remux'?1200:0};return {};},
  document:{activeElement:null}};

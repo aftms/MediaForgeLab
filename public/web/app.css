@@ -34,3 +34,5 @@ nav .personal-entry{display:block;padding:12px 13px;color:var(--text);text-decor
 @media(max-width:600px){#player .player-heading{align-items:flex-start;gap:8px;flex-wrap:wrap}.player-window-actions{margin-left:auto}#player{resize:none}.player-size-hint{display:none}}
 
 #player-pip{font-size:13px;white-space:nowrap}#player-pip[aria-pressed=true]{border-color:#6d9e9d;color:#a8d8ce}
+
+#play-navigation{display:flex;align-items:center;gap:8px;margin:0 0 12px}#play-navigation[hidden]{display:none}#play-navigation button{font-size:12px;padding:7px 10px;white-space:nowrap}#play-list{flex:1;min-width:0;max-width:none;min-height:34px;font-size:13px;padding:6px 8px}#play-list-position{color:var(--muted);font-size:11px;white-space:nowrap}@media(max-width:600px){#play-navigation{flex-wrap:wrap}#play-list{order:-1;flex-basis:100%;width:100%}#play-list-position{margin-left:auto}}

@@ -20,7 +20,7 @@ from test_personal import FakeCloud
 from media import process_options
 
 class Fixture:
-    def __init__(self,tracks=False):
+    def __init__(self,tracks=False,navigation=False):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
         subprocess.run([shutil.which('ffmpeg'),'-v','quiet','-f','lavfi','-i','testsrc2=size=320x180:rate=24','-f','lavfi','-i','sine=frequency=440','-t','20','-c:v','libx264','-pix_fmt','yuv420p','-g','48','-c:a','aac','-movflags','+faststart',str(self.root/'video.mp4')],check=True,**process_options())
         video=self.root/'video.mp4'
@@ -58,13 +58,16 @@ class Fixture:
         self.app.personal.cloud.close();self.app.personal.cloud=Cloud();self.app.personal.add_root('root');roots=[dict(r) for r in self.app.personal.db.execute('SELECT * FROM roots')];self.app.personal._scan(roots)
         self.video=identifier('drive','video');self.photo=identifier('drive','photo0')
         self.app.catalog.add(dict(id='fixture-vod',kind='movie',name='Synthetic IPTV',group='Fixture',url='http://127.0.0.1:'+str(source.server_port)+'/video.mp4'))
+        if navigation:
+            url='http://127.0.0.1:'+str(source.server_port)+'/video.mp4'
+            for i in range(60):self.app.catalog.add(dict(id='nav-'+str(i),kind='movie',name='List movie %03d'%i,group='Fixture',url=url))
         self.thread=threading.Thread(target=self.app.serve_forever,daemon=True);self.thread.start()
         self.url='http://127.0.0.1:'+str(self.app.server_port)
     def close(self):
         self.app.shutdown();self.app.server_close();self.source.shutdown();self.source.server_close();self.temp.cleanup()
 
 if __name__=='__main__':
-    f=Fixture(tracks="--tracks" in sys.argv)
+    f=Fixture(tracks="--tracks" in sys.argv,navigation="--navigation" in sys.argv)
     Path(sys.argv[1]).write_text(json.dumps(dict(url=f.url,video=f.video,photo=f.photo)))
     stop=Path(sys.argv[1]+'.stop');stop.unlink(missing_ok=True)
     print('Synthetic personal server ready',flush=True)
