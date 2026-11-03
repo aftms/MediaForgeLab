@@ -10,7 +10,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  async function key(k){await call('Input.dispatchKeyEvent',{type:'keyDown',windowsVirtualKeyCode:k});await call('Input.dispatchKeyEvent',{type:'keyUp',windowsVirtualKeyCode:k});}
  async function browse(client,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/personal/':'/tv/personal.html')+'?client='+client});await until('document.querySelectorAll(".tile").length===12');assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));}
  try{
- await call('Page.enable');await call('Runtime.enable');await call('Emulation.setDeviceMetricsOverride',{width:1500,height:960,deviceScaleFactor:1,mobile:false});
+ await call('Page.enable');await call('Page.addScriptToEvaluateOnNewDocument',{source:"Object.defineProperty(window,'documentPictureInPicture',{value:undefined});"});await call('Runtime.enable');await call('Emulation.setDeviceMetricsOverride',{width:1500,height:960,deviceScaleFactor:1,mobile:false});
  await call('Page.navigate',{url:fixture.url+'/web/'});await until('document.getElementById("connection") && document.getElementById("connection").textContent!=="A ligar ao computador…"');await sleep(300);
  await run(`document.getElementById("video").muted=true;window.mediaRequests=[];var originalFetch=window.fetch;window.fetch=function(url,opts){if(typeof url==='string'&&(url.endsWith('/api/media/web')||url.endsWith('/api/media/stop')))mediaRequests.push(url);return originalFetch.apply(this,arguments)};document.querySelector('[data-section=movie]').click()`);
  await until('document.querySelector(".card-open")');await run('document.querySelector(".card-open").click()');await until('document.getElementById("video").currentTime>1 && !document.getElementById("video").paused');
@@ -18,7 +18,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  const baseline=await run('mediaRequests.length'),position=await run('document.getElementById("video").currentTime');
  assert.ok(await run('!document.getElementById("player-pip").hidden && !document.getElementById("player-pip").disabled'));
  await call('Runtime.evaluate',{expression:'document.getElementById("player-pip").click()',userGesture:true});await until('document.pictureInPictureElement===document.getElementById("video")');
- console.log('PASS entered PiP');assert.equal(await run('document.getElementById("player-pip-label").textContent'),'Repor');await sleep(700);
+ assert.equal(await run('document.getElementById("player").open'),false);console.log('PASS entered native fallback PiP; catalogue unlocked');assert.equal(await run('document.getElementById("player-pip-label").textContent'),'Repor');await sleep(700);
  assert.ok(await run('document.getElementById("video").currentTime')>position);assert.equal(await run('mediaRequests.length'),baseline);
  await call('Runtime.evaluate',{expression:'document.getElementById("player-pip").click()',userGesture:true});await until('!document.pictureInPictureElement');console.log('PASS returned to page');assert.equal(await run('mediaRequests.length'),baseline);
  await run('document.getElementById("video").pause()');await until('(async()=>!(await(await fetch("/api/media/status")).json()).active)()');

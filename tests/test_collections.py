@@ -103,7 +103,7 @@ class HTTPTests(unittest.TestCase):
   with self.request('/api/collections') as r:self.assertEqual(json.load(r)['total'],1)
   with self.request('/collections/player',headers={'Origin':'null','Sec-Fetch-Site':'cross-site'}) as r:
    self.assertEqual(r.status,200);self.assertIsNone(r.headers.get('X-Frame-Options'));self.assertEqual(r.headers['Referrer-Policy'],'strict-origin-when-cross-origin');self.assertIn('youtube.com',r.headers['Content-Security-Policy']);self.assertNotIn('MAG_TV_CONFIG',r.read().decode())
-  with self.request('/web/') as r:self.assertEqual(r.headers['X-Frame-Options'],'DENY');self.assertNotIn('youtube',r.headers['Content-Security-Policy'])
+  with self.request('/web/') as r:self.assertEqual(r.headers['X-Frame-Options'],'SAMEORIGIN');self.assertIn("frame-ancestors 'self'",r.headers['Content-Security-Policy']);self.assertNotIn('youtube',r.headers['Content-Security-Policy'])
   with self.request('/web/collections/') as r:self.assertEqual(r.status,200);self.assertIn("frame-src 'self'",r.headers['Content-Security-Policy'])
   with self.request('/api/collections',headers={'Host':'evil.example'}) as r:self.assertEqual(r.status,403)
 

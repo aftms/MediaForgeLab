@@ -847,3 +847,66 @@ Samsung1.0.25 construída/instalada exit0. Xiaomi continua desligada; APK1.4 de
 Coleções pendente como antes. Validação física de persistência nas TVs/MAG pendente.
 Próximo: atualizar web/reabrir TV/Restart portal; escolhas feitas desde esta versão
 ficam guardadas. Commit/push e notas Gateway no fecho. Sem novo bloqueio.
+
+
+## Destaque com navegação livre — web27 / Coleções7 / Pessoal8 (2026-11-03)
+
+Pedido: destacar, continuar a consultar a interface e substituir o conteúdo ao
+escolher outro canal/filme/vídeo; incluir Coleções e Pessoal. Implementado helper
+comum ES5 public/tv/floating-player.js para os três leitores web. Chrome/Windows
+usa Document PiP e mantém a mesma janela ao mudar de conteúdo ou biblioteca. O
+modal/overlay fecha enquanto destacado; barra discreta Repor/Parar e título ficam
+na biblioteca. Repor volta ao leitor e à biblioteca que o contém; Parar liberta-o.
+
+Navegação entre TV/filmes/séries, Coleções e Pessoal mantém documentos residentes
+em iframes locais, sem descarregar o controlador que ainda reproduz. Só os três
+endpoints web da biblioteca admitem framing SAMEORIGIN + frame-ancestors self;
+restante portal mantém DENY. O contexto de destaque pode mostrar os media externos
+já aceites por Coleções; shell externa de embeds continua isolada sem tokens/dados.
+Bridge oficial confirma a janela controladora do módulo, mesmo após mover iframe
+para PiP. Um coordenador serializa a transferência e espera a paragem do leitor
+anterior. IPTV mantém a proteção de ligação única existente. Fotografias Pessoal
+também destacáveis em Document PiP; leitores nativos das TVs/MAG ficam integrais.
+
+Com suporte apenas a PiP nativo, usa-se a capacidade do navegador; a continuidade
+de janela ao trocar de biblioteca depende desse suporte. Document PiP requer
+contexto seguro (loopback ou HTTPS configurado) e navegador compatível. Mover
+embeds oficiais pode recarregar o iframe; YouTube retoma a posição conhecida.
+Facebook continua com controlos próprios e seguinte manual. Fechar/navegar para
+fora de toda a app termina o contexto; não há cache de transmissões.
+
+Testes Chrome isolado/mudo PASS: vídeo sintético IPTV progride enquanto se navega;
+trocar filme→canal mantém a janela e envia stop antes de novo start; abrir Coleções
+preserva o leitor até escolher MP4 público; seleção liberta lease IPTV; YouTube
+real mudo na janela partilhada; Pessoal vídeo continua ao consultar fotos, escolher
+foto substitui vídeo e liberta lease pessoal; identidade da mesma janela confirmada;
+Repor/Parar terminam corretamente. Screenshot da biblioteca livre inspecionada.
+Uma execução com build SDK concorrente não confirmou vídeo Pessoal a tempo; bateria
+de integração repetida sem builds passou completa. Testes anteriores falharam por
+espera da transição e asserção currentSrc; agora verificam estado/source/pausa.
+13 Coleções + 16 portal e regressões MAG/TV passaram. Testes sem fornecedor real.
+
+Samsung pacote1.0.26/TVr26 preparado (alterações de destaque destinam-se à web);
+MAGr31 mantém-se, Coleções7/Pessoal8 partilhados. Xiaomi continua desligada,
+APK1.4 pendente. Ativação backend requer reinício para novas rotas estáticas/CSP.
+Neste ponto havia reprodução Navegador ativa; solicitada confirmação de leitor
+fechado. Não reiniciar/interromper enquanto essa confirmação estiver pendente.
+Próximo: ativar após confirmação, Ctrl+F5, escolher Destacar e navegar normalmente.
+Commit/push desta fase e Gateway notes no fecho.
+
+
+Fecho desta fase: utilizador confirmou «Já fechei; podes ativar». Backend reiniciado
+com guarda idle e identidade confirmada; web/aliases de floating-player.js deram200,
+as três páginas web têm SAMEORIGIN/self e index MAG mantém DENY. Samsung1.0.26
+instalada. Estado atual ATIVO, não continuar a reportar confirmação pendente.
+
+Validação adicional PASS: fallback PiP nativo (catálogo livre, entrar/sair, pausa,
+sem nova ligação ao destacar); Coleções Document PiP com YouTube real mudo,
+pausa/retoma, reposição, posição preservada, destacar em pausa e fechar pelo X;
+MP4 destacado sem trocar source. Detetado e corrigido estado «A reproduzir» antigo
+enquanto iframe recarregava: agora mostra «A retomar…» e só habilita pausa após
+ready. Bridge autoriza nonce/origem e módulo proprietário ou seu proxy PiP.
+Regressão de navegação Pessoal web/MAG/TV/mobile passou, incluindo foco e álbuns.
+Screenshot da biblioteca livre com barra Em destaque inspecionada. Sem fornecedor
+real nem stream deixado ativo pelos testes. Commit/push no fecho; Ctrl+F5 para
+carregar web27. Testes antigos PiP alinhados ao novo modo e fallback nativo.

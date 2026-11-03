@@ -26,9 +26,10 @@ function load(d){
  }else{message('Origem não suportada neste leitor.');send('error',{message:'Abra este vídeo na aplicação de origem.'});}
 }
 window.addEventListener('message',function(e){
- var d=e.data,controller=e.source===parent;try{controller=controller||(parent.mflCollectionsPip===true&&e.source===parent.opener&&e.origin===location.protocol+'//'+location.host);}catch(ignore){}if(!controller||!d||d.source!=='mfl-collections-command')return;
- if(!source){if(d.command!=='load'||typeof d.channel!=='string'||d.channel.length<16)return;source=e.source;origin=e.origin;channel=d.channel;load(d.item);return;}
- if(e.source!==source||e.origin!==origin||d.channel!==channel)return;
+ var d=e.data,controller=e.source===parent;try{controller=controller||(parent.mflCollectionsPip===true&&e.source===(parent.mflCollectionsController||parent.opener)&&e.origin===location.protocol+'//'+location.host);}catch(ignore){}if(!controller||!d||d.source!=='mfl-collections-command')return;
+ if(!source){if(d.command!=='load'||typeof d.channel!=='string'||d.channel.length<16)return;source=parent.mflCollectionsPip&&parent.mflCollectionsController?parent.mflCollectionsController:e.source;origin=e.origin;channel=d.channel;load(d.item);return;}
+ var pipProxy=false;try{pipProxy=parent.mflCollectionsPip===true&&parent.mflCollectionsController===source&&e.source===parent;}catch(ignore){}
+ if((e.source!==source&&!pipProxy)||e.origin!==origin||d.channel!==channel)return;
  if(d.command==='layout'&&facebookFrame){var ratio=Number(d.aspect_ratio);if(isFinite(ratio)&&ratio>=.2&&ratio<=4){facebookAspect=ratio;fitFacebook();}return;}
  try{if(d.command==='play'){if(player.playVideo)player.playVideo();else player.play().catch(function(){send('blocked',{message:'Use os controlos do vídeo para iniciar.'});});}
  else if(d.command==='pause'){if(player.pauseVideo)player.pauseVideo();else player.pause();}

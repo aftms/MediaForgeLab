@@ -446,3 +446,13 @@ origens múltiplas, país, categoria, género, qualidade, PT/BR e pasta de favor
 Cada navegador/dispositivo/endereço tem as suas preferências. Apagar os dados do
 navegador remove-as; favoritos e progresso no servidor permanecem. Sem preferências,
 TV começa em Portugal. A biblioteca volta à primeira página, sem iniciar reprodução.
+
+
+Web27: «Destacar» liberta a biblioteca para consultar, pesquisar e escolher outro
+conteúdo. No Chrome Windows com Document PiP, a mesma janela é reutilizada e o
+leitor anterior é parado antes do novo. Vale para TV/filmes/séries, Coleções e
+Pessoal, incluindo fotografias. Navegar pelos links da app mantém o leitor ativo;
+fechar/navegar para fora da app termina o contexto. A barra inferior permite Repor
+ou Parar; Repor abre a biblioteca do conteúdo destacado. Suporte completo depende
+de Document PiP e contexto seguro (127.0.0.1 ou HTTPS); PiP nativo é alternativa
+conforme o navegador. Nenhuma transmissão é guardada offline.

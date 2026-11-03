@@ -42,11 +42,11 @@ for asset in (BASE/'public'/'tv').glob('*'):
 STATIC['/tv/']=('tv/index.html','text/html')
 # Same files, kept under the installed PWA scope; no personal content is cached.
 STATIC['/web/personal/']=('tv/personal.html','text/html')
-for name in ('personal.css','personal.js','config.js','player.js','brand.png','track-controls.js','track-controls.css','browse-prefs.js'):
+for name in ('personal.css','personal.js','config.js','player.js','brand.png','track-controls.js','track-controls.css','browse-prefs.js','floating-player.js'):
     STATIC['/web/personal/'+name]=STATIC['/tv/'+name]
 STATIC['/web/collections/']=('tv/collections.html','text/html')
 STATIC['/collections/player']=('tv/collection-player.html','text/html')
-for name in ('collections.css','collections.js','config.js','player.js','brand.png','browse-prefs.js'):
+for name in ('collections.css','collections.js','config.js','player.js','brand.png','browse-prefs.js','floating-player.js'):
     STATIC['/web/collections/'+name]=STATIC['/tv/'+name]
 STATIC.update({"/assets/"+p.name:("assets/"+p.name,"image/png")
                for p in (BASE / 'public' / 'assets').glob('*.png')})
@@ -250,7 +250,8 @@ class PortalHandler(BaseHTTPRequestHandler):
         route=self.path.split('?',1)[0]
         embed=route in ('/collections/player','/tv/collection-player.html')
         collection=route in ('/web/collections/','/tv/collections.html')
-        if not embed:self.send_header("X-Frame-Options", "DENY")
+        web_library=route in ('/web/','/web/personal/','/web/collections/')
+        if not embed:self.send_header("X-Frame-Options", "SAMEORIGIN" if web_library else "DENY")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin" if embed else "no-referrer")
         if embed:
             policy="default-src 'none'; script-src 'self' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://www.facebook.com https://player.vimeo.com; connect-src https://www.youtube.com https://player.vimeo.com; img-src https://i.ytimg.com; base-uri 'none'; form-action 'none'"
@@ -258,6 +259,7 @@ class PortalHandler(BaseHTTPRequestHandler):
             policy="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https: http:; media-src 'self' https: http: blob:; worker-src 'self' blob:; img-src 'self' data: https://i.ytimg.com; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
         else:
             policy="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'"
+        if web_library:policy=policy.replace("frame-ancestors 'none'","frame-ancestors 'self'").replace("media-src 'self' blob:","media-src 'self' https: http: blob:")
         self.send_header("Content-Security-Policy", policy)
         self.end_headers()
         if self.command != "HEAD":
