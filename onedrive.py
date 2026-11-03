@@ -32,7 +32,7 @@ class CloudRedirect(urllib.request.HTTPRedirectHandler):
 def safe_download(url):
     u=urllib.parse.urlsplit(url)
     host=(u.hostname or '').lower()
-    suffixes=('1drv.com','1drv.ms','onedrive.com','live.com','sharepoint.com','sharepointonline.com','windows.net')
+    suffixes=('1drv.com','1drv.ms','onedrive.com','live.com','sharepoint.com','sharepointonline.com','windows.net','microsoftpersonalcontent.com','svc.ms')
     if u.scheme!='https' or u.username or u.password or u.port not in (None,443) or not any(host==x or host.endswith('.'+x) for x in suffixes):
         raise CloudError('O OneDrive devolveu um endereço de conteúdo não reconhecido.',502)
     return url
@@ -184,7 +184,8 @@ class OneDrive:
             if len(rows)>5000:raise CloudError('Escolha uma pasta com menos subpastas diretas.')
         return dict(drive=drive,items=sorted(rows,key=lambda i:i['name'].casefold()))
     def content_url(self,drive,item):
-        d=self.get(self.item_path(drive,item)+'?$select=id,@microsoft.graph.downloadUrl')
+        # Graph may omit downloadUrl annotations when $select is used.
+        d=self.get(self.item_path(drive,item))
         url=d.get('@microsoft.graph.downloadUrl')
         if not url:raise CloudError('A conta não disponibilizou uma ligação de leitura compatível. A integração precisa de validar o acesso autenticado desta conta.',502)
         return safe_download(url)

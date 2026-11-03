@@ -277,3 +277,32 @@ na sessão física do Chrome do utilizador; apenas HTML/HTTP.
 Continuidade OneDrive: consentimento concluído e connected=true confirmado na
 fase anterior, sem erros; ainda aguardava escolha de pasta piloto. Próximo passo
 funcional mantém-se: escolher uma pasta pequena e validar conteúdos reais.
+
+## Fotografias OneDrive reais — correção ativa (2026-11-03)
+
+Utilizador indexou pasta piloto:18fotografias/1vídeo; reportou fotografia sem
+imagem. Diagnóstico real: $select=id,@microsoft.graph.downloadUrl devolvia só id;
+GET do item sem $select devolveu annotation válida. Conteúdo usa
+my.microsoftpersonalcontent.com e miniaturas francecentral1-mediap.svc.ms, ausentes
+da allowlist. Retirado $select desse pedido e acrescentados microsoftpersonalcontent.com
++svc.ms com validação HTTPS443/fronteira de domínio/sem userinfo, incluindo redirects.
+URLs assinados e tokens nunca impressos/registados. Sem alteração de permissões.
+
+8 testes pessoais passaram, incluindo regressões de annotation omitida, domínios
+Microsoft, hosts lookalike rejeitados e ausência de bearer em pedidos binários.
+Fotografia reportada obtida realmente, miniaturaJPEG178x240 e inteira801x1080.
+Serviço reiniciado apenas idle/scan parado; fingerprint lógico de items/roots/
+membership/albums/album_items igual antes/depois; conta continua ligada.
+Chrome isolado confirmou duas fotografias descodificadas sem erro; sem screenshots
+ou exportação de conteúdo pessoal. Correção backend beneficia todas as interfaces,
+sem reinstalar pacotes TV. Fechar/reabrir foto; Ctrl+F5 se necessário.
+
+Primeiro teste Chrome selecionou o primeiro item geral, que era o vídeo, e falhou
+por esperar uma imagem. Vídeo pessoal iniciou pipeline HLS (ready,2segmentos
+servidos), depois encerrado ao fechar navegador; estado idle confirmado. Não
+confundir com validação visual/áudio de vídeo. Teste ajustado explicitamente a
+Fotografias e passou. Nenhum stream IPTV iniciado. Progresso do vídeo pode ter
+sido registado pelo leitor; não reposto sem evidência do valor anterior.
+
+Próximo: aceitação das fotos pelo utilizador; vídeo com imagem/som e reprodução
+nas TVs/MAG físicos ainda por validar. Sem bloqueio da fotografia reportada.

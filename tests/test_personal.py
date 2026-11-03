@@ -105,9 +105,11 @@ class PersonalTests(unittest.TestCase):
                 self.assertFalse(m.status()['active'])
         finally:m.close()
     def test_cloud_redirect_and_graph_boundaries(self):
-        for url in ['http://fixture.1drv.com/a','https://evil.invalid/a','https://1drv.com.evil.invalid/a','https://127.0.0.1/a','https://u:p@fixture.1drv.com/a']:
+        for url in ['http://fixture.1drv.com/a','https://evil.invalid/a','https://1drv.com.evil.invalid/a','https://127.0.0.1/a','https://u:p@fixture.1drv.com/a','https://my.microsoftpersonalcontent.com.evil.invalid/a','https://mediap.svc.ms.evil.invalid/a','http://my.microsoftpersonalcontent.com/a','https://francecentral1-mediap.svc.ms:8080/a']:
             with self.assertRaises(CloudError):safe_download(url)
         self.assertEqual(safe_download('https://fixture.1drv.com/a'),'https://fixture.1drv.com/a')
+        for url in ('https://my.microsoftpersonalcontent.com/a','https://francecentral1-mediap.svc.ms/a'):
+            self.assertEqual(safe_download(url),url)
         client=OneDrive(Path(self.temp.name)/'auth')
         try:
             with self.assertRaises(CloudError):client.get('https://evil.invalid/?access_token=x')
@@ -116,6 +118,27 @@ class PersonalTests(unittest.TestCase):
             self.assertTrue(client.state()['configured'])
             self.assertNotIn('tokens',client.state())
         finally:client.close()
+    def test_personal_download_annotation_and_thumbnail_hosts(self):
+        client=OneDrive(Path(self.temp.name)/'downloads')
+        paths=[]
+        def metadata(path):
+            paths.append(path)
+            if '/thumbnails' in path:return {'value':[{'large':{'url':'https://francecentral1-mediap.svc.ms/fixture'}}]}
+            # Matches the real personal-account response: selecting the annotation drops it.
+            if '?' in path:return {'id':'photo'}
+            return {'id':'photo','@microsoft.graph.downloadUrl':'https://my.microsoftpersonalcontent.com/fixture'}
+        from unittest.mock import MagicMock
+        response=MagicMock();response.__enter__.return_value.read.return_value=b'fixture-image'
+        try:
+            with patch.object(client,'get',side_effect=metadata),patch.object(client.binary,'open',return_value=response) as opened:
+                self.assertEqual(client.content_url('drive','photo'),'https://my.microsoftpersonalcontent.com/fixture')
+                self.assertEqual(client.image_bytes('drive','photo',True),b'fixture-image')
+                self.assertEqual(client.image_bytes('drive','photo'),b'fixture-image')
+                for call in opened.call_args_list:
+                    self.assertFalse(call.args[0].has_header('Authorization'))
+                self.assertTrue(all('$select' not in path for path in paths))
+        finally:client.close()
+
     @unittest.skipUnless(os.name=='nt','Windows DPAPI')
     def test_tokens_encrypted_at_rest_and_not_in_status(self):
         client=OneDrive(Path(self.temp.name)/'vault')

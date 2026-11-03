@@ -68,14 +68,18 @@ TV e MAG: opção **Pessoal** na aplicação. A página web permanece dentro do
 
 ## Limites e validação
 
-Esta fase está preparada para um piloto; a conta real ainda não foi autorizada.
+Conta real autorizada e pasta piloto indexada (18 fotografias e 1 vídeo).
+Duas fotografias reais foram abertas e descodificadas no Chrome após corrigir
+a resolução de URLs do OneDrive pessoal.
 Testes sintéticos validam atualização repetida/falha, preservação de organização,
 DPAPI, fronteiras HTTP/CSRF/Origin, streaming HLS, remux/transcode, procura de posição,
 limpeza e exclusão de duas reproduções pessoais. Chrome confirmou vídeo sintético
 com imagem, pausa/retomar/avanço, fotografias em várias páginas, álbuns, favoritos,
 pesquisa, largura móvel e navegação simulada de comando.
 
-Não equivalem a testes de OneDrive real nem da reprodução física MAG/Samsung/Xiaomi.
+Os testes sintéticos não equivalem à reprodução física MAG/Samsung/Xiaomi.
+A autorização, indexação piloto e fotografias OneDrive reais já foram verificadas;
+a reprodução de vídeo com imagem/som e os dispositivos físicos continuam pendentes.
 Dependem ainda da conta, codecs, rede, firmware e capacidade do PC. MAG tem saída
 até 1080p. HEIC/RAW e outros formatos de imagem usam miniatura do OneDrive quando
 não são diretamente convertíveis; não se garante apresentação do original em
