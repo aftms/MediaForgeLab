@@ -15,3 +15,12 @@ body.mag .tile strong{font-size:14px}
 .tile small{font-size:12px;line-height:1.35;padding:0 9px 6px}
 body.tv .tile strong{font-size:14px;line-height:19px;height:38px;max-height:38px}body.tv .tile small{font-size:13px}
 body.mag .tile strong{font-size:13px;line-height:18px;height:36px;max-height:36px}
+
+/* Explicit edges and block layout for MAG WebKit (no inset/grid/flex requirement). */
+#home{display:inline-block;margin-left:auto;border:1px solid #35515d;border-radius:8px;padding:10px 12px;text-decoration:none;font-weight:bold}
+body.mag header{display:block;position:relative;padding:16px 24px}body.mag header img{float:left;margin-right:14px}body.mag header>div{display:inline-block}body.mag #home{float:right}
+body.mag nav,body.mag .manage{display:block}body.mag aside{padding:12px 18px}body.mag .filters,body.mag .heading,body.mag .viewer-head,body.mag .row{display:block}body.mag .filters>*{margin:4px}body.mag .heading button,body.mag .viewer-head button{float:right}
+body.mag .overlay,body.mag .modal{top:0;right:0;bottom:0;left:0}body.mag #screen video,body.mag #screen object,body.mag #external,body.mag #external iframe{top:0;left:0;right:0;bottom:0}
+body.mag #screen{height:45vh}body.mag .viewer-head{min-height:50px}body.mag .row>*{margin:4px}body.mag .art{display:block;text-align:center}body.mag .art img{object-fit:contain}body.mag button:focus,body.mag a:focus{outline:3px solid #e5c28b;background:#294a54}
+
+.mag-help{display:none}body.mag .mag-help{display:block;margin-top:5px}

@@ -1009,3 +1009,47 @@ Ativação exige reiniciar backend. Guarda inicial adiou porque começou reprodu
 Navegador após a leitura idle. Solicitada confirmação de fechar o leitor; não
 reiniciar até essa confirmação. Coleçõesv9, web27/MAGr31/Pessoal10 mantidos.
 Próximo ativar após confirmação e Ctrl+F5; instalação/commit/push/Gateway no fecho.
+
+
+## Correção Coleções na MAG — v10 (2026-11-03)
+
+Pedido: Coleções não funciona na MAG e deixa o utilizador sem conseguir sair.
+Reprodução controlada com capacidades antigas simuladas: sem evento XHR2 onload,
+a versão anterior ficava com zero cartões; sem button.click, BACK lançava TypeError.
+Não se obteve um diagnóstico da MAG física; esta evidência demonstra os caminhos
+de incompatibilidade, não identifica com certeza o firmware/capacidade da box.
+
+Pedidos usam agora readyState + prazo manual, conclusão única e recuperação 403
+limitada. Shell MAG autónoma instalada antes de preferências/opcionais: erro de
+arranque não remove saída, BACK/ESC regressam ao portal e MENU sai diretamente.
+Navegação via document.onkeydown, keyCode/which/window.event e returnValue; OK
+invoca a ação sem button.click. BACK funciona também no campo de pesquisa; edição
+de combo/teclado fecha antes. Desliga spatial navigation nativa conforme Infomir.
+Voltar fecha primeiro teclado/dialog/leitor, depois portal; link Biblioteca tem href.
+Falha do HTML5 video não impede Stop da API nativa. Iframe externo não fica com
+o foco do comando: controlos da biblioteca retomam o foco na MAG. InitPlayer usa
+SetTopWin(0); formatos/players sociais continuam oficiais, sem extração indevida.
+
+CSS MAG explicita top/right/bottom/left e layouts simples onde inset/grid/flex
+deixavam menus/leitor fora do ecrã. Foco destacado e ajuda Voltar/MENU visível.
+Títulos compactos preservados. Sem alterações aos catálogos, favoritos ou streams.
+
+Validação: tests/collections-mag-http.cjs PASS (readyState, erro, JSON inválido/null,
+timeout, eventos repetidos e retry403). tests/collections-mag-browser.cjs PASS com
+fixture tests/collections_mag_fixture.py: lista, favoritos, setas/OK/BACK/MENU,
+pesquisa/combo, overlays com inset removido antes de interpretar CSS, native mock,
+Stop apesar de erro HTML5, foco iframe, helper ausente, API recusada e erro de ação;
+smoke web/TV. Acorn ES5 dos quatro scripts partilhados PASS. navigation.cjs PASS;
+22 testes Python Coleções/metadados PASS. Sem reprodução externa/fornecedor real.
+
+Coleções v10 (JS/CSS10) já servida em HTTP; bytes ativos conferidos com o repo.
+Não foi preciso reiniciar backend e reprodução Navegador ativa foi preservada.
+MAG principal continua r31/web27/TVr30/Pessoal10. Samsung instalada continua1.0.30
+com Coleçõesv9 empacotadas; esta correção MAG não precisa reinstalar apps TV.
+Categoria Por classificar do checkpoint anterior continua com ativação backend
+pendente: ainda sem confirmação de fecho do leitor. Não reiniciar com stream ativo.
+
+Próximo: utilizador faz Restart portal e valida Coleçõesv10 na MAG (lista/Voltar
+e reprodução social física). Foi pedida confirmação assíncrona. YouTube/Facebook
+no navegador antigo continuam dependentes da capacidade real da MAG; teste feito
+no PC apenas simula limites e não confirma imagem/som na box.
