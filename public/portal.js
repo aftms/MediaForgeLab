@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:21,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:22,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);
@@ -137,7 +137,7 @@ var MagPortal = (function () {
         releaseLease();
     }
     function showOsd(message){
-        var item=playingItem||current();text(el("osd-title"),message||(item?(item.favorite?"★ ":"")+item.name:"Media Forge Lab"));
+        var item=playingItem||current();text(el("osd-title"),message||(item?(item.favorite?"★ ":"")+item.name:"MediaForgeLab"));
         text(el("osd-hint"),fastDirection?"« / » Velocidade · OK Reproduzir · BACK Cancelar":playing&&item&&item.kind!=="tv"?"← → Ajustar · « » Rápido · VERDE Favorito · MENU Opções":"↑ ↓ / CH+ CH− Mudar · MENU Áudio / Legendas · BACK Parar");
         updateTimeline();window.clearTimeout(osdTickTimer);if(playing){osdTickTimer=window.setTimeout(timelineTick,1000);}
         el("osd").style.display="block";window.clearTimeout(osdTimer);osdTimer=window.setTimeout(function(){if(!seekInFlight&&!fastDirection){el("osd").style.display="none";}},5000);

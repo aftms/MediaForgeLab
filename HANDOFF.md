@@ -136,3 +136,18 @@ Próximo passo: reabrir as interfaces (Ctrl+F5 na web) e avaliar a organização
 Corrigir regras centrais se o utilizador identificar canais mal classificados.
 Sem bloqueios desta fase. Não foram abertas transmissões para estes testes.
 Validações físicas anteriores/integração do legado continuam pendentes.
+
+## Identidade MAG r22 — publicada
+
+Utilizador reportou nome/logótipo antigos na MAG física. HTTP LAN8090 e loopback
+já serviam Media Forge Lab r21 e o PNG atual (hash igual ao workspace), pelo
+que a causa na box ainda não foi confirmada: aguarda revisão/Portal 1 URL.
+MAG r22 usa o nome MediaForgeLab no cabeçalho/título/OSD, mesmo logótipo comum,
+referências de CSS/JS/PNG v22 e meta no-cache para WebKit antigo. Retirada etiqueta
+estática v6 da inicialização. Sem alteração a chaves de armazenamento ou leitura.
+
+Navegação/regressões MAG passaram. Chrome1280×720 confirmou página LAN, nome,
+logo carregado e r22, com lista real; sem streams nem reinício do servidor.
+Próximo: Restart portal na MAG e confirmar r22. Se persistir identidade antiga,
+verificar Portal 1 URL; URL atual com chave nova: http://192.168.1.240:8090/?v=22.
+Não afirmar que cache é causa comprovada nem que o ecrã físico foi validado.
