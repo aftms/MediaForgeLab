@@ -42,6 +42,8 @@ def samsung(server, profile):
     (root/'index.html').write_text(html,encoding='utf-8')
     personal=(root/'personal.html').read_text(encoding='utf-8').replace('<script src="config.js">','<script src="$WEBAPIS/webapis/webapis.js"></script><script src="config.js">')
     (root/'personal.html').write_text(personal,encoding='utf-8')
+    collection=(root/'collections.html').read_text(encoding='utf-8').replace('<script src="config.js">','<script src="$WEBAPIS/webapis/webapis.js"></script><script src="config.js">')
+    (root/'collections.html').write_text(collection,encoding='utf-8')
     xml=(BASE/'tv/samsung/config.xml').read_text(encoding='utf-8').replace('http://192.168.1.240:8090',server)
     (root/'config.xml').write_text(xml,encoding='utf-8')
     shutil.copyfile(BASE/'public/web/icon-512.png',root/'icon.png')

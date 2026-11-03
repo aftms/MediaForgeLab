@@ -8,7 +8,7 @@ var MagPortal = (function () {
     var leaseToken="",leaseTimer=null,leaseRequest=0;
     var updateTimer=null, progressTimer=null, resumePosition=0, completed=false, progressActive=false;
     var artKind="",favoriteTabsFocus=false,menuFocus="list",sidebarIndex=0,sidebarOkTime=0;
-    var sidebarButtons=["tab-tv","tab-movie","tab-series","tab-all","personal-button","search-button","favorite-button","quality-button","options-button"];
+    var sidebarButtons=["tab-tv","tab-movie","tab-series","tab-all","personal-button","collections-button","search-button","favorite-button","quality-button","options-button"];
     var favoritePending=false,favoriteLastId="",favoriteLastAttempt=0;
     var searchTimer=null, searchOrigin=null, searchPending=false;
     var seekTimer=null, seekTarget=null, osdTickTimer=null, tracksReady=false, autoAudioDone=false, autoAudioTimer=null, autoAudioAttempts=0, subtitleEnabled=null, pickerSubtitle="";
@@ -579,6 +579,7 @@ var MagPortal = (function () {
         el("favorites-tv").onclick=function(){selectFavoriteKind("tv",false);};el("favorites-movie").onclick=function(){selectFavoriteKind("movie",false);};el("favorites-series").onclick=function(){selectFavoriteKind("series",false);};
         el("tab-tv").onclick=function(){selectKind("tv");};el("tab-movie").onclick=function(){selectKind("movie");};el("tab-series").onclick=function(){selectKind("series");};el("tab-all").onclick=function(){selectKind("all");};
         el("search-button").onclick=search;el("quality-button").onclick=qualityPicker;el("favorite-button").onclick=favorite;el("options-button").onclick=optionsMenu;
+        el("collections-button").onclick=function(){window.location.href="/tv/collections.html?client=mag";};
         el("personal-button").onclick=function(){window.location.href="/tv/personal.html?client=mag";};
         el("update-button").onclick=checkUpdates;el("source-save").onclick=saveSource;
         loadPage(0,false);loadLibrary();pollUpdates();

@@ -13,6 +13,8 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 from media import MediaManager, MediaError
 from personal import PersonalLibrary, PersonalMedia
+from collections_store import Collections, CollectionError
+import sqlite3
 from onedrive import CloudError
 from favorite_layout import FavoriteLayout, LayoutError
 from catalog import Catalog
@@ -42,6 +44,10 @@ STATIC['/tv/']=('tv/index.html','text/html')
 STATIC['/web/personal/']=('tv/personal.html','text/html')
 for name in ('personal.css','personal.js','config.js','player.js','brand.png','track-controls.js','track-controls.css'):
     STATIC['/web/personal/'+name]=STATIC['/tv/'+name]
+STATIC['/web/collections/']=('tv/collections.html','text/html')
+STATIC['/collections/player']=('tv/collection-player.html','text/html')
+for name in ('collections.css','collections.js','config.js','player.js','brand.png'):
+    STATIC['/web/collections/'+name]=STATIC['/tv/'+name]
 STATIC.update({"/assets/"+p.name:("assets/"+p.name,"image/png")
                for p in (BASE / 'public' / 'assets').glob('*.png')})
 
@@ -150,6 +156,7 @@ class PortalServer(PortalHTTPServer):
         self.instance = secrets.token_hex(12)
         self.bind_host, self.scheme = config['host'], 'http'
         self.media = MediaManager(self)
+        self.collections = Collections(self.runtime/'collections')
         self.personal = PersonalLibrary(self.runtime/'personal')
         self.personal_media = PersonalMedia(self,self.personal)
         self.favorite_layout = FavoriteLayout(self.runtime/'favorite-layout.json')
@@ -159,6 +166,7 @@ class PortalServer(PortalHTTPServer):
         self.media.close()
         self.personal_media.close()
         self.personal.close()
+        self.collections.close()
         super().server_close()
 
     def handle_error(self, request, client_address):
@@ -201,6 +209,11 @@ class PortalHandler(BaseHTTPRequestHandler):
             return False
         if self.app.tv_access.authorized(self.path, self.headers, preflight):
             return True
+        # Public, data-free embed shell only. Packaged TVs navigate from file://.
+        # APIs retain the normal origin + TV-key + action-token checks.
+        if self.command in ('GET','HEAD') and self.path.split('?',1)[0] in (
+            '/collections/player','/tv/collection-player.html','/tv/collection-player.js','/tv/collection-player.css'):
+            return True
         origin = self.headers.get("Origin")
         if origin and origin != self.server.scheme+"://" + host:
             return False
@@ -232,9 +245,18 @@ class PortalHandler(BaseHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-MAG-TV, X-MAG-Action')
                 self.send_header('Access-Control-Max-Age', '300')
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'")
+        route=self.path.split('?',1)[0]
+        embed=route in ('/collections/player','/tv/collection-player.html')
+        collection=route in ('/web/collections/','/tv/collections.html')
+        if not embed:self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin" if embed else "no-referrer")
+        if embed:
+            policy="default-src 'none'; script-src 'self' https://www.youtube.com https://s.ytimg.com https://player.vimeo.com; style-src 'self' 'unsafe-inline'; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://www.facebook.com https://player.vimeo.com; connect-src https://www.youtube.com https://player.vimeo.com; img-src https://i.ytimg.com; base-uri 'none'; form-action 'none'"
+        elif collection:
+            policy="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https: http:; media-src 'self' https: http: blob:; worker-src 'self' blob:; img-src 'self' data: https://i.ytimg.com; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        else:
+            policy="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'"
+        self.send_header("Content-Security-Policy", policy)
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(content)
@@ -255,7 +277,12 @@ class PortalHandler(BaseHTTPRequestHandler):
         # Exact route allowlist: never expose the repository or original playlist.
         route = self.path.split("?", 1)[0]
         query = {k:v[-1] for k,v in parse_qs(urlsplit(self.path).query).items()}
-        if route == '/api/personal':
+        if route == '/api/collections':
+            try:self.respond(200,self.app.collections.browse(query))
+            except CollectionError as error:self.respond(error.status,{'error':str(error)})
+            except (ValueError,TypeError):self.respond(400,{'error':'Filtro inválido.'})
+            except sqlite3.Error:self.respond(503,{'error':'Biblioteca temporariamente indisponível.'})
+        elif route == '/api/personal':
             try:
                 operation=query.get('operation','browse')
                 if operation=='status':result=dict(self.app.personal.status(),playback=self.app.personal_media.status())
@@ -360,10 +387,10 @@ class PortalHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         payload = b''
-        if self.path in ('/api/personal','/api/refresh','/api/source','/api/progress','/api/favorite','/api/favorites/layout','/api/player-diagnostics','/api/media/web','/api/media/mag','/api/media/pulse','/api/media/stop'):
+        if self.path in ('/api/collections','/api/personal','/api/refresh','/api/source','/api/progress','/api/favorite','/api/favorites/layout','/api/player-diagnostics','/api/media/web','/api/media/mag','/api/media/pulse','/api/media/stop'):
             try:
                 size = int(self.headers.get('Content-Length','0'))
-                if not 0<size<=8192:
+                if not 0<size<=(65536 if self.path=='/api/collections' else 8192):
                     raise ValueError('Body limit')
                 # Consume bounded bodies before rejecting: unread TCP data can
                 # turn a clear 403 into a connection reset on Windows.
@@ -371,6 +398,17 @@ class PortalHandler(BaseHTTPRequestHandler):
             except (ValueError,OSError):
                 self.respond(400,{'error':'Pedido invÃ¡lido'})
                 return
+        if self.path == '/api/collections':
+            if not self.allowed() or not hmac.compare_digest(self.headers.get('X-MAG-Action',''),self.app.action_token):
+                self.respond(403,{'error':'Pedido recusado'});return
+            try:
+                data=json.loads(payload)
+                if not isinstance(data,dict):raise ValueError()
+                self.respond(200,self.app.collections.update(data))
+            except CollectionError as error:self.respond(error.status,{'error':str(error)})
+            except (ValueError,TypeError,KeyError):self.respond(400,{'error':'Pedido inválido.'})
+            except (OSError,sqlite3.Error):self.respond(503,{'error':'Não foi possível guardar. Os dados anteriores foram preservados.'})
+            return
         if self.path == '/api/personal':
             if not self.allowed() or not hmac.compare_digest(self.headers.get('X-MAG-Action',''),self.app.action_token):
                 self.respond(403,{'error':'Pedido recusado'});return

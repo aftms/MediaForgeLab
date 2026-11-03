@@ -15,6 +15,8 @@ import android.widget.VideoView;
 public final class MainActivity extends Activity {
  private WebView web;
  private VideoView player;
+ private WebView collections;
+ private FrameLayout layout;
  private volatile int position;
  private int generation;
  private volatile String phase="idle";
@@ -29,11 +31,11 @@ public final class MainActivity extends Activity {
    return base.getScheme().equals(uri.getScheme()) && base.getHost().equals(uri.getHost())
        && base.getPort()==uri.getPort() && uri.getUserInfo()==null;
  }
- private void js(String code) { if(web!=null) web.evaluateJavascript("window.MagTV && "+code,null); }
+ private void js(String code) { WebView current=collections!=null?collections:web;if(current!=null) current.evaluateJavascript("window.MagTV && "+code,null); }
  @Override public void onCreate(Bundle saved) {
    super.onCreate(saved);
    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
-   FrameLayout layout = new FrameLayout(this);
+   layout = new FrameLayout(this);
    player = new VideoView(this);
    FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(-1,-1,android.view.Gravity.CENTER);
    layout.addView(player,videoParams); player.setVisibility(View.GONE);
@@ -44,7 +46,10 @@ public final class MainActivity extends Activity {
    settings.setCacheMode(WebSettings.LOAD_NO_CACHE);settings.setMediaPlaybackRequiresUserGesture(true);
    settings.setUseWideViewPort(true);settings.setLoadWithOverviewMode(true);
    web.setWebViewClient(new WebViewClient(){
-    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest req){return !allowed(req.getUrl()) || !req.getUrl().getPath().startsWith("/tv/");}
+    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest req){
+     if(req.isForMainFrame()&&allowed(req.getUrl())&&"/tv/collections.html".equals(req.getUrl().getPath())){openCollections();return true;}
+     return !allowed(req.getUrl()) || !req.getUrl().getPath().startsWith("/tv/");
+    }
     @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest req){
      if(!allowed(req.getUrl())) return new WebResourceResponse("text/plain","UTF-8",403,"Forbidden",null,new java.io.ByteArrayInputStream(new byte[0]));
      return null;
@@ -54,6 +59,32 @@ public final class MainActivity extends Activity {
    layout.addView(web,new FrameLayout.LayoutParams(-1,-1));setContentView(layout);
    web.loadUrl(BuildConfig.SERVER+"/tv/");web.requestFocus();handler.post(tick);
  }
+ private void openCollections(){
+   if(collections!=null)return;
+   stopPlayer();web.setVisibility(View.GONE);
+   collections=new WebView(this);collections.setBackgroundColor(Color.BLACK);
+   WebSettings settings=collections.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
+   settings.setAllowFileAccess(false);settings.setAllowContentAccess(false);
+   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setMediaPlaybackRequiresUserGesture(true);
+   settings.setUseWideViewPort(true);settings.setLoadWithOverviewMode(true);
+   // Intentionally no addJavascriptInterface: untrusted embeds have no Java bridge.
+   collections.setWebViewClient(new WebViewClient(){
+    @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest req){
+     if(req.isForMainFrame()){
+      if(allowed(req.getUrl())&&(req.getUrl().getPath().equals("/tv/index.html")||req.getUrl().getPath().equals("/tv/"))){closeCollections();return true;}
+      return !(allowed(req.getUrl())&&req.getUrl().getPath().equals("/tv/collections.html"));
+     }
+     return !(allowed(req.getUrl())||"https".equals(req.getUrl().getScheme()));
+    }
+    @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest req){
+     if(!allowed(req.getUrl())&&!"https".equals(req.getUrl().getScheme()))return new WebResourceResponse("text/plain","UTF-8",403,"Forbidden",null,new java.io.ByteArrayInputStream(new byte[0]));
+     return null;
+    }
+   });
+   layout.addView(collections,new FrameLayout.LayoutParams(-1,-1));
+   collections.loadUrl(BuildConfig.SERVER+"/tv/collections.html?client=tv");collections.requestFocus();
+ }
+ private void closeCollections(){if(collections!=null){layout.removeView(collections);collections.destroy();collections=null;}web.setVisibility(View.VISIBLE);web.requestFocus();}
  private void stopPlayer(){phase="idle";++generation;player.stopPlayback();player.setVisibility(View.GONE);position=0;getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);}
  private final class Bridge {
    @JavascriptInterface public void play(final String url){
@@ -86,5 +117,5 @@ public final class MainActivity extends Activity {
    return super.dispatchKeyEvent(e);
  }
  @Override protected void onPause(){js("MagTV.suspend()");stopPlayer();super.onPause();}
- @Override protected void onDestroy(){handler.removeCallbacks(tick);stopPlayer();web.removeJavascriptInterface("MagPlayer");web.destroy();super.onDestroy();}
+ @Override protected void onDestroy(){closeCollections();handler.removeCallbacks(tick);stopPlayer();web.removeJavascriptInterface("MagPlayer");web.destroy();super.onDestroy();}
 }

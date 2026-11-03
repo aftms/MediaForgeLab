@@ -619,3 +619,79 @@ pausa real liberta; autoplay negado mostra mensagem certa/liberta, ▶ retoma e 
 liberta PASS. Nenhum acesso ao fornecedor. Backend/TV/MAG/Pessoal inalterados.
 Estáticos webv23 ativos, sem restart. Próximo Ctrl+F5 e reabrir conteúdo; utilizador
 confirma arranque real. Sem bloqueios. Nunca executar testes com áudio audível.
+
+
+## Coleções v1 — web24 / MAGr29 / TVr19 (2026-11-03)
+
+Utilizador aceitou nome Coleções e autorizou implementação do módulo de vídeos
+sociais, comum a todas as versões. Código/uso/limites em COLLECTIONS.md.
+SQLite privada partilhada, categorias/subcategorias, pesquisa/origem/favoritos,
+listas ordenadas até500 entradas, progressos por ocorrência, retoma e importação
+transacional até100 links. Canonicalização por IDs conhecidos, sem scraping/download.
+YouTube/Vimeo oficiais com eventos de fim; Facebook público manual; outros links
+abrem na origem na web. Leitor externo isolado, sem chaveTV/fornecedor; APIs protegidas.
+Android1.4 usa WebView separada sem ponte Java para Coleções.
+
+88 testes Python PASS; regressões MAG navegação, TVAPI/AVPlay e origem PASS.
+Chrome real silencioso: YouTube playing/time, pause/resume, seek ao fim e próximo
+automático PASS; CRUD/favoritos/pesquisa/teclado/layouts web390/1280,TV1920,MAG1280 PASS.
+Samsung física .229 autorizada pelo utilizador: WGT1.0.19 instalada, YouTube real
+sem som, time advancing/pause/resume, navegação/teclado/Voltar PASS. Item de teste
+removido e leitor fechado; deixou Coleções vazia. Screenshot debugger sem resposta,
+teste interrompido e limpeza confirmada por segunda ligação CDP; não repetir captura.
+
+Backend ativado após guarda idle provider/personal/scan/refresh; novos routesHTTP200.
+Web24, MAGr29 e TVr19 ativos. APK Android1.4 construído/assinado, NÃO instalado:
+utilizador desligou Xiaomi .90 e pediu apenas teste Samsung. Não contactar/ligar
+Xiaomi até disponível. MAG física, Facebook e Vimeo reais ainda por confirmar.
+Restante IPTV/Pessoal e exclusão de conta fornecedor preservados; testes sem IPTV.
+
+Importação automática HealthForgeLab bloqueada por ausência de concessão API:
+resource_access.api_services=[] no projeto mediaforgelab. Não contornar com outra
+identidade. Alternativa disponível: importar exportação JSON/links do utilizador.
+Nenhum pedido de permissão/melhoria foi enviado; API existente precisa de grant
+antes de integrar. Próximo: utilizador experimentar guardar links e organizar
+categorias/listas; instalar APK1.4 quando Xiaomi estiver ligada; validar vídeos
+concretos nas plataformas que ainda não têm prova física. Não produzir áudio em testes.
+
+
+### Pedidos durante a implementação — Coleções v2
+
+Utilizador pediu Destacar na web, perguntou pelos títulos genéricos e pediu etiquetas.
+Implementado: etiquetas partilhadas até20/vídeo, entrada por vírgulas no editor,
+chips e filtro reutilizável, pesquisa, dedup Unicode/case/acento e JSONimport tags.
+Categorias continuam independentes. Nomes YouTube/Vimeo via oEmbed oficial em fila
+de fundo após importação/arranque, sem bloquear UI ou sobrescrever títulos manuais;
+preview manual no editor. Verificação real:6 YouTube já com títulos/autor;1Facebook
+com título genérico, indicação para editar manualmente. Não renomear Facebook por
+adivinhação nem usar scraping/credenciais de outras apps.
+
+Destacar web: PiP nativo para vídeo direto; Document PiP para embed. Só um leitor,
+mesmo iframe adotado pela janela (browser recarrega; retoma posição conhecida).
+Canal/origem/source verificados; wrapper aceita controlador same-origin opener
+apenas no contexto PiP marcado. Fechar/retornar restaura DOM e encerra janela.
+Requer Chrome/Edge compatível em localhost/HTTPS; não prometer PiP em HTTP LAN.
+Facebook pode recomeçar porque não dá posição. TV/MAG não mostram Destacar.
+
+10 testes Coleções e bateria91/91 PASS. Uma corrida de pipelinePessoal durantebuild
+falhou; isolado PASS, repetição completa sembuild PASS. Sem alteração do pipeline.
+Chrome real mudo: YouTube PiP/time/pause/resume/restore, MP4 nativo sem nova fonte,
+tags UI normalizadas/filtradas e fecho de popup/iframe PASS. Docs COLLECTIONS.md.
+Serviço reiniciado com guardas idle e títulos reais confirmados. Versão módulo2,
+web24/MAGr29, TVr20/Samsung1.0.20; APK1.4 final construído e Xiaomi continua pendente.
+Próximo: Ctrl+F5 em Coleções, usar Opções/Editar para etiquetas e título Facebook;
+testar Destacar no PC; instalar APK1.4 quando Xiaomi voltar a estar ligada.
+
+
+Fecho da fase: teste real Chrome adicional PASS para destacar em pausa, conservar
+posição e fechar a janela PiP pelo próprio X, restaurando o leitor na página.
+Samsung1.0.20 final reconstruída/instalada após os últimos ajustes. No futuro,
+não testar novamente vídeos reais sem respeitar autorização e silêncio.
+
+Última pergunta do utilizador: faz sentido etiquetas/subetiquetas nível2/3?
+Respondido como proposta, NÃO implementada nesta fase: grupos até3níveis
+(Atividade→Workout→Mobilidade/Força/Cardio; Zona muscular→Pernas→Gémeos/Glúteos;
+Culinária→Tipo de prato→Refeição/Sobremesa), múltiplas etiquetas por vídeo e filtro
+de pai incluindo descendentes. Etiquetas atuais são planas, categorias já hierárquicas.
+Próximo desenvolvimento se autorizado: hierarquia de etiquetas preservando IDs
+e associações existentes. Não apresentar esta proposta como funcionalidade entregue.

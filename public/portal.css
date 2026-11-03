@@ -113,5 +113,5 @@ button { font-family:Arial,Helvetica,sans-serif; cursor:pointer; }
 #navigation .nav-tab.remote-focus, #actions button.remote-focus { outline:2px solid #e5c28b; outline-offset:1px; background-color:#37575c; color:#fff3d9; }
 
 /* Five peer sections, with the same spacing and remote highlight. */
-#navigation{height:40%}.nav-label{margin-bottom:4%}.nav-tab{height:17%;margin-bottom:2%}
+#navigation{height:40%}.nav-label{margin-bottom:4%}.nav-tab{height:14%;margin-bottom:1.5%}
 #navigation .nav-tab.remote-focus{border-left-color:#e5c28b;background-color:#37575c;color:#fff3d9}
