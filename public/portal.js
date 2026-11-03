@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:27,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:28,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);

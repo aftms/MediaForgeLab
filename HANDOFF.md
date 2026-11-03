@@ -579,3 +579,19 @@ libertada PASS. Screenshot móvel inspecionado. Testes reais Chrome fullscreen
 botão/duplo-clique/resize e PiP sem novas sessões PASS. Sem fornecedor, ficheiros
 pessoais ou reinício backend. Estáticos webv21 ativos; aceitação física pendente.
 Próximo: Ctrl+F5 e usar a barra dentro do vídeo; pode haver preparação ao saltar.
+
+
+## Ícone Pessoal — webv22 / MAGr28 / TVr18 (2026-11-03)
+
+Substituído glifo ▧ na web/TV e pasta genérica na MAG por álbum de fotografias
+sobrepostas, traço verde-água e sol dourado. Geometria em design-assets.py usa o
+mesmo sistema de ícones; PNG64 transparente suporta MAG antiga. Web/MAG usam
+assets/personal.png; cópia idêntica personal-icon.png no pacote/hospedagem TV,
+gerada pela mesma função. Web alinha ícone/texto como restantes entradas.
+
+Verificado PNG RGBA64, igualdade de bytes entre variantes, conteúdo do WGT,
+HTTP das duas imagens, sintaxe JS e diff. Pré-visualização estática Chrome
+inspecionada. Sem streams. Servidor mantém tabela estática em memória: reiniciado
+apenas após confirmar todas leases/scan/refresh idle, para registar novos PNG.
+Samsung1.0.18 instalada exit0; Xiaomi recebe UI hospedada ao reabrir. Pessoalv6
+inalterado. Próximo Ctrl+F5/reabrir TVs/Restart portal MAG. Sem bloqueios.

@@ -7,7 +7,7 @@ OUT.mkdir(exist_ok=True)
 INK = '#e5f0f3'
 ACCENT = '#e5c28b'
 COLORS = dict(tv='#7ad4c5', movie='#e5c28b', series='#b9ace5', all='#efca83',
-              country='#8dc8e4', group='#91cbbd', episode='#b9ace5',
+              country='#8dc8e4', group='#91cbbd', personal='#7ad4c5', episode='#b9ace5',
               search='#8dc8e4', quality='#7ad4c5', options='#b9ace5', refresh='#7ad4c5')
 
 
@@ -46,6 +46,12 @@ def icon(name, size=64):
     elif name=='group':
         d.line([(8,51),(8,16),(26,16),(32,23),(56,23),(56,51),(8,51)],fill=ink,width=4)
         line([(17,32),(46,32)],ACCENT);line([(17,41),(38,41)],ACCENT)
+    elif name=='personal':
+        # A small album: overlapping photo frames, landscape and warm sunlight.
+        d.rounded_rectangle((7,8,48,45),radius=5,outline=ink,width=4)
+        d.rounded_rectangle((15,18,57,55),radius=5,fill='#18353d',outline=ink,width=4)
+        d.ellipse((42,25,49,32),fill=ACCENT)
+        line([(20,46),(29,35),(37,44),(43,38),(52,48)],width=4)
     elif name=='search':
         d.ellipse((10,8,42,40),outline=ink,width=4);line([(38,36),(55,53)],width=5)
     elif name=='quality':
@@ -61,8 +67,11 @@ def icon(name, size=64):
     return im.resize((size,size),Image.Resampling.LANCZOS)
 
 
-for name in ('tv','movie','series','all','country','group','search','quality','options','refresh','episode'):
+for name in ('tv','movie','series','all','country','group','search','quality','options','refresh','episode','personal'):
     icon(name).save(OUT/(name+'.png'),optimize=True)
+
+# Packaged TVs need the same image within their flat application folder.
+icon('personal').save(OUT.parent/'tv'/'personal-icon.png',optimize=True)
 
 for name in ('tv','movie','series','all','country','group','episode'):
     backgrounds = dict(tv='#173b40', movie='#393229', series='#2c2d46', all='#393429')
