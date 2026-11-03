@@ -1,0 +1,8 @@
+.origin-filter{min-width:170px;text-align:left;white-space:nowrap;font-weight:normal}
+.origin-panel{position:fixed;z-index:10000;box-sizing:border-box;background:#142733;color:#ecf3f7;border:1px solid #51727e;border-radius:10px;padding:8px;box-shadow:0 10px 30px #0008;overflow:auto;font:15px Arial,sans-serif}
+.origin-panel p{margin:5px 8px 10px;color:#abc3cf;font-size:12px}
+.origin-panel button{display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:9px 10px;margin:2px 0;text-align:left;border:1px solid transparent;border-radius:6px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.origin-panel button:hover,.origin-panel button:focus{outline:2px solid #e4bc73;outline-offset:-2px;background:#25424e}
+.origin-panel [aria-checked=true]{background:#1c3b44;color:#a9e5da}
+.origin-check{display:inline-block;flex:none;width:17px;height:17px;line-height:17px;text-align:center;border:1px solid #7bb4b4;border-radius:3px;font-size:15px}
+.origin-panel .origin-done{justify-content:center;margin-top:8px;border-color:#3e606c;background:#203b48;font-weight:bold}

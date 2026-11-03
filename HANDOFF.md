@@ -781,3 +781,30 @@ de teste fechado. Sem streams IPTV. Facebook em TVs/MAG físicas ainda não vali
 Próximo: Ctrl+F5/reabrir Coleções e confirmar Facebook nas TVs quando conveniente.
 Hierarquia tags/categorias continua só proposta; gestão web/favoritos todos mantidos.
 Commit/push desta fase e Gateway notes no fecho. Sem novo bloqueio de entrega.
+
+
+## Origens com seleção múltipla — web25 / MAGr30 / TVr24 (2026-11-03)
+
+O filtro de canais permite marcar várias origens. API aceita origin=MEO,VO como
+união antes de aplicar qualidade/deduplicação. Parâmetro simples continua válido;
+lista vazia significa todas. Normalização/canonicalização evita resultados distintos
+por ordem, repetição ou espaços. Categoria permanece selecionada ao mudar origens.
+
+Web e TVs partilham public/tv/origin-filter.js/css: menu compacto com marcas,
+resumo da seleção, aplicação imediata, Todas e Concluir. Teclado e comando:
+setas navegam, OK marca/desmarca, Voltar/Escape fecha e devolve foco. MAG usa o
+seletor nativo do portal com marcas, múltiplos OK e BACK para concluir. Desmarcar
+a última origem volta a Todas. Não modifica favoritos, listas ou progressos.
+
+Validação: 19 testes catálogo e 16 portal PASS; união, qualidade Auto/HD, favoritos,
+cache, filtro inválido e categoria cobertos. Regressões MAG e TV API/player PASS.
+Chrome sintético sem streams: seleção MEO+VO, remover uma/todas, categoria intacta,
+teclado/comando simulado, foco e layouts desktop/mobile PASS; screenshots vistas.
+Fixture reproduzível tests/origins_fixture.py e tests/origin-filter-browser.cjs.
+Não foram necessários testes de reprodução nem testes do pipeline Pessoal.
+
+Backend ativado com guarda media/personal/scan/refresh inativos; Samsung1.0.24
+construída e instalação registada no fecho da fase. Xiaomi continua desligada,
+APK1.4 pendente: sem tentativa de instalação. Coleçõesv5 e Pessoalv6 inalterados.
+Próximo Ctrl+F5 na web, reabrir app TV ou Restart portal na MAG. Validar o comando
+físico quando conveniente. Commit/push e notas Gateway no fecho.

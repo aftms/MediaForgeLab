@@ -365,6 +365,11 @@ console.log("PASS: default Portugal for live TV, BACK/MENU world browsing and un
 h=harness(false);h.click('options-button');for(let i=0;i<5;i++)h.key(40);h.key(13);
 assert.equal(h.nodes['picker-title'].value,'Origem dos canais');h.key(40);h.key(13);
 assert(h.requests.at(-1).url.includes('origin=MEO'));assert.match(h.nodes.group.value,/Origem: MEO/);
+assert.equal(h.nodes['picker-title'].value,'Origem dos canais');h.release(13);h.key(40);h.key(13);
+assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'),'MEO,VO');
+h.release(13);h.key(38);h.key(13);assert.equal(new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'),'VO');
+h.release(13);h.key(38);h.key(13);assert(!new URL('http://fixture.invalid'+h.requests.at(-1).url).searchParams.get('origin'));h.key(8);
+
 h.click('tab-movie');assert(!h.requests.at(-1).url.includes('origin='));
 h.click('tab-tv');assert(!h.requests.at(-1).url.includes('origin='));
 console.log('PASS: MAG origins picker uses remote, sends origin filter and resets outside TV.');

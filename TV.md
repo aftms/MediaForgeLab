@@ -197,3 +197,11 @@ Samsung 1.0.10 instalada; Xiaomi usa a mesma UI r10 sem reinstalar APK1.2.
 Filmes e séries têm seletores de país/idioma do catálogo e género, combináveis
 com categoria e pesquisa. Não filtra pelo país de produção. Metadados incompletos
 ficam em Sem género indicado. Reabrir a aplicação para carregar a nova interface.
+
+
+Origens múltiplas (web25 / TVr24): abrir Origens, marcar uma ou várias e escolher
+Concluir, ou clicar fora. A lista atualiza a cada marca; a categoria mantém-se.
+Todas as origens limpa a seleção. Desmarcar a última também regressa a Todas.
+Comando: setas, OK para marcar/desmarcar, Voltar para fechar. Na MAGr30, MENU →
+Origem dos canais usa as mesmas regras. Qualidade Auto continua a escolher uma
+versão por canal entre as origens selecionadas. Não há alteração de favoritos.

@@ -430,3 +430,11 @@ mantém-se. TV em direto continua com controlos nativos. Esta alteração é do
 leitor web de filmes/episódios; MAG, interfaces nativas TV e Pessoal inalterados.
 No modo Destacar, os controlos da pequena janela são geridos pelo navegador;
 a barra completa permanece na página, não dentro da janela PiP nativa.
+
+
+Origens múltiplas (web25 / TVr24): abrir Origens, marcar uma ou várias e escolher
+Concluir, ou clicar fora. A lista atualiza a cada marca; a categoria mantém-se.
+Todas as origens limpa a seleção. Desmarcar a última também regressa a Todas.
+Comando: setas, OK para marcar/desmarcar, Voltar para fechar. Na MAGr30, MENU →
+Origem dos canais usa as mesmas regras. Qualidade Auto continua a escolher uma
+versão por canal entre as origens selecionadas. Não há alteração de favoritos.

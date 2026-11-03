@@ -230,7 +230,7 @@ class Catalog:
         qual, favorites = params.get('quality', 'auto'), params.get('favorites') == '1'
         language=params.get('language','')
         genre=params.get('genre','') if kind in ('movie','series','all') else ''
-        origin=params.get('origin','') if kind in ('tv','all') else ''
+        origin=tuple(sorted(set(x.strip().upper() for x in params.get('origin','')[:200].split(',') if x.strip()))) if kind in ('tv','all') else ()
         cache_key = (kind, country, group, tuple(terms), qual, favorites, language, origin, genre)
         with self.lock:
             if cache_key in self.cache:
@@ -259,7 +259,7 @@ class Catalog:
                     continue
                 if terms and not all(term in item['_search'] for term in terms):
                     continue
-                if item['kind'] == 'tv' and origin and item['origin'] != origin:
+                if item['kind'] == 'tv' and origin and item['origin'] not in origin:
                     continue
                 if item['kind'] == 'tv' and qual not in ('auto', 'all') and item['quality'] != qual:
                     continue

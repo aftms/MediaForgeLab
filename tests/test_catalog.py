@@ -63,7 +63,16 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='MEO'))['items'][0]['id'],'2')
         self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='VO'))['items'][0]['id'],'1')
         self.assertEqual(cat.browse(dict(kind='tv',q='RTP 1',origin='MEO',quality='FHD'))['total'],0)
+        both=dict(kind='tv',country='PT',q='RTP 1',origin='MEO,VO',quality='all')
+        self.assertEqual({i['id'] for i in cat.browse(both)['items']},{'1','2'})
+        self.assertEqual(cat.browse(dict(both,quality='auto'))['items'][0]['id'],'1')
+        self.assertEqual(cat.browse(dict(both,quality='HD'))['items'][0]['id'],'2')
+        self.assertIs(cat.selection(both),cat.selection(dict(both,origin=' vo, MEO,VO ')))
+        self.assertEqual(cat.browse(dict(both,origin='NO_SUCH_SOURCE'))['total'],0)
+        self.assertEqual(cat.browse(dict(both,origin=''))['total'],3)
+        self.assertEqual(cat.browse(dict(both,group='Desporto'))['total'],0)
         cat.favorite('1',True)
+        self.assertEqual({i['id'] for i in cat.browse(dict(both,favorites='1'))['items']},{'1','2'})
         alternative=cat.browse(dict(kind='tv',favorites='1',origin='MEO'))['items']
         self.assertEqual([i['id'] for i in alternative],['2']);self.assertTrue(alternative[0]['favorite'])
         groups=cat.browse(dict(view='groups',kind='tv',country='PT',origin='MEO'))['items']

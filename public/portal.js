@@ -422,9 +422,12 @@ var MagPortal = (function () {
         xhr("/api/catalog?"+queryString({view:"origins",kind:"tv",country:state.country,limit:30}),function(data){
             if(stamp!==loadSeq||state.kind!=="tv"){return;}
             if(!data){status("Não foi possível consultar as origens.");return;}
-            var options=[],sources=[{id:"origin:",name:"Todas as origens"}].concat(data.items),i;
-            for(i=0;i<sources.length;i+=1){options.push((function(row){var code=row.id.slice(7);return {label:row.name,icon:"tv",current:code===state.origin,description:"Filtra os canais pela identificação de origem na lista do fornecedor.",action:function(){state.origin=code;state.originName=code?row.name:"";stack=[];loadPage(0,false);}};}(sources[i])));}
-            status("");picker("Origem dos canais",options,"Todas ou apenas uma origem");
+            var sources=[{id:"origin:",name:"Todas as origens"}].concat(data.items);
+            function draw(focus){var options=[],selected=state.origin?state.origin.split(","):[],i;
+                for(i=0;i<sources.length;i+=1){options.push((function(row,index){var code=row.id.slice(7),checked=code?selected.indexOf(code)!==-1:!selected.length;return {label:(checked?"✓ ":"□ ")+row.name,icon:"tv",badge:checked?"Selecionada":"",description:"OK marca ou desmarca. Pode escolher várias origens. BACK regressa aos canais.",action:function(){var found=selected.indexOf(code);if(!code){selected=[];}else if(found<0){selected.push(code);}else{selected.splice(found,1);}state.origin=selected.sort().join(",");var names=[];for(var n=1;n<sources.length;n+=1){if(selected.indexOf(sources[n].id.slice(7))!==-1){names.push(sources[n].name);}}state.originName=names.join(" + ");stack=[];loadPage(0,false);draw(index);}};}(sources[i],i)));}
+                options.push({label:"Concluir",icon:"tv",action:function(){}});picker("Origem dos canais",options,"OK marcar / desmarcar · BACK concluir");choiceIndex=focus||0;renderPicker();
+            }
+            status("");draw(0);
         });
     }
     function help(){closeOverlay();overlay="help";el("help").style.display="block";}
