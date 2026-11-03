@@ -245,3 +245,20 @@ validados pelos testes sintéticos. UI de seleção de pastas foi testada com mo
 Graph real e capacidade de duas adaptações simultâneas permanecem por confirmar.
 HEIC/RAW dependem das miniaturas; atalhos remoteItem ignorados; sem IA, alterações
 ou eliminação de originais. Configuração, limites e testes em PERSONAL.md.
+
+## Registo Microsoft configurado — autorização pendente (2026-11-03)
+
+Utilizador concluiu o registo MediaForgeLab para contas Microsoft pessoais,
+ativou public client flows e confirmou permissões delegadas Files.Read e
+Files.Read.All. A permissão adicional foi explicitamente pedida pelo utilizador
+para ficar preparada desde já. Código pede ambos os scopes + offline_access,
+sem escrita. Client ID da captura configurado apenas em .runtime/personal;
+tenant consumers. O bloqueio anterior de acesso ao Entra está ultrapassado.
+
+7 testes pessoais passaram. Serviço reiniciado com IPTV/pessoal idle e scans
+parados. Microsoft aceitou o pedido device code; aguarda consentimento do
+utilizador. Código temporário e tokens não foram registados no handoff/Git.
+Abrir http://127.0.0.1:8091/web/personal/?client=web para ver o código/endereço.
+Se expirar, Ligar OneDrive gera outro. Próximo: autorizar na Microsoft, confirmar
+ligação e escolher UMA pasta piloto antes de indexar. Graph real e reprodução
+física continuam por validar; nenhuma transmissão foi iniciada nesta fase.

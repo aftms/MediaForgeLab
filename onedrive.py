@@ -12,7 +12,8 @@ import urllib.parse
 import urllib.request
 
 GRAPH = 'https://graph.microsoft.com/v1.0'
-SCOPE = 'https://graph.microsoft.com/Files.Read offline_access'
+# Broader read scope explicitly requested by the owner; no write permissions.
+SCOPE = 'https://graph.microsoft.com/Files.Read https://graph.microsoft.com/Files.Read.All offline_access'
 
 class CloudError(Exception):
     def __init__(self, message, status=400):

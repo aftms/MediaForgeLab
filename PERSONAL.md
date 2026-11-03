@@ -10,7 +10,8 @@ MediaForgeLab e são comuns aos dispositivos da rede de casa.
    O Application (client) ID é público; não é a palavra-passe nem um client secret.
 2. Em **Authentication → Advanced settings**, permitir **public client flows**.
    Esta aplicação usa device code; não precisa de client secret nem redirect URI.
-3. Permissão Microsoft Graph **delegada Files.Read**. O pedido também inclui
+3. Permissões Microsoft Graph **delegadas Files.Read e Files.Read.All**,
+   esta última incluída por pedido explícito do utilizador. O pedido também inclui
    `offline_access` para renovar a autorização sem repetir o início de sessão.
 4. Na MediaForgeLab: **Pessoal → Ligar OneDrive**, introduzir o Client ID.
    Abrir o endereço Microsoft apresentado, introduzir o código temporário e
