@@ -328,9 +328,9 @@ h.key(8);assert.equal(h.nodes['selected-name'].value,'Uma série');
 console.log('PASS: season directories/counts, parent series favorites, per-season pagination and episode playback, nested BACK selection.');
 
 // All left-side controls are reachable with arrows, without executing them while moving.
-const sideIds=['tab-tv','tab-movie','tab-series','tab-all','search-button','favorite-button','quality-button','options-button'];
+const sideIds=['tab-tv','tab-movie','tab-series','tab-all','personal-button','search-button','favorite-button','quality-button','options-button'];
 h=harness();h.enterTV();h.key(40);const selectedBefore=h.nodes['selected-name'].value;h.key(37);
-for(let i=0;i<8;i++){
+for(let i=0;i<sideIds.length;i++){
   assert.match(h.nodes[sideIds[i]].className,/remote-focus/);
   assert.equal(sideIds.filter(id=>h.nodes[id].className.includes('remote-focus')).length,1);
   assert(!h.nodes.list.children.some(row=>row.className.includes(' selected')));
@@ -346,7 +346,7 @@ h.key(37);h.key(8);assert.equal(h.nodes['selected-name'].value,selectedBefore);h
 h=harness();h.key(37);h.key(40);h.key(13);assert.equal(h.nodes['selected-name'].value,'Todos os títulos');
 h.key(13);assert.equal(h.nodes['selected-name'].value,'Todos os títulos'); // A held OK does not cascade.
 h.release(13);h.key(13);assert.equal(h.nodes['selected-name'].value,'Câmara de Cinema');
-h.key(37);for(let i=0;i<3;i++)h.key(40);h.key(13);h.release(13);assert.equal(h.nodes['search-panel'].style.display,'block');
+h.key(37);for(let i=0;i<4;i++)h.key(40);h.key(13);h.release(13);assert.equal(h.nodes['search-panel'].style.display,'block');
 h.type('Cinema');h.flush(250);h.key(13);assert.equal(h.nodes['search-panel'].style.display,'none');assert(h.nodes.list.children[0].className.includes(' selected'));
 h.key(37);assert.match(h.nodes['search-button'].className,/remote-focus/);h.key(40);h.key(13);
 assert(h.favorites.has('m10'));assert.match(h.nodes['favorite-button'].className,/remote-focus/);assert.equal(h.nodes['favorite-button'].value,'Remover filme');

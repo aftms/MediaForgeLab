@@ -201,3 +201,47 @@ Regressão web-player passou; Chrome com UA Chrome/Edge/Android verificou a sele
 de instruções e encaixe1280×720/390×844. Sem instalação real, streams ou restart.
 Próximo: utilizador Ctrl+F5 e seguir submenu do navegador; se não existir, obter
 navegador/endereço para diagnóstico do caso real. Sem bloqueio da alteração de UI.
+
+## Biblioteca pessoal OneDrive — piloto preparado (2026-11-03)
+
+Implementação autorizada pelo utilizador para TODAS as interfaces. Web v13,
+TV r11/Samsung 1.0.11, Xiaomi APK 1.3 e MAG r24. Interface ES5 comum em
+public/tv/personal.*, web sob /web/personal/ para permanecer na PWA. OneDrive
+pessoal read-only Files.Read/offline_access, device code, DPAPI Windows. SQLite
+transacional com pastas explicitamente escolhidas, IDs drive/item, favoritos,
+álbuns e progresso comuns. Atualização não descarrega vídeos. Imagens limitadas
+a 400 ficheiros/128MB; streaming progressivo via pipeline HLS comum, remux quando
+compatível e adaptação até1080p, cache temporário limpo ao parar. Uma reprodução
+pessoal de cada vez, independente da única reprodução IPTV. Originais intactos.
+
+76 testes Python e regressões JS MAG/TV/web passaram. Chrome isolado confirmou
+vídeo sintético HLS com imagem, pausa/retomar, avanço, fim com completed persistido;
+fotografias/galeria com15itens atravessando páginas, álbuns/favoritos comuns,
+pesquisa,390px e navegação simulada do comando/MagTV Android. Testes incluem
+atualização sem duplicados, falha/vazio/cTag instável/paginação repetida, DPAPI,
+CSRF/Origin/rotas privadas, leases independentes, remux/transcode e limpeza.
+Os últimos aliases PWA/ponte Android também passaram no Chrome. Não abriram
+streams reais de IPTV nem conteúdos da conta Microsoft.
+
+Serviço reiniciado só com lease IPTV idle e refresh parado; hashes de favoritos,
+progresso/snapshot iguais. HTTP loopback8091 e LAN8090 validados com
+OneDrive desligado. Samsung1.0.11 e Android1.3 compilados, assinados e instalados
+nas TVs .229/.90 sem iniciar reprodução. Reabrir apps; MAG Restart portal r24;
+web Ctrl+F5/reabrir PWA v13. Sessões sintéticas encerradas.
+
+BLOQUEIO EXTERNO: não foi fornecido Application/Client ID. Utilizador disse ter
+um ID e confirmou OneDrive pessoal, mas perguntou se Entra é pago (tem365pessoal).
+Esclarecido: EntraFree existe, P1/P2 desnecessários; criação do registo pede conta
+Azure/subscrição ativa e diretório, podendo usar conta gratuita; 365pessoal não
+substitui registo técnico. Não foram criados registo/serviços Azure nem iniciado
+autorização. Pergunta pendente: consegue abrir Registos de aplicações no Entra,
+ou aparece erro/pedido de conta Azure? Não repetir pedidos de segredos. Pedir
+apenas GUID público/ajudar configuração. Não usar IDs públicos de apps alheias.
+
+Próximo: concluir registo próprio e auth por device code, escolher UMA pasta
+piloto com o utilizador, testar metadados/imagem/vídeo reais e depois validar
+comandos/reprodução nas TVs e MAG físicos. Não declarar OneDrive ou hardware
+validados pelos testes sintéticos. UI de seleção de pastas foi testada com mocks;
+Graph real e capacidade de duas adaptações simultâneas permanecem por confirmar.
+HEIC/RAW dependem das miniaturas; atalhos remoteItem ignorados; sem IA, alterações
+ou eliminação de originais. Configuração, limites e testes em PERSONAL.md.

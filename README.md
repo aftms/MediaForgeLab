@@ -407,3 +407,10 @@ A versão desktop antiga está arquivada localmente, sem integração automátic
 A secção TV abre em Portugal (PT). Pode escolher outro país; na MAG, use
 BACK ou MENU → Países e categorias. Filmes, séries e favoritos mantêm os
 seus filtros habituais. Ao voltar à secção TV, Portugal é novamente o padrão.
+
+
+## Biblioteca pessoal OneDrive
+
+A primeira versão partilhada está descrita em [PERSONAL.md](PERSONAL.md).
+Inclui configuração Microsoft, privacidade, funcionamento e validações pendentes.
+A conversão de fotografias usa Pillow, já instalado neste computador.

@@ -30,6 +30,7 @@ def process_options():
 class MediaManager:
     def __init__(self, app):
         self.app = app
+        self.namespace = app.config.get('media_namespace','media')
         self.lock = threading.RLock()
         self.upstream_lock = threading.Lock()
         self.forwarder = None
@@ -156,7 +157,7 @@ class MediaManager:
             if s.get('error'):
                 result['error'] = s['error']
             if s['mode']=='web':
-                result['url'] = '/media/hls/'+s['token']+'/index.m3u8'
+                result['url'] = '/'+self.namespace+'/hls/'+s['token']+'/index.m3u8'
                 result['video_mode'] = s.get('video_mode')
             return result
 
@@ -183,7 +184,7 @@ class MediaManager:
 
     def _prepare(self, s):
         try:
-            raw = 'http://127.0.0.1:%s/media/raw/%s' % (self.app.config['loopback_port'], s['token'])
+            raw = 'http://127.0.0.1:%s/%s/raw/%s' % (self.app.config['loopback_port'], self.namespace, s['token'])
             fast_tv = s['kind']=='tv' and s.get('device') in ('Samsung TV','Android TV') and not s['compatibility']
             android_live = fast_tv and s.get('device')=='Android TV'
             browser_vod = s['kind'] in ('movie','episode') and s.get('device')=='Navegador' and not s['compatibility']
@@ -230,6 +231,9 @@ class MediaManager:
             # Native TV decoders receive original video in HLS without a separate
             # upstream probe. Compatibility mode retains full analysis/transcode.
             copy_video = fast_tv or (videos[0].get('codec_name')=='h264' and videos[0].get('pix_fmt') in ('yuv420p','yuvj420p') and not s['compatibility'])
+            max_height = self.app.config.get('max_video_height')
+            if max_height and videos and (int(videos[0].get('height',0))>max_height or int(videos[0].get('width',0))>1920):
+                copy_video=False
             folder = self.root / s['token']
             with self.lock:
                 if self.session is not s:
@@ -251,6 +255,8 @@ class MediaManager:
                     command += ['-ss',str(s['position'])]
                 command += ['-readrate','1','-readrate_initial_burst','12','-i',raw,'-map','0:v:0','-map','0:a:%d?'%ai,'-sn','-dn']
                 command += ['-c:v','copy'] if copy_video else ['-c:v','libx264','-preset','veryfast','-crf','22','-pix_fmt','yuv420p','-g','48','-sc_threshold','0']
+                if max_height and not copy_video:
+                    command += ['-vf',"scale=w='min(1920,iw)':h='min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2"]
                 command += ['-c:a','copy'] if (fast_tv and s.get('device')=='Samsung TV') or (audio and audio[ai].get('codec_name')=='aac') else ['-c:a','aac','-b:a','160k','-ac','2']
                 command += ['-f','hls','-hls_time','2' if android_live or browser_vod else '4','-hls_list_size','10','-hls_delete_threshold','2',
                     '-hls_flags','delete_segments+temp_file','-hls_segment_filename',str(folder/'s%06d.ts'),str(folder/'index.m3u8')]
@@ -277,6 +283,10 @@ class MediaManager:
                     self._stop()
                     self.last_failure = (s['token'], s['ip'])
             # No exception/URL/process arguments are written to logs.
+
+    def open_source(self, session, url, headers, method):
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        return opener.open(urllib.request.Request(url,headers=headers,method=method),timeout=10)
 
     def serve_raw(self, handler, token):
         with self.lock:
@@ -306,7 +316,7 @@ class MediaManager:
             try:
                 s['startup_ms'].setdefault('upstream_open',round((time.monotonic()-s['started'])*1000))
                 s['startup_ms']['last_upstream_open']=round((time.monotonic()-s['started'])*1000)
-                response=opener.open(urllib.request.Request(url,headers=headers,method='HEAD' if handler.command=='HEAD' else 'GET'),timeout=10)
+                response=self.open_source(s,url,headers,'HEAD' if handler.command=='HEAD' else 'GET')
                 s['startup_ms'].setdefault('upstream_headers',round((time.monotonic()-s['started'])*1000))
                 s['startup_ms']['last_upstream_headers']=round((time.monotonic()-s['started'])*1000)
             except urllib.error.HTTPError as error:

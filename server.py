@@ -12,6 +12,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 from media import MediaManager, MediaError
+from personal import PersonalLibrary, PersonalMedia
+from onedrive import CloudError
 from favorite_layout import FavoriteLayout, LayoutError
 from catalog import Catalog
 from provider import Provider
@@ -36,6 +38,10 @@ for asset in (BASE/'public'/'tv').glob('*'):
     if asset.suffix in ('.html', '.js', '.css', '.png'):
         STATIC['/tv/'+asset.name]=('tv/'+asset.name,{'.html':'text/html','.js':'application/javascript','.css':'text/css','.png':'image/png'}[asset.suffix])
 STATIC['/tv/']=('tv/index.html','text/html')
+# Same files, kept under the installed PWA scope; no personal content is cached.
+STATIC['/web/personal/']=('tv/personal.html','text/html')
+for name in ('personal.css','personal.js','config.js','player.js','brand.png'):
+    STATIC['/web/personal/'+name]=STATIC['/tv/'+name]
 STATIC.update({"/assets/"+p.name:("assets/"+p.name,"image/png")
                for p in (BASE / 'public' / 'assets').glob('*.png')})
 
@@ -144,11 +150,15 @@ class PortalServer(PortalHTTPServer):
         self.instance = secrets.token_hex(12)
         self.bind_host, self.scheme = config['host'], 'http'
         self.media = MediaManager(self)
+        self.personal = PersonalLibrary(self.runtime/'personal')
+        self.personal_media = PersonalMedia(self,self.personal)
         self.favorite_layout = FavoriteLayout(self.runtime/'favorite-layout.json')
         super().__init__((config["host"], config["port"]), PortalHandler)
 
     def server_close(self):
         self.media.close()
+        self.personal_media.close()
+        self.personal.close()
         super().server_close()
 
     def handle_error(self, request, client_address):
@@ -245,7 +255,31 @@ class PortalHandler(BaseHTTPRequestHandler):
         # Exact route allowlist: never expose the repository or original playlist.
         route = self.path.split("?", 1)[0]
         query = {k:v[-1] for k,v in parse_qs(urlsplit(self.path).query).items()}
-        if route in STATIC:
+        if route == '/api/personal':
+            try:
+                operation=query.get('operation','browse')
+                if operation=='status':result=dict(self.app.personal.status(),playback=self.app.personal_media.status())
+                elif operation=='folders':result=self.app.personal.cloud.folders(query.get('parent','root'))
+                elif operation=='browse':result=self.app.personal.browse(query)
+                else:raise CloudError('Operação desconhecida.')
+                self.respond(200,result)
+            except CloudError as error:self.respond(error.status,{'error':str(error)})
+            except (ValueError,TypeError):self.respond(400,{'error':'Filtro inválido.'})
+        elif route.startswith('/personal/image/'):
+            try:self.respond(200,self.app.personal.image(route.rsplit('/',1)[1],query.get('full')=='1'),'image/jpeg')
+            except CloudError as error:self.respond(error.status,{'error':str(error)})
+        elif route.startswith('/personal/raw/'):
+            try:self.app.personal_media.serve_raw(self,route.rsplit('/',1)[1])
+            except (CloudError,MediaError) as error:self.respond(error.status,{'error':str(error)})
+            except (OSError,ValueError):self.close_connection=True
+        elif route.startswith('/personal/hls/'):
+            try:
+                _,_,_,token,name=route.split('/')
+                content,mime=self.app.personal_media.segment(token,name,self.client_address[0])
+                self.respond(200,content,mime)
+            except (CloudError,MediaError) as error:self.respond(error.status,{'error':str(error)})
+            except (OSError,ValueError):self.respond(404,{'error':'Segmento pessoal indisponível.'})
+        elif route in STATIC:
             name, mime = STATIC[route]
             self.respond(200, (BASE / "public" / name).read_bytes(), mime)
         elif route == "/api/health":
@@ -326,7 +360,7 @@ class PortalHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         payload = b''
-        if self.path in ('/api/refresh','/api/source','/api/progress','/api/favorite','/api/favorites/layout','/api/player-diagnostics','/api/media/web','/api/media/mag','/api/media/pulse','/api/media/stop'):
+        if self.path in ('/api/personal','/api/refresh','/api/source','/api/progress','/api/favorite','/api/favorites/layout','/api/player-diagnostics','/api/media/web','/api/media/mag','/api/media/pulse','/api/media/stop'):
             try:
                 size = int(self.headers.get('Content-Length','0'))
                 if not 0<size<=8192:
@@ -337,6 +371,28 @@ class PortalHandler(BaseHTTPRequestHandler):
             except (ValueError,OSError):
                 self.respond(400,{'error':'Pedido invÃ¡lido'})
                 return
+        if self.path == '/api/personal':
+            if not self.allowed() or not hmac.compare_digest(self.headers.get('X-MAG-Action',''),self.app.action_token):
+                self.respond(403,{'error':'Pedido recusado'});return
+            try:
+                data=json.loads(payload)
+                if not isinstance(data,dict):raise ValueError()
+                op=data.get('operation')
+                library=self.app.personal
+                if op=='configure':library.cloud.configure(str(data.get('client_id','')),str(data.get('tenant','consumers')));result=library.status()
+                elif op=='connect':result=library.cloud.connect()
+                elif op=='disconnect':self.app.personal_media.close();library.cloud.disconnect();self.app.personal_media=PersonalMedia(self.app,library);result=library.status()
+                elif op=='root':result=library.add_root(str(data.get('id','')))
+                elif op=='scan':result=library.start_scan()
+                elif op=='play':result=self.app.personal_media.start(data,self.client_address[0],'web')
+                elif op=='pulse':result=self.app.personal_media.pulse(data,self.client_address[0])
+                elif op=='stop':result=self.app.personal_media.release(data,self.client_address[0])
+                else:result=library.update(data)
+                self.respond(200,result)
+            except (CloudError,MediaError) as error:self.respond(error.status,{'error':str(error)})
+            except (ValueError,TypeError,KeyError):self.respond(400,{'error':'Pedido pessoal inválido.'})
+            except OSError:self.respond(503,{'error':'Não foi possível guardar os dados pessoais.'})
+            return
         if self.path == '/api/favorites/layout':
             if not self.allowed() or not hmac.compare_digest(self.headers.get('X-MAG-Action',''),self.app.action_token):
                 self.respond(403,{'error':'Pedido recusado'});return

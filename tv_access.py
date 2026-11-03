@@ -4,7 +4,7 @@ import json
 import secrets
 from pathlib import Path
 
-ROUTES = frozenset(('/api/library', '/api/health', '/api/catalog', '/api/favorites',
+ROUTES = frozenset(('/api/personal','/api/library', '/api/health', '/api/catalog', '/api/favorites',
     '/api/favorite', '/api/continue', '/api/progress', '/api/refresh',
     '/api/media/web', '/api/media/pulse', '/api/media/stop'))
 

@@ -8,7 +8,7 @@ var MagPortal = (function () {
     var leaseToken="",leaseTimer=null,leaseRequest=0;
     var updateTimer=null, progressTimer=null, resumePosition=0, completed=false, progressActive=false;
     var artKind="",favoriteTabsFocus=false,menuFocus="list",sidebarIndex=0,sidebarOkTime=0;
-    var sidebarButtons=["tab-tv","tab-movie","tab-series","tab-all","search-button","favorite-button","quality-button","options-button"];
+    var sidebarButtons=["tab-tv","tab-movie","tab-series","tab-all","personal-button","search-button","favorite-button","quality-button","options-button"];
     var favoritePending=false,favoriteLastId="",favoriteLastAttempt=0;
     var searchTimer=null, searchOrigin=null, searchPending=false;
     var seekTimer=null, seekTarget=null, osdTickTimer=null, tracksReady=false, subtitleEnabled=null, pickerSubtitle="";
@@ -44,7 +44,7 @@ var MagPortal = (function () {
     }
     function diagnostic(stage,values,after){
         if(!meta.action_token){if(after){after();}return;}
-        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:23,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
+        var data={session:diagnosticSession,seq:++diagnosticSeq,revision:24,stage:stage,id:playingItem?String(playingItem.id):""},key,done=false,req,timer;
         for(key in values){if(values.hasOwnProperty(key)){data[key]=values[key];}}
         function finish(){if(done){return;}done=true;window.clearTimeout(timer);if(after){after();}}
         timer=window.setTimeout(function(){if(req){req.onreadystatechange=function(){};try{req.abort();}catch(ignore){}}finish();},700);
@@ -565,6 +565,7 @@ var MagPortal = (function () {
         el("favorites-tv").onclick=function(){selectFavoriteKind("tv",false);};el("favorites-movie").onclick=function(){selectFavoriteKind("movie",false);};el("favorites-series").onclick=function(){selectFavoriteKind("series",false);};
         el("tab-tv").onclick=function(){selectKind("tv");};el("tab-movie").onclick=function(){selectKind("movie");};el("tab-series").onclick=function(){selectKind("series");};el("tab-all").onclick=function(){selectKind("all");};
         el("search-button").onclick=search;el("quality-button").onclick=qualityPicker;el("favorite-button").onclick=favorite;el("options-button").onclick=optionsMenu;
+        el("personal-button").onclick=function(){window.location.href="/tv/personal.html?client=mag";};
         el("update-button").onclick=checkUpdates;el("source-save").onclick=saveSource;
         loadPage(0,false);loadLibrary();pollUpdates();
     }

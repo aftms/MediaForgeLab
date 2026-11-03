@@ -59,7 +59,7 @@ public final class MainActivity extends Activity {
    @JavascriptInterface public void play(final String url){
     Uri uri=Uri.parse(url);
     phase="requested";
-    if(!allowed(uri)||!uri.getPath().matches("/media/hls/[a-f0-9]{48}/index\\.m3u8")||uri.getQuery()!=null||uri.getFragment()!=null){phase="rejected";runOnUiThread(()->js("MagTV.error()"));return;}
+    if(!allowed(uri)||!uri.getPath().matches("/(?:media|personal)/hls/[a-f0-9]{48}/index\\.m3u8")||uri.getQuery()!=null||uri.getFragment()!=null){phase="rejected";runOnUiThread(()->js("MagTV.error()"));return;}
     runOnUiThread(()->{stopPlayer();final int stamp=generation;phase="preparing";getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);openedAt=android.os.SystemClock.elapsedRealtime();preparedMs=0;frameMs=0;player.setVisibility(View.VISIBLE);
      player.setOnPreparedListener(mp->{if(stamp==generation){phase="prepared";preparedMs=android.os.SystemClock.elapsedRealtime()-openedAt;getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);player.start();}});
      player.setOnInfoListener((mp,what,extra)->{if(stamp==generation&&what==android.media.MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START){phase="playing";frameMs=android.os.SystemClock.elapsedRealtime()-openedAt;}return false;});
