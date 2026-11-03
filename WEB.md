@@ -461,3 +461,9 @@ conforme o navegador. Nenhuma transmissão é guardada offline.
 Pessoalv9: cartões compactos e60 conteúdos por página por defeito. «Por página»
 no rodapé permite12/24/30/60 e fica guardado por vista. TV começa com30 e MAG24.
 Nomes/pastas completos aparecem ao passar o rato; imagens usam carregamento lazy.
+
+
+Pessoalv10: navegação lateral com ícones, pesquisa/filtros alinhados e estado
+OneDrive compacto. «Gerir biblioteca» abre ações de pastas/atualização/conta.
+No comando, → passa da secção aos conteúdos; ← na primeira coluna regressa à
+secção. BACK fecha a gestão. No telemóvel, as secções passam para duas filas.

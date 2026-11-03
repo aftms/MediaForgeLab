@@ -937,3 +937,30 @@ Pessoalv9, web27/MAGr31/Coleções7 mantidos; Samsung1.0.27/TVr27 construída.
 Mudança ativa nos ficheiros servidos, sem interromper leitores. Instalação Samsung
 e commit/push registados no fecho. Xiaomi desligada/APK1.4 pendente como antes.
 Próximo Ctrl+F5/reabrir Pessoal e escolher a quantidade no rodapé. Sem bloqueio novo.
+
+
+## Menu Pessoal redesenhado — v10 / TVr28 (2026-11-03)
+
+Pedido: menu feio, elementos amontoados; melhorar apresentação e ícones. Agora
+tem barra lateral com seis secções e ícones SVG inline consistentes; seleção teal
+com rebordo e indicador lateral; cabeçalho Pessoal/Media Forge Lab com versão10.
+Pesquisa com lupa/teclado e filtros Ano/Pasta alinhados num painel, Novo álbum
+visível. OneDrive tem cartão de ligação; Gerir biblioteca expande painel de gestão
+com pastas/atualização/desligar e estado detalhado, evitando ações amontoadas.
+Cabeçalho da grelha junta título, contagem e Opções do item; removida a folga do
+status vazio. Cartões compactos/quantidade persistente da fase anterior mantidos.
+
+Mobile: secções3×2 com ícones, conta compacta e filtros adaptáveis. SVG decorativo
+aria-hidden, botões só com ícone têm nome acessível, secção aria-pressed e painel
+aria-expanded. Setas → saem da barra lateral para a grelha; ← na primeira coluna
+regressa à secção; BACK fecha gestão. Layout tem fallback float/WebKit prefixado.
+
+Chrome metadata-only135 itens PASS: web1887px/mobile390px/TV1920/MAG1280 sem
+overlap/overflow; ícones, seleção, abrir/fechar gestão, setas e Opções do item.
+Screenshots desktop/mobile/gestão inspecionadas. Regressão compacta60/60/15,
+quantidade persistente, sequência fotos e paginação por comando passou. Sem
+reprodução, ações OneDrive reais, alteração de dados ou reinício do servidor.
+Pessoalv10 ativo nos ficheiros servidos. TVr28/Samsung1.0.28 reconstruída/instalada
+no fecho. Web27/MAGr31/Coleções7 mantidos; Xiaomi desligada/APK1.4 pendente.
+Próximo Ctrl+F5/reabrir Pessoal e confirmar v10; testar apresentação física quando
+conveniente. Commit/push e Gateway notes no fecho. Sem bloqueio novo.
