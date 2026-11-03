@@ -298,3 +298,10 @@ Filmes e séries: país/idioma da versão do catálogo e género, combináveis c
 categoria, pesquisa e favoritos. Todos por defeito, sem restringir a PT/BR.
 Quando o fornecedor não indica género, os títulos ficam em Sem género indicado.
 Atualizar com Ctrl+F5; o cache da PWA foi versionado para v10, sem cache de streams.
+
+## Sobre — web v11
+
+O botão Sobre no menu mostra sempre a versão da interface carregada, definida
+por WEB_VERSION em app.js. O diálogo apresenta nome, logótipo, versão e modo
+Navegador/Aplicação instalada (PWA). Atualizações da interface devem incrementar
+esta constante e as referências/cache no HTML e sw.js em conjunto.

@@ -1,5 +1,6 @@
 /* Modern browser UI; shares all catalog/favorite/progress/refresh APIs with MAG. */
 (()=>{'use strict';
+const WEB_VERSION='11';
 const $=id=>document.getElementById(id),video=$('video'),owner=crypto.randomUUID?crypto.randomUUID():('web-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 const labels={tv:'TV em direto',movie:'Filmes',series:'Séries',favorites:'Favoritos',continue:'Continuar a ver'};
 let action='',section='tv',state={kind:'tv',view:'items',quality:'auto',country:'PT',origin:'',group:'',q:'',favorites:'0',language:''},offset=0,total=0,history=[],rows=[],sequence=0,filterSeq=0,searchTimer,pollTimer,installPrompt;
@@ -139,6 +140,11 @@ window.addEventListener('appinstalled',()=>{installPrompt=null;appInstalled=true
 if(installDisplay.addEventListener)installDisplay.addEventListener('change',event=>{appInstalled=event.matches||navigator.standalone===true;installLabel();});
 $('install').onclick=async()=>{if(appInstalled||!installPrompt){installHelp();return;}const prompt=installPrompt;installPrompt=null;$('install').disabled=true;try{await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='dismissed')installHelp('A instalação foi cancelada. Pode voltar a tentar pelo menu do navegador.');}catch{installHelp('Não foi possível abrir a instalação direta. Use a opção de instalação do navegador.');}finally{$('install').disabled=false;installLabel();}};
 $('close-install').onclick=()=>$('install-panel').close();installLabel();
+/* The displayed version belongs to the interface actually loaded. */
+text('web-version','Web v'+WEB_VERSION);
+text('about-version','v'+WEB_VERSION);
+$('about').onclick=()=>{text('about-mode',installDisplay.matches||navigator.standalone===true?'Aplicação instalada (PWA)':'Navegador');$('about-panel').showModal();};
+$('close-about').onclick=()=>$('about-panel').close();
 /* End installation controls. */
 window.addEventListener('pagehide',()=>{if(session){fetch('/api/media/stop',{method:'POST',headers:{'Content-Type':'application/json','X-MAG-Action':action},body:JSON.stringify({token:session.token}),keepalive:true}).catch(()=>{});}});
 async function connection(){try{const s=await api('/api/media/status');text('connection',s.active?'● Em reprodução: '+s.device:'● Pronto · uma ligação disponível');}catch{text('connection','Sem ligação ao computador');}setTimeout(connection,10000);}

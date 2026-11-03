@@ -16,3 +16,8 @@ main{max-width:none}.display-tools{display:flex;justify-content:space-between;ga
 .brand{font-size:18px;line-height:1.3;gap:8px}.brand img{flex-shrink:0;width:38px;height:38px}.brand small{font-size:10px;margin-top:5px}.brand>span{max-width:150px}
 
 #install-panel{width:min(580px,94vw)}#install-panel p{line-height:1.6}
+
+/* About stays reachable in the utility menu, including short windows. */
+.sidebar{overflow-y:auto}.side-bottom{flex-shrink:0}
+#web-version{display:block;color:var(--muted);font-size:10px;font-weight:500}
+#about-panel{width:min(460px,94vw)}.about-brand{display:flex;align-items:center;gap:14px;margin:20px 0}.about-brand img{width:64px;height:64px}.about-brand h3{margin:0;font-size:22px}.about-brand p{margin:4px 0 0;color:var(--muted)}.about-details{margin:24px 0}.about-details>div{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.about-details dt{color:var(--muted)}.about-details dd{margin:0;font-weight:650}

@@ -173,3 +173,16 @@ snapshot iguais antes/depois. Samsung 1.0.10 assinada e instalada na .229; reque
 reabrir app. Xiaomi mantém APK1.2 e recebe UIr10 hospedada ao reabrir. MAG Restart
 portal r23; web Ctrl+F5 v10. Validação com comando físico ainda por confirmar.
 Sem bloqueios desta fase; validações físicas anteriores/legado continuam pendentes.
+
+## Sobre na web — v11 concluída
+
+Botão Sobre com ícone e Web v11 sempre visível no menu. Diálogo acessível com
+MediaForgeLab, logótipo, versão da interface efetivamente carregada (constante
+WEB_VERSION no JS) e modo Navegador/PWA. Recursos/cache web v11. Menu lateral
+rolável em janelas baixas. Sem alterações de backend, MAG, TV ou dados privados.
+
+Regressões web-player passaram. Chrome1280×720 e390×844: nome/logo/versão,
+abertura, fecho no botão e Escape, retorno de foco e ausência de overflow
+confirmados; capturas revistas. Modo PWA deriva de display-mode/standalone;
+não foi feita nova instalação Android. Sem transmissões nem restart do serviço.
+Próximo: Ctrl+F5 ou reabrir PWA e escolher Sobre. Sem bloqueios desta fase.
