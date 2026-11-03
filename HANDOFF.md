@@ -262,3 +262,18 @@ Abrir http://127.0.0.1:8091/web/personal/?client=web para ver o código/endereç
 Se expirar, Ligar OneDrive gera outro. Próximo: autorizar na Microsoft, confirmar
 ligação e escolher UMA pasta piloto antes de indexar. Graph real e reprodução
 física continuam por validar; nenhuma transmissão foi iniciada nesta fase.
+
+## Favicon da página Pessoal — corrigido (2026-11-03)
+
+A página principal web já declarava um favicon, mas Pessoal não tinha link icon.
+Adicionada referência explícita ao brand.png existente, relativa para funcionar
+em /web/personal/ e /tv/personal.html, com tipo image/png e chave v1. Ativa sem
+reiniciar serviço. Verificados HTML e PNG HTTP200/type/assinatura em loopback8091
+e LAN8090 nas páginas principal e Pessoal. Ctrl+F5 no Chrome para recarregar.
+Sem alteração de código do leitor/catálogos. Pacotes de TV não reinstalados por
+esta alteração exclusiva do separador do navegador. Não foi validado o separador
+na sessão física do Chrome do utilizador; apenas HTML/HTTP.
+
+Continuidade OneDrive: consentimento concluído e connected=true confirmado na
+fase anterior, sem erros; ainda aguardava escolha de pasta piloto. Próximo passo
+funcional mantém-se: escolher uma pasta pequena e validar conteúdos reais.
