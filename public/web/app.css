@@ -14,3 +14,5 @@ main{max-width:none}.display-tools{display:flex;justify-content:space-between;ga
 
 /* Media Forge Lab wordmark: fits the existing sidebar and small screens. */
 .brand{font-size:18px;line-height:1.3;gap:8px}.brand img{flex-shrink:0;width:38px;height:38px}.brand small{font-size:10px;margin-top:5px}.brand>span{max-width:150px}
+
+#install-panel{width:min(580px,94vw)}#install-panel p{line-height:1.6}

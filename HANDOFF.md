@@ -8,7 +8,7 @@ A aplicação MAG/web/TV é a base. Antiga MediaCatalog arquivada em
 Evolução conjunta passo a passo, sem importar a interface antiga.
 
 Nome visível **Media Forge Lab**, novo símbolo de enquadramentos/reprodução.
-MAG r19, web v5, TV r7. Pesquisa TV com lupa apenas no topo direito, 30 títulos/página.
+MAG r19, web v6, TV r7. Pesquisa TV com lupa apenas no topo direito, 30 títulos/página.
 Favoritos, pastas, progresso, catálogo completo e atualização são partilhados.
 Um único stream entre as interfaces; apps externas ao portal não são controladas.
 
@@ -33,3 +33,11 @@ WGT r7/1.0.7 e APK 1.1 assinados e instalados nas duas TVs. Entrada Admin
 Media Forge Lab pertence agora a mediaforgelab; a antiga entrada URG está desativada.
 O código antigo do portal foi retirado do Gateway, mantendo quatro BAT de
 compatibilidade e o histórico Git. Ver ARCHITECTURE.md para a partilha de código.
+
+## Web v6 — botão de instalação
+
+Corrigido botão que só aparecia após beforeinstallprompt. Agora fica visível,
+abre instalação nativa quando disponível ou ajuda contextual, distingue PWA
+aberta/appinstalled e mantém ação após cancelar. Cache da shell atualizado;
+manifesto corrigido para UTF-8. Testes Chrome isolado 1366/390px passaram,
+JS syntax/diffcheck passaram; sem reinício do serviço nem acesso ao fornecedor.

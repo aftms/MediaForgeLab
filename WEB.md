@@ -206,3 +206,16 @@ Definições, Instalar aplicação e Abrir interface MAG têm ícones vetoriais,
 cores discretas e destaque de foco. A instalação PWA continua destinada ao
 navegador Windows/Android. As aplicações Samsung e Android TV são separadas:
 ver [TV.md](TV.md). Usam o mesmo serviço e a mesma ligação única.
+
+## Instalação visível — web v6
+
+O botão Instalar aplicação está sempre disponível. Quando o navegador fornece
+a instalação direta, abre o respetivo pedido; caso contrário mostra instruções
+e, em HTTP LAN, os endereços local/HTTPS adequados. Cancelar não deixa um botão
+sem ação. Dentro da PWA, ou após appinstalled, apresenta Aplicação instalada.
+O estado instalado não é inferido de armazenamento antigo.
+
+Validado em Chrome isolado: botão visível, ajuda em contexto seguro e HTTP LAN,
+callback de instalação simulado, cancelamento, evento appinstalled e layout390px.
+Não se instalou uma PWA real neste teste nem se abriram transmissões.
+Referência: [evento beforeinstallprompt](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeinstallprompt_event).
