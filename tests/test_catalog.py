@@ -67,13 +67,46 @@ class CatalogTests(unittest.TestCase):
         alternative=cat.browse(dict(kind='tv',favorites='1',origin='MEO'))['items']
         self.assertEqual([i['id'] for i in alternative],['2']);self.assertTrue(alternative[0]['favorite'])
         groups=cat.browse(dict(view='groups',kind='tv',country='PT',origin='MEO'))['items']
-        self.assertEqual([g['group'] for g in groups],['','PT| MEO'])
+        self.assertEqual([g['group'] for g in groups],['','Generalistas'])
         self.assertEqual(cat.browse(dict(view='origins',kind='tv',country='ES'))['total'],1)
         cat.add(dict(id='m1',kind='movie',name='VO: Filme',group='PT| VODAFONE'))
         self.assertEqual(cat.browse(dict(kind='movie',origin='MEO'))['total'],1)
         self.assertEqual(cat.browse(dict(view='origins',kind='movie'))['total'],0)
         self.assertEqual(origin_for(dict(kind='tv',name='TV Vodafone News',group='PT| Noticias')),'OTHER')
         self.assertEqual(origin_for(dict(kind='tv',name='Canal',group='PT| PORTUGALⱽᴵᴾ ᴿᴬᵂ')),'VIP')
+
+    def test_own_categories_preserve_sources_families_and_vod(self):
+        rows=[tv(1,'MEO: RTP 1 HD','PT| MEO'),tv(2,'VO: RTP 1 FHD','PT| VODAFONE'),
+              tv(3,'MEO: SPORT TV 1 HD','PT| MEO'),tv(4,'VO: SPORT TV 1 FHD','PT| VODAFONE'),
+              tv(5,'PT: TVCINE TOP HD'),tv(6,'PT: SIC K HD'),tv(7,'PT: RTP 3 HD'),
+              tv(8,'PT: NATIONAL GEOGRAPHIC HD'),tv(9,'PT: MTV HD'),tv(10,'MEO: AXN HD'),
+              tv(11,'MEO: 24 KITCHEN HD'),tv(12,'MEO: CANCAO NOVA HD'),
+              tv(13,'Unknown brand','PT| MEO'),tv(14,'Cinema private','PT| ADULTS')]
+        cat=Catalog(rows,self.config)
+        self.assertEqual(rows[0]['group'],'PT| MEO')
+        self.assertEqual(cat.by_id['1']['group'],'PT| MEO')
+        self.assertEqual(cat.by_id['1']['origin'],'MEO')
+        self.assertEqual(cat.by_id['1']['key'],family_key(dict(kind='tv',country='PT',name=rows[0]['name'])))
+        groups=cat.browse(dict(kind='tv',view='groups',country='PT',limit='30'))['items']
+        self.assertEqual(sum(g['count'] for g in groups[1:]),groups[0]['count'])
+        self.assertTrue(all('PT|' not in g['name'] for g in groups))
+        chosen=cat.browse(dict(kind='tv',country='PT',origin='MEO',group='Desporto',q='SPORT',quality='HD'))['items']
+        self.assertEqual([i['id'] for i in chosen],['3']);self.assertEqual(chosen[0]['group'],'Desporto')
+        cat.favorite('3',True)
+        self.assertEqual(cat.browse(dict(kind='tv',favorites='1',group='Desporto',origin='VO'))['items'][0]['id'],'4')
+        self.assertGreater(cat.browse(dict(kind='tv',country='PT',group='PT| MEO'))['total'],0)
+        cat.add(dict(id='m1',kind='movie',name='Filme',group='PT| FILMES'))
+        self.assertEqual(cat.browse(dict(kind='movie'))['items'][0]['group'],'PT| FILMES')
+        self.assertEqual(cat.by_id['14']['category'],'Adultos')
+        self.assertEqual(cat.by_id['13']['category'],'Outros')
+        # A later version supplies a useful category for an otherwise unknown family.
+        cat.add(dict(tv(15,'PT: Unknown brand HD','PT| DOCUMENTARIOS'),kind='tv',country='PT'))
+        self.assertEqual(cat.by_id['13']['category'],'Documentários')
+        self.assertFalse(cat.browse(dict(kind='tv',country='PT',group='Outros',q='Unknown'))['items'])
+        self.assertEqual(cat.browse(dict(kind='tv',country='PT',group='Documentários',q='Unknown',quality='all'))['total'],2)
+        groups=cat.browse(dict(kind='tv',view='groups',country='PT',limit='30'))['items']
+        for g in groups[1:]:
+            self.assertEqual(g['count'],cat.browse(dict(kind='tv',country='PT',group=g['group']))['total'])
 
     def test_large_web_pages_are_complete_without_changing_mag_limits(self):
         for i in range(301):

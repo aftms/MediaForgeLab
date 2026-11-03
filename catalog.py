@@ -9,6 +9,7 @@ import time
 import unicodedata
 from urllib.parse import urlsplit
 from provider import Provider, decode_epg
+from channel_categories import CATEGORIES, category_hint
 from storage import atomic_batch, json_bytes, recover
 
 COUNTRIES = dict(PT='Portugal', ES='Espanha', UK='Reino Unido', IE='Irlanda', FR='França', BR='Brasil',
@@ -105,6 +106,7 @@ class Catalog:
         self.by_country = collections.defaultdict(list)
         self.by_group = collections.defaultdict(list)
         self.by_family = collections.defaultdict(list)
+        self.family_categories = {}
         self.kind_counts = collections.Counter()
         self.summaries = collections.OrderedDict()
         self.provider = None
@@ -159,13 +161,37 @@ class Catalog:
         item['quality'] = quality(item['name'], item['group'])
         item['origin'] = origin_for(item)
         item['key'] = item.get('favorite_key') or family_key(item)
-        item['_search'] = normalized(item['name'] + ' ' + item['group'])
+        if item['kind']=='tv':
+            category, priority = category_hint(normalized(item['name']), normalized(' '.join(item.get('groups') or [item['group']])))
+            previous = self.family_categories.get(item['key'])
+            if previous and previous[1] >= priority:
+                category, priority = previous
+            elif item['id'] not in self.by_id:
+                # All source/quality variants stay in one category. A named
+                # channel rule beats a broad source group; unknown never wins.
+                for variant in self.by_family[item['key']]:
+                    original = variant.get('groups') or [variant['group']]
+                    old = variant['category']
+                    if old != category:
+                        if old not in original:
+                            self.by_group[('tv',variant['country'],old)].remove(variant)
+                        if category not in original:
+                            self.by_group[('tv',variant['country'],category)].append(variant)
+                        variant['category'] = category
+                        variant['_search'] = normalized(variant['name']+' '+variant['group']+' '+category)
+                self.family_categories[item['key']] = (category, priority)
+            item['category'] = category
+        item['_search'] = normalized(item['name'] + ' ' + item['group'] + ' ' + item.get('category',''))
         if item['id'] not in self.by_id:
             if item['kind'] != 'episode':
                 self.items.append(item)
                 self.by_kind[item['kind']].append(item)
                 self.by_country[(item['kind'], item['country'])].append(item)
-                for group in item.get('groups') or [item['group']]:
+                # Keep source-group aliases for already-open/older clients.
+                groups = list(item.get('groups') or [item['group']])
+                if item['kind']=='tv' and item['category'] not in groups:
+                    groups.append(item['category'])
+                for group in groups:
                     self.by_group[(item['kind'], item['country'], group)].append(item)
                 self.by_family[item['key']].append(item)
                 self.kind_counts[item['kind']] += 1
@@ -176,6 +202,8 @@ class Catalog:
 
     def public(self, item):
         result = {k: item[k] for k in ('id', 'name', 'group', 'kind', 'country', 'quality', 'origin') if k in item}
+        if item['kind']=='tv':
+            result['group'] = item['category']
         result['favorite'] = item['key'] in self.favorites
         result['plot'] = str(item.get('plot', ''))[:1000]
         if 'season' in item:
@@ -210,7 +238,7 @@ class Catalog:
                 source = self.by_kind.get(kind, ())
             selected = []
             for item in source:
-                if item['kind'] == 'episode' or (country and item['country'] != country) or (group and group not in (item.get('groups') or [item['group']])):
+                if item['kind'] == 'episode' or (country and item['country'] != country) or (group and group != item.get('category') and group not in (item.get('groups') or [item['group']])):
                     continue
                 if language=='ptbr' and not any(re.match(r'^(PT|BR)(?:\b|/)',normalized(g)) for g in item.get('groups') or [item['group']]):
                     continue
@@ -255,9 +283,10 @@ class Catalog:
         else:
             selection = (self.selection(dict(kind=kind, country=params.get('country', ''), quality=params.get('quality','auto'), origin=params.get('origin','')))
                          if kind == 'tv' else self.by_kind.get(kind, ()))
-            counter = collections.Counter(group for i in selection for group in (i.get('groups') or [i['group']]))
+            counter = collections.Counter(group for i in selection for group in ([i['category']] if i['kind']=='tv' else (i.get('groups') or [i['group']])))
             rows = [{'id': 'group:', 'name': 'Todos os títulos' if kind != 'tv' else 'Todos os canais', 'kind':'group','group':'','count':len(selection)}]
-            ordered = sorted(counter.items(), key=lambda pair: (not normalized(pair[0]).startswith(('PT','BR')), normalized(pair[0])))
+            ordered = (sorted(counter.items(),key=lambda pair:CATEGORIES.index(pair[0])) if kind=='tv'
+                       else sorted(counter.items(), key=lambda pair: (not normalized(pair[0]).startswith(('PT','BR')), normalized(pair[0]))))
             rows += [{'id': 'group:' + g, 'name':g,'kind':'group','group':g,'count':n} for g,n in ordered]
         with self.lock:
             self.summaries[key] = rows

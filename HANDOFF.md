@@ -114,3 +114,25 @@ controlos de autorização em produção. Hashes de dados privados preservados.
 Próximo passo: utilizador reabrir Xiaomi/Samsung, Ctrl+F5 na web ou Restart portal
 na MAG e escolher origem. Sem bloqueios. Não foram iniciadas transmissões nem
 alterados favoritos. Pendentes anteriores de validação física/legado mantêm-se.
+
+## Categorias próprias de TV — concluído
+
+Taxonomia local partilhada em channel_categories.py e catalog.py: Generalistas,
+Desporto, Filmes, Séries e entretenimento, Infantis, Notícias, Documentários,
+Música, Estilo de vida, Religião, Adultos, Outros. Nome reconhecido precede pistas
+amplas do fornecedor; pistas adultas têm prioridade. Variantes da mesma família
+partilham a classificação de maior confiança. Origem e qualidade continuam
+separadas, com filtros antes da deduplicação. Grupos originais e aliases mantidos;
+filmes/séries, IDs, favoritos e progresso sem migração. Classificação aproximada;
+Outros evita adivinhar quando falta informação. Sem custos/API externa adicionais.
+
+Serviço atualizado; web v9/TV r9/MAG r21 e pacotes instalados continuam válidos.
+67 testes Python e regressões JS MAG/TV/web passaram. Chrome confirmou categorias
+próprias e MEO + Desporto em web/TV, sem reprodução. Contagens reais PT Auto:
+422 famílias, soma das categorias igual ao total; contagens por categoria também
+coincidem com os resultados filtrados para todas as origens, MEO e VO.
+
+Próximo passo: reabrir as interfaces (Ctrl+F5 na web) e avaliar a organização.
+Corrigir regras centrais se o utilizador identificar canais mal classificados.
+Sem bloqueios desta fase. Não foram abertas transmissões para estes testes.
+Validações físicas anteriores/integração do legado continuam pendentes.

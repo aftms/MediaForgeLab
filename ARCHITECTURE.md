@@ -26,3 +26,22 @@ Favoritos são lidos/escritos no servidor. Uma alteração afeta todas as interf
 mas não existe push em tempo real: outra lista já aberta pode precisar de ser
 reaberta. Pastas/reordenação são geridas na web; a interface TV consulta as pastas,
 e a MAG conserva a sua organização mais simples por tipo de conteúdo.
+
+## Categorias próprias dos canais
+
+`channel_categories.py` define a taxonomia local comum a MAG, web, Samsung e
+Xiaomi: Generalistas, Desporto, Filmes, Séries e entretenimento, Infantis,
+Notícias, Documentários, Música, Estilo de vida, Religião, Adultos e Outros.
+Não requer serviços pagos nem consultas externas. Regras pelo nome reconhecido
+precedem pistas de género dos grupos originais; grupos adultos têm prioridade.
+Casos sem indicação suficiente ficam em Outros. A classificação é heurística,
+podendo precisar de ajustes neste módulo para marcas não reconhecidas.
+
+O catálogo aplica a melhor indicação a todas as variantes da mesma família,
+mantendo a categoria comum entre origens e qualidades. Origem continua como
+filtro separado. Os grupos originais permanecem nos dados privados e nos aliases
+de consulta para clientes antigos, atualização e exportação M3U. A API apresenta
+a categoria própria em `group` dos canais e em `view=groups`; filmes e séries
+mantêm os seus grupos. IDs e chaves de favoritos não mudam. As regras voltam a
+ser aplicadas ao carregar os catálogos atualizados. Não é necessário reinstalar
+APK/WGT: reabrir a interface atualiza as listas.
