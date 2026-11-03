@@ -595,3 +595,27 @@ inspecionada. Sem streams. Servidor mantém tabela estática em memória: reinic
 apenas após confirmar todas leases/scan/refresh idle, para registar novos PNG.
 Samsung1.0.18 instalada exit0; Xiaomi recebe UI hospedada ao reabrir. Pessoalv6
 inalterado. Próximo Ctrl+F5/reabrir TVs/Restart portal MAG. Sem bloqueios.
+
+
+## Falsa pausa ao abrir — webv23 (2026-11-03)
+
+Utilizador reportou e confirmou «Em pausa · ligação libertada» espontâneo ao abrir,
+com vídeo parado a0s. Reproduzido: schedulePauseRelease tratava video.paused inicial
+como pausa após ready/start, inclusive resize/evento pause antes do primeiro playing.
+Timer900ms libertava lease prematuramente. Novo playbackStarted só arma após evento
+playing válido, reset em detach; pausa de arranque/resize não liberta nem grava posição.
+Pausa após reprodução continua com900ms, guards de geração/sessão/epoch mantidos.
+
+attemptPlayback aplica guardas a callbacks/promessas tardias e distingue rejeição
+de autoplay: mensagem «O navegador bloqueou a reprodução automática. Prima ▶ para
+iniciar», guarda posição inicial/resume, liberta ligação sem sobrescrever progresso.
+Outros erros de arranque têm mensagem própria. ▶ reabre normalmente após gesto.
+
+Testes: reprodução da falha antes da alteração; web-pause-lifecycle unidade com
+startup, playing, pausa real/transitória, late pause/start, autoplay e posição PASS.
+web-player regressões PASS. Chrome --mute-audio + video.muted=true com canal/filme
+sintéticos: arranque retardado sob resize/pause continua com mesma sessão; imagem,
+pausa real liberta; autoplay negado mostra mensagem certa/liberta, ▶ retoma e fechar
+liberta PASS. Nenhum acesso ao fornecedor. Backend/TV/MAG/Pessoal inalterados.
+Estáticos webv23 ativos, sem restart. Próximo Ctrl+F5 e reabrir conteúdo; utilizador
+confirma arranque real. Sem bloqueios. Nunca executar testes com áudio audível.
