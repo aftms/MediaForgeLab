@@ -1,4 +1,4 @@
-# Coleções — módulo v7
+# Coleções — módulo v8
 
 Biblioteca partilhada de links para vídeos, organizada por categorias/subcategorias
 e listas de reprodução. Os dados pertencem ao serviço MediaForgeLab; web, MAG e
@@ -10,7 +10,7 @@ TVs usam a mesma API e base SQLite, sem bibliotecas separadas.
   `http://192.168.1.240:8090/web/collections/?client=web` nos outros dispositivos.
   A entrada Coleções está no menu da aplicação/PWA. Também funciona sob o HTTPS
   já configurado no portal, dentro do âmbito `/web/` da PWA.
-- Samsung: abrir Media Forge Lab, versão TV r26 / pacote 1.0.26, e escolher Coleções.
+- Samsung: abrir Media Forge Lab, versão TV r29 / pacote 1.0.29, e escolher Coleções.
 - MAG: Restart portal, confirmar r29 e escolher Coleções. O menu, a biblioteca e
   a organização estão incluídos; leitores externos dependem do WebKit da box.
 - Xiaomi: requer APK 1.4 para os leitores externos. O pacote está construído em
@@ -218,3 +218,7 @@ escolher outro conteúdo substitui o atual na mesma janela quando há Document P
 Os links da app permitem passar entre Coleções, Pessoal e TV mantendo o controlador
 residente. MP4 usa a mesma superfície destacada; embeds podem recarregar ao mudar
 de janela. YouTube retoma a posição, Facebook continua com controlos próprios.
+
+
+A v8 usa títulos compactos de duas linhas (web12px, MAG13px, TV14px), com nome
+completo ao passar o rato. Os nomes guardados permanecem completos.

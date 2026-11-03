@@ -9,3 +9,9 @@
 body.mag .tile strong{font-size:14px}
 
 #screen.facebook-screen{height:65vh;min-height:260px;aspect-ratio:auto}#screen.facebook-screen:fullscreen{height:100vh;max-height:none}#facebook-layout-row{display:block;margin:10px 0}#facebook-layout{padding:5px 8px;font-size:13px}
+
+/* Compact, consistent card titles; full title remains accessible on hover. */
+.tile strong{font-size:12px;font-weight:600;line-height:16px;padding:0;margin:7px 9px;min-height:0;height:32px;max-height:32px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-wrap:break-word}
+.tile small{font-size:12px;line-height:1.35;padding:0 9px 6px}
+body.tv .tile strong{font-size:14px;line-height:19px;height:38px;max-height:38px}body.tv .tile small{font-size:13px}
+body.mag .tile strong{font-size:13px;line-height:18px;height:36px;max-height:36px}

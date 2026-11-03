@@ -964,3 +964,20 @@ Pessoalv10 ativo nos ficheiros servidos. TVr28/Samsung1.0.28 reconstruída/insta
 no fecho. Web27/MAGr31/Coleções7 mantidos; Xiaomi desligada/APK1.4 pendente.
 Próximo Ctrl+F5/reabrir Pessoal e confirmar v10; testar apresentação física quando
 conveniente. Commit/push e Gateway notes no fecho. Sem bloqueio novo.
+
+
+## Títulos Coleções mais pequenos — v8 / TVr29 (2026-11-03)
+
+Utilizador continua a achar os títulos demasiado grandes. Ajustado explicitamente
+para12px web/mobile,13px MAG e14px TV, peso600 (evita bolder herdado do botão),
+apenas2linhas e reticências. Altura de texto32/36/38px, margens exteriores para não
+deixar a3.ªlinha aparecer no padding do line-clamp. Metadados12px/TV13px. Nome
+completo preservado no DOM e title do botão, sem alterar os nomes guardados.
+Coleçõesv8/CSSv8/JSv8; TVr29/Samsung1.0.29 reconstruída/instalada no fecho;
+web27/MAGr31/Pessoal10 mantidos. Não houve reinício nem reprodução.
+
+Verificação visual Chrome com títulos sintéticos longos: web1920/mobile390,
+TV1920/MAG1280 com fonte/peso/altura corretos, limite2linhas, tooltip completo e
+sem overflow. Screenshot inspecionada após corrigir bleed do padding. Sem novos
+testes unitários para CSS. Próximo Ctrl+F5 em Coleções, confirmarv8. Commit/push
+e notas Gateway no fecho; sem bloqueio novo.
