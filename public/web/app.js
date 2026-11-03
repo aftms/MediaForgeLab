@@ -1,6 +1,6 @@
 /* Modern browser UI; shares all catalog/favorite/progress/refresh APIs with MAG. */
 (()=>{'use strict';
-const WEB_VERSION='11';
+const WEB_VERSION='12';
 const $=id=>document.getElementById(id),video=$('video'),owner=crypto.randomUUID?crypto.randomUUID():('web-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 const labels={tv:'TV em direto',movie:'Filmes',series:'Séries',favorites:'Favoritos',continue:'Continuar a ver'};
 let action='',section='tv',state={kind:'tv',view:'items',quality:'auto',country:'PT',origin:'',group:'',q:'',favorites:'0',language:''},offset=0,total=0,history=[],rows=[],sequence=0,filterSeq=0,searchTimer,pollTimer,installPrompt;
@@ -134,7 +134,7 @@ $('settings').onclick=async()=>{$('source-url').value='';text('source-status',''
 const installDisplay=window.matchMedia('(display-mode: standalone)');
 let appInstalled=installDisplay.matches||navigator.standalone===true;
 function installLabel(){text('install-label',appInstalled?'Aplicação instalada':'Instalar aplicação');$('install').hidden=false;}
-function installHelp(detail){text('install-status',detail||(appInstalled?'A Media Forge Lab já está aberta como aplicação.':!window.isSecureContext?'Este endereço HTTP da rede local não permite instalar a aplicação. Abra um dos endereços abaixo.':'O navegador ainda não disponibilizou a instalação direta. Pode procurar a opção no menu do navegador.'));$('install-instructions').hidden=appInstalled;$('install-address-help').hidden=window.isSecureContext;$('install-panel').showModal();}
+function installHelp(detail){text('install-status',detail||(appInstalled?'A Media Forge Lab já está aberta como aplicação.':!window.isSecureContext?'Este endereço HTTP da rede local não permite instalar a aplicação. Abra um dos endereços abaixo.':'A instalação direta ainda não está disponível nesta janela. Siga os passos do seu navegador abaixo.'));const ua=navigator.userAgent||'',guide=/Android/i.test(ua)?'android':/Edg\//.test(ua)?'edge':'chrome';for(const name of ['chrome','edge','android'])$('install-'+name).open=name===guide;$('install-instructions').hidden=appInstalled;$('install-address-help').hidden=window.isSecureContext;$('install-panel').showModal();}
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;installLabel();});
 window.addEventListener('appinstalled',()=>{installPrompt=null;appInstalled=true;installLabel();if($('install-panel').open)installHelp('Aplicação instalada. Pode abri-la na lista de aplicações do dispositivo.');});
 if(installDisplay.addEventListener)installDisplay.addEventListener('change',event=>{appInstalled=event.matches||navigator.standalone===true;installLabel();});

@@ -305,3 +305,16 @@ O botão Sobre no menu mostra sempre a versão da interface carregada, definida
 por WEB_VERSION em app.js. O diálogo apresenta nome, logótipo, versão e modo
 Navegador/Aplicação instalada (PWA). Atualizações da interface devem incrementar
 esta constante e as referências/cache no HTML e sw.js em conjunto.
+
+## Ajuda de instalação — web v12
+
+O fallback de instalação abre os passos do navegador detetado, mantendo Chrome
+Windows, Edge Windows e Chrome Android disponíveis em secções expansíveis. Links
+para a documentação oficial acompanham as instruções. O caminho exato pode variar
+com a versão/idioma do navegador. A ausência de beforeinstallprompt não identifica
+por si só a causa nem prova que a app não esteja instalada.
+
+Diagnóstico Chrome isolado em http://127.0.0.1:8091/web/: getInstallabilityErrors
+vazio, manifesto sem erros, service worker activated e controller presente. Não
+prova que o navegador/endereço do utilizador tem o mesmo estado. Ajuda verificada
+com agentes de utilizador Chrome/Edge/Android simulados; não foi instalada PWA.

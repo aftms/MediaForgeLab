@@ -186,3 +186,18 @@ abertura, fecho no botão e Escape, retorno de foco e ausência de overflow
 confirmados; capturas revistas. Modo PWA deriva de display-mode/standalone;
 não foi feita nova instalação Android. Sem transmissões nem restart do serviço.
 Próximo: Ctrl+F5 ou reabrir PWA e escolher Sobre. Sem bloqueios desta fase.
+
+## Ajuda de instalação — web v12
+
+Utilizador não encontra opção de instalação no menu do navegador (captura do
+fallback). Pergunta pendente: navegador, Windows/Android e endereço usado.
+Chrome isolado loopback8091: sem erros de installability/manifest, SW activated
+com controller. Causa no dispositivo do utilizador ainda não confirmada.
+
+Substituídas instruções genéricas por passos Chrome Windows, Edge Windows e Chrome
+Android; secção provável abre automaticamente, todas consultáveis. Referências
+oficiais Google/Microsoft confirmadas e ligadas no diálogo. Web/cachev12.
+Regressão web-player passou; Chrome com UA Chrome/Edge/Android verificou a seleção
+de instruções e encaixe1280×720/390×844. Sem instalação real, streams ou restart.
+Próximo: utilizador Ctrl+F5 e seguir submenu do navegador; se não existir, obter
+navegador/endereço para diagnóstico do caso real. Sem bloqueio da alteração de UI.
