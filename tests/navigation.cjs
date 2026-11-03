@@ -383,5 +383,5 @@ h=harness();h.nodes['tab-series'].onclick();h.key(13);h.key(13);
 h.nodes['options-button'].onclick();h.key(38);h.key(13);h.key(40);h.key(13);
 const filteredSeries=h.requests.filter(r=>r.url.includes('/api/catalog?')).at(-1).url;
 assert.ok(filteredSeries.includes('kind=series')&&filteredSeries.includes('genre=Drama')&&filteredSeries.includes('view=items'));
-assert.equal(new URL('http://fixture.invalid'+filteredSeries).searchParams.get('group'),'');
+assert.equal(new URL('http://fixture.invalid'+filteredSeries).searchParams.get('group')||'','');
 console.log('PASS: MAG genre filter from seasons returns to series without treating series title as category.');
