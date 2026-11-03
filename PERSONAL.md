@@ -33,6 +33,15 @@ Referências oficiais:
 
 ## Utilização
 
+Na MAG, **Pessoal** é uma secção do menu principal (r25), com o mesmo formato
+visual das restantes secções. A seleção pelo comando tem contorno dourado.
+Na biblioteca pessoal (v4), as setas percorrem as fotografias/vídeos em grelha;
+OK abre o conteúdo. Os botões Favorito/Álbum nos cartões continuam clicáveis,
+mas as setas não saltam para eles. Para essas ações, usar MENU/INFO ou subir
+acima da primeira fila até **Opções do item** e premir OK. Depois de alterar
+um favorito, a seleção regressa ao mesmo conteúdo. BACK fecha as opções.
+
+
 Fotografias/vídeos, pesquisa por nome/pasta, filtros por ano e pasta, favoritos,
 álbuns manuais e continuar a ver. Criar, renomear ou apagar álbuns não altera
 os ficheiros originais. Fotografias em ecrã inteiro, anterior/seguinte e

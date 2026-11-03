@@ -358,3 +358,33 @@ interface hospedada r12 ao reabrir; MAG entrar novamente em Pessoal (v3).
 Nenhum stream IPTV ou vídeo pessoal aberto nesta fase: só servidor sintético,
 encerrado no fim. Testes não comprovam funcionamento do slider em hardware físico.
 Próximo: Ctrl+F5 na web, Pessoal v3, experimentar arrastar; aceitar nas TVs/MAG.
+
+
+## Navegação Pessoal na MAG — r25 / Pessoal v4 / TV r13 (2026-11-03)
+
+Pedido: Pessoal incoerente/espremido no menu MAG, sem destaque de seleção;
+setas nos conteúdos saltavam entre ações de favorito/álbum. Causa: botão
+Pessoal absoluto fora de #navigation, excluído do CSS remote-focus; navegação
+pessoal geométrica incluía todos os botões dos cartões e navegação espacial
+nativa MAG não era desativada até iniciar vídeo.
+
+Integrado Pessoal como quinta nav-tab com ícone/descrição/espaçamento e foco
+dourado. Grelha pessoal usa linhas/colunas dos cartões, exclui ações secundárias
+do percurso de setas e destaca cartão/título. Opções do item via MENU/INFO ou
+botão acima da grelha, sem botões de cores; favoritos/álbuns mantêm ações por
+rato/toque. Diálogos aninhados preservam retorno; favorita mantém seleção após
+recarregar dados. Navegação espacial MAG desativada logo ao entrar no Pessoal.
+
+Validação: node --check; navigation.cjs, personal-timeline.cjs,
+personal-player.cjs, tv-player.cjs, tv-api.cjs e web-player.cjs PASS.
+Novo personal-navigation-browser.cjs PASS em Chrome com dados sintéticos a
+1280x720, 1920x1080 e 390x844: setas saltam ações, opções/álbum, mutação de
+favorito preserva foco, destaque/alinhamento do menu MAG por teclas reais CDP.
+Capturas revistas. Nenhum conteúdo pessoal real nem stream IPTV aberto.
+
+Estáticos ativos sem reiniciar backend. Samsung1.0.13 assinada/instalada após
+confirmar ambas as sessões de reprodução inativas. Xiaomi APK1.3 carrega TVr13
+hospedada ao reabrir. MAG Restart portal para r25 e Pessoal v4. Testes no PC
+não confirmam o comando/hardware MAG: falta aceitação física pelo utilizador.
+Próximo: confirmar navegação natural entre conteúdos na MAG. Restante plano
+OneDrive mantém piloto e validação de reprodução nas TVs/MAG pendente.
