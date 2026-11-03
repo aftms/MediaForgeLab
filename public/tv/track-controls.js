@@ -4,7 +4,7 @@ var languages={por:'Português',pt:'Português',eng:'Inglês',en:'Inglês',spa:'
 function label(t,kind){var lang=String(t.language||'').toLowerCase(),name=languages[lang]||t.language||kind+' '+(t.index+1);return name+(t.title?' · '+t.title:'')+(t.supported===false?' · formato ainda não suportado':'');}
 window.MediaTrackControls=function(root,video,position,changed,overlayParent){
  var self=this,audio=0,subtitle=-1,cues=[],timer=null,nativeTrack=null,known={},overlay=document.createElement('div');overlay.className='media-captions';overlayParent.appendChild(overlay);
- root.className+=' media-track-controls';var title=document.createElement('button'),body=document.createElement('div'),opened=root.parentNode.tagName==='DIALOG';title.type='button';title.textContent='Áudio e legendas';title.setAttribute('aria-expanded',String(opened));root.appendChild(title);root.appendChild(body);body.style.display=opened?'block':'none';title.onclick=function(){opened=!opened;body.style.display=opened?'block':'none';title.setAttribute('aria-expanded',String(opened));};
+ root.className+=' media-track-controls';var title=document.createElement('button'),body=document.createElement('div'),opened=false;title.type='button';title.textContent='Áudio e legendas';title.setAttribute('aria-expanded',String(opened));root.appendChild(title);root.appendChild(body);body.style.display=opened?'block':'none';title.onclick=function(){opened=!opened;body.style.display=opened?'block':'none';title.setAttribute('aria-expanded',String(opened));};
  function select(name){var wrap=document.createElement('label'),text=document.createElement('span'),field=document.createElement('select');text.textContent=name;field.setAttribute('aria-label',name);wrap.appendChild(text);wrap.appendChild(field);body.appendChild(wrap);return field;}
  var a=select('Áudio'),s=select('Legendas'),note=document.createElement('small');body.appendChild(note);note.setAttribute('role','status');
  if(video&&video.addTextTrack&&window.VTTCue){try{nativeTrack=video.addTextTrack('subtitles','Media Forge Lab');nativeTrack.mode='showing';}catch(ignore){}}
@@ -13,7 +13,7 @@ window.MediaTrackControls=function(root,video,position,changed,overlayParent){
  function options(field,tracks,empty,kind,selected,off){field.innerHTML='';if(off)field.add(new Option('Desligadas',-1));for(var i=0;i<tracks.length;i++){var t=tracks[i],opt=new Option(label(t,kind),t.index);opt.disabled=t.supported===false;field.add(opt);}if(!field.options.length)field.add(new Option(empty,0));field.value=selected;}
  this.clear=function(){clear();clearInterval(timer);timer=null;};
  this.values=function(){return {audio:audio,subtitle:subtitle};};
- this.reset=function(){audio=0;subtitle=-1;clear();clearInterval(timer);timer=null;};
+ this.reset=function(){opened=false;body.style.display='none';title.setAttribute('aria-expanded','false');audio=0;subtitle=-1;clear();clearInterval(timer);timer=null;};
  this.prepare=function(){clear();a.disabled=s.disabled=true;note.textContent='A verificar as faixas disponíveis…';};
  this.update=function(data){audio=Number(data.audio_index)||0;subtitle=data.subtitle_index===undefined?-1:Number(data.subtitle_index);var at=data.audio||[],st=data.subtitles||[],supported=0;for(var i=0;i<st.length;i++)if(st[i].supported!==false)supported++;
  options(a,at,data.tracks_known===false?'Automático':'Sem faixa detetada','Áudio',audio,false);options(s,st,'','Legenda',subtitle,true);a.disabled=at.length<2;s.disabled=!supported;

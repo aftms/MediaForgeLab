@@ -362,3 +362,10 @@ persistente de900ms a liberta. Retomar nesse intervalo reutiliza o leitor; a
 pausa prolongada mantém a política de libertar a ligação. Alterar o tamanho
 não retoma automaticamente um vídeo pausado. Escape ao sair de ecrã inteiro
 não fecha o diálogo através de um evento cancel simultâneo.
+
+
+## Apresentação discreta — web v16
+
+Áudio e legendas fica fechado por defeito, incluindo ao abrir outro conteúdo.
+Um botão pequeno abre os seletores compactos, sem caixa colorida ou moldura.
+O mesmo estilo aplica-se às TVs e Pessoal; o foco do comando continua visível.

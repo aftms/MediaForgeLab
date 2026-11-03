@@ -456,3 +456,17 @@ Próximo: Ctrl+F5 para webv15 e confirmar duplo clique no computador do utilizad
 Ajuste final: duplo clique usa estado fullscreen capturado no primeiro clique;
 se o navegador já realizou a transição, não envia um segundo pedido. Teste final
 confirma ausência de aviso indevido de fullscreen e mantém todos os checks acima.
+
+
+## Painel de idiomas discreto — webv16 / TVr15 / Pessoalv6 (2026-11-03)
+
+Utilizador achou painel Áudio e legendas intrusivo/forte. Componente partilhado
+fecha por defeito em todas as interfaces e em reset/novo conteúdo. Eliminados
+fundo/moldura, título menor de peso normal e cor neutra; seletores compactos220px,
+labels leves, nota pequena, foco acessível mantido. Não altera reprodução.
+Verificação visual Chrome com componente e dados sintéticos: fechado baixo70px,
+abrir seletores, reset fecha,390px sem overflow; capturas fechado/aberto revistas.
+JS syntax e diff check PASS. Sem streams abertos nem restart backend. Samsung
+1.0.15 assinada/instalada após verificar ausência de reprodução Samsung. Xiaomi
+hospedada recebe r15; MAG rootr25 mantém-se, Pessoalv6. Web Ctrl+F5 parav16.
+Próximo: aceitar apresentação discreta; testes físicos anteriores continuam pendentes.
