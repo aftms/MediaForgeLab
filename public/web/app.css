@@ -36,3 +36,20 @@ nav .personal-entry{display:block;padding:12px 13px;color:var(--text);text-decor
 #player-pip{font-size:13px;white-space:nowrap}#player-pip[aria-pressed=true]{border-color:#6d9e9d;color:#a8d8ce}
 
 #play-navigation{display:flex;align-items:center;gap:8px;margin:0 0 12px}#play-navigation[hidden]{display:none}#play-navigation button{font-size:12px;padding:7px 10px;white-space:nowrap}#play-list{flex:1;min-width:0;max-width:none;min-height:34px;font-size:13px;padding:6px 8px}#play-list-position{color:var(--muted);font-size:11px;white-space:nowrap}@media(max-width:600px){#play-navigation{flex-wrap:wrap}#play-list{order:-1;flex-basis:100%;width:100%}#play-list-position{margin-left:auto}}
+
+/* VOD control bar: one full-length timeline within the image. */
+#video-stage{position:relative;isolation:isolate;background:#000;border-radius:8px;overflow:hidden}
+#video-stage .video-controls{position:absolute;inset:auto 0 0;z-index:2;padding:32px 16px 10px;background:linear-gradient(transparent,rgba(0,0,0,.82));color:#fff;transition:opacity .18s}
+#video-stage.controls-quiet .video-controls{opacity:0;pointer-events:none}
+#video-stage:focus-within .video-controls{opacity:1;pointer-events:auto}
+.video-controls-row{display:flex;align-items:center;gap:10px;min-height:32px}.video-controls-space{flex:1}
+#video-stage .video-controls button{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#fff;border:0;border-radius:5px;width:34px;height:32px;padding:5px;font-size:17px;flex-shrink:0}
+#video-stage .video-controls button:hover{background:#ffffff20}#video-stage .video-controls svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#video-stage #video-mute[aria-pressed=true]{opacity:.5}
+#video-stage #timeline{display:block;width:100%;height:20px;margin:0;accent-color:#eee;cursor:pointer}
+#video-stage #play-time{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#video-volume{width:72px;height:18px;accent-color:#eee;min-width:36px}
+#video-stage:fullscreen{width:100%;height:100%;border-radius:0;display:flex;align-items:center;justify-content:center;background:#000}
+#video-stage:fullscreen video{width:100%;height:100%;max-height:none;aspect-ratio:auto;object-fit:contain;border-radius:0}
+#video-stage:fullscreen .video-controls{padding:48px 24px 14px}
+@media(max-width:500px){#video-stage .video-controls{padding:24px 8px 4px}.video-controls-row{gap:4px}#video-volume{width:46px}#video-stage #play-time{font-size:11px}}

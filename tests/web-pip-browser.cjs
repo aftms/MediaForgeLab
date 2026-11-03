@@ -11,7 +11,7 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  async function browse(client,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/personal/':'/tv/personal.html')+'?client='+client});await until('document.querySelectorAll(".tile").length===12');assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));}
  try{
  await call('Page.enable');await call('Runtime.enable');await call('Emulation.setDeviceMetricsOverride',{width:1500,height:960,deviceScaleFactor:1,mobile:false});
- await call('Page.navigate',{url:fixture.url+'/web/'});await until('document.getElementById("connection").textContent!=="A ligar ao computador…"');await sleep(300);
+ await call('Page.navigate',{url:fixture.url+'/web/'});await until('document.getElementById("connection") && document.getElementById("connection").textContent!=="A ligar ao computador…"');await sleep(300);
  await run(`document.getElementById("video").muted=true;window.mediaRequests=[];var originalFetch=window.fetch;window.fetch=function(url,opts){if(typeof url==='string'&&(url.endsWith('/api/media/web')||url.endsWith('/api/media/stop')))mediaRequests.push(url);return originalFetch.apply(this,arguments)};document.querySelector('[data-section=movie]').click()`);
  await until('document.querySelector(".card-open")');await run('document.querySelector(".card-open").click()');await until('document.getElementById("video").currentTime>1 && !document.getElementById("video").paused');
 

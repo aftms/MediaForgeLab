@@ -411,3 +411,22 @@ Web, Samsung e Xiaomi usam a mesma seleção no servidor, com os metadados já
 obtidos para reproduzir, sem consulta extra ao fornecedor. MAG usa os idiomas
 informados pelo leitor nativo e só muda a faixa fora dos callbacks do firmware.
 Se não houver informação suficiente na MAG, mantém o áudio que o leitor escolheu.
+
+
+## Barra de posição dentro do vídeo — web v21
+
+Nos filmes e episódios, existe uma única barra dentro do vídeo, com a posição
+e duração totais. Clique/arraste para escolher um ponto ou use as setas quando
+a barra tem foco. Os botões de reprodução/pausa, volume e ecrã inteiro ficam
+junto da barra. Os controlos desaparecem quando não estão a ser usados e voltam
+ao mover/tocar no vídeo ou focar um botão; permanecem visíveis em pausa.
+Em ecrã inteiro, a mesma barra continua acessível, sem reiniciar o vídeo ao
+maximizar. A barra deixa de mostrar a duração parcial do trecho HLS preparado.
+
+Escolher uma posição pede ao servidor esse ponto do ficheiro; pode haver uma
+breve preparação. Em pausa, escolher a posição mantém a ligação livre; ▶ retoma
+no ponto escolhido. Fechar guarda essa posição. A escolha de áudio/legendas
+mantém-se. TV em direto continua com controlos nativos. Esta alteração é do
+leitor web de filmes/episódios; MAG, interfaces nativas TV e Pessoal inalterados.
+No modo Destacar, os controlos da pequena janela são geridos pelo navegador;
+a barra completa permanece na página, não dentro da janela PiP nativa.

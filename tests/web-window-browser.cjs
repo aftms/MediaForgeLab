@@ -11,8 +11,8 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  async function browse(client,width,height){await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});await call('Page.navigate',{url:fixture.url+(client==='web'?'/web/personal/':'/tv/personal.html')+'?client='+client});await until('document.querySelectorAll(".tile").length===12');assert.ok(await run('document.documentElement.scrollWidth<=innerWidth'));}
  try{
  await call('Page.enable');await call('Runtime.enable');await call('Emulation.setDeviceMetricsOverride',{width:1500,height:960,deviceScaleFactor:1,mobile:false});
- await call('Page.navigate',{url:fixture.url+'/web/'});await until('document.getElementById("connection").textContent!=="A ligar ao computador…"');await sleep(300);
- await run(`window.mediaRequests=[];var originalFetch=window.fetch;window.fetch=function(url,opts){if(typeof url==='string'&&(url.endsWith('/api/media/web')||url.endsWith('/api/media/stop')))mediaRequests.push(url);return originalFetch.apply(this,arguments)};document.querySelector('[data-section=movie]').click()`);
+ await call('Page.navigate',{url:fixture.url+'/web/'});await until('document.getElementById("connection") && document.getElementById("connection").textContent!=="A ligar ao computador…"');await sleep(300);
+ await run(`document.getElementById('video').muted=true;window.mediaRequests=[];var originalFetch=window.fetch;window.fetch=function(url,opts){if(typeof url==='string'&&(url.endsWith('/api/media/web')||url.endsWith('/api/media/stop')))mediaRequests.push(url);return originalFetch.apply(this,arguments)};document.querySelector('[data-section=movie]').click()`);
  await until('document.querySelector(".card-open")');await run('document.querySelector(".card-open").click()');await until('document.getElementById("video").currentTime>1 && !document.getElementById("video").paused');
  const starts=await run('mediaRequests.length'),initial=await run('document.getElementById("player").getBoundingClientRect().width');
  await click('player-smaller');const small=await run('document.getElementById("player").getBoundingClientRect().width');assert.ok(small<initial-100);await click('player-larger');assert.ok(await run('document.getElementById("player").getBoundingClientRect().width')>small+100);
@@ -20,11 +20,11 @@ const fs=require('fs'),assert=require('assert/strict'),sleep=ms=>new Promise(r=>
  const rect=await run('(()=>{var r=document.getElementById("player").getBoundingClientRect();return {x:r.right-4,y:r.bottom-4,width:r.width}})()');
  await call('Input.dispatchMouseEvent',{type:'mouseMoved',x:rect.x,y:rect.y});await call('Input.dispatchMouseEvent',{type:'mousePressed',x:rect.x,y:rect.y,button:'left',clickCount:1});await call('Input.dispatchMouseEvent',{type:'mouseMoved',x:rect.x+80,y:rect.y-40,button:'left',buttons:1});await call('Input.dispatchMouseEvent',{type:'mouseReleased',x:rect.x+80,y:rect.y-40,button:'left',clickCount:1});
  assert.ok(await run('document.getElementById("player").getBoundingClientRect().width')>rect.width+30);
- await call('Runtime.evaluate',{expression:'document.getElementById("player-fullscreen").click()',userGesture:true});await until('document.fullscreenElement===document.getElementById("video")');
+ await call('Runtime.evaluate',{expression:'document.getElementById("player-fullscreen").click()',userGesture:true});await until('document.fullscreenElement===document.getElementById("video-stage")');
  assert.ok(await run('document.getElementById("video").getBoundingClientRect().height>=innerHeight-2'));
  await sleep(300);await run('document.exitFullscreen()');await until('!document.fullscreenElement');
  async function doubleClickVideo(){const p=await run('(()=>{var r=document.getElementById("video").getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()');for(const n of [1,2]){await call('Input.dispatchMouseEvent',{type:'mousePressed',...p,button:'left',clickCount:n});await call('Input.dispatchMouseEvent',{type:'mouseReleased',...p,button:'left',clickCount:n});await sleep(60)}}
- await doubleClickVideo();await until('document.fullscreenElement===document.getElementById("video")');await doubleClickVideo();await until('!document.fullscreenElement');
+ await doubleClickVideo();await until('document.fullscreenElement===document.getElementById("video-stage")');await doubleClickVideo();await until('!document.fullscreenElement');
 
  await run('document.getElementById("player").dispatchEvent(new Event("cancel",{cancelable:true}))');assert.ok(await run('document.getElementById("player").open'));
  await call('Emulation.setDeviceMetricsOverride',{width:1100,height:760,deviceScaleFactor:1,mobile:false});await call('Emulation.setDeviceMetricsOverride',{width:1500,height:960,deviceScaleFactor:1,mobile:false});

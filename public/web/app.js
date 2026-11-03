@@ -1,10 +1,10 @@
 /* Modern browser UI; shares all catalog/favorite/progress/refresh APIs with MAG. */
 (()=>{'use strict';
-const WEB_VERSION='20';
+const WEB_VERSION='21';
 const $=id=>document.getElementById(id),video=$('video'),owner=crypto.randomUUID?crypto.randomUUID():('web-'+Date.now()+'-'+Math.random().toString(36).slice(2));
 const labels={tv:'TV em direto',movie:'Filmes',series:'Séries',favorites:'Favoritos',continue:'Continuar a ver'};
 let action='',section='tv',state={kind:'tv',view:'items',quality:'auto',country:'PT',origin:'',group:'',q:'',favorites:'0',language:''},offset=0,total=0,history=[],rows=[],sequence=0,filterSeq=0,searchTimer,pollTimer,installPrompt;
-let session=null,playingItem=null,hls=null,basePosition=0,duration=0,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,subtitleIndex=-1,compatibility=false,pausedPosition=null,pauseTimer=null,pauseEpoch=0;
+let session=null,playingItem=null,hls=null,basePosition=0,duration=0,lastSaved=0,starting=false,playerGeneration=0,audioIndex=0,subtitleIndex=-1,compatibility=false,pausedPosition=null,pauseTimer=null,pauseEpoch=0,seekBusy=false,seekingTimeline=false;
 const display={view:'cards',sizes:{cards:60,list:120}};
 try{const saved=JSON.parse(localStorage.getItem('mag-web-display-v1'));if(saved&&['cards','list'].includes(saved.view))display.view=saved.view;for(const view of ['cards','list'])if([60,120,240].includes(saved?.sizes?.[view]))display.sizes[view]=saved.sizes[view];}catch{}
 function pageSize(){return display.sizes[display.view];}
@@ -106,7 +106,7 @@ async function choosePlayback(){const list=playbackList,value=$('play-list').val
 function closePlaybackList(){++listGeneration;playbackList=null;renderPlaybackList();}
 $('play-previous').onclick=()=>adjacentPlayback(-1);$('play-next').onclick=()=>adjacentPlayback(1);$('play-list').onchange=choosePlayback;
 const trackControls=new MediaTrackControls($('media-tracks'),video,()=>video.currentTime||0,(audio,subtitle)=>{audioIndex=audio;subtitleIndex=subtitle;if(pausedPosition===null)seekOrRestart();},$('player'));
-function updateTime(){if(starting||!session)return;const now=basePosition+(video.currentTime||0);text('play-time',fmt(now)+' / '+(duration>0?fmt(duration):'—'));if(document.activeElement!==$('timeline'))$('timeline').value=now;if(now-lastSaved>=15||now<lastSaved-20){lastSaved=now;saveProgress();}}
+function updateTime(){if(starting||(!session&&pausedPosition===null))return;const now=pausedPosition!==null?pausedPosition:basePosition+(video.currentTime||0);if(!seekingTimeline){text('play-time',fmt(now)+' / '+(duration>0?fmt(duration):'—'));$('timeline').value=now;$('timeline').setAttribute('aria-valuetext',fmt(now)+' de '+fmt(duration));}updateVideoControls();if(session&&(now-lastSaved>=15||now<lastSaved-20)){lastSaved=now;saveProgress();}}
 function cancelPauseRelease(){clearTimeout(pauseTimer);pauseTimer=null;++pauseEpoch;}
 function schedulePauseRelease(){
  cancelPauseRelease();if(starting||!session||video.ended||!video.paused)return;
@@ -120,10 +120,10 @@ function schedulePauseRelease(){
   try{await api('/api/media/stop',{token:current.token});}catch{}
  },900);
 }
-async function saveProgress(){if(starting||!session||!playingItem||playingItem.kind==='tv')return;const position=Math.max(0,Math.floor(basePosition+(video.currentTime||0)));try{await api('/api/progress',{id:playingItem.id,position,duration:Math.floor(duration),completed:duration>0&&position>=duration-8});}catch{/* Keep playback running if saving fails. */}}
+async function saveProgress(){if(starting||(!session&&pausedPosition===null)||!playingItem||playingItem.kind==='tv')return;const position=Math.max(0,Math.floor(pausedPosition!==null?pausedPosition:basePosition+(video.currentTime||0)));try{await api('/api/progress',{id:playingItem.id,position,duration:Math.floor(duration),completed:duration>0&&position>=duration-8});}catch{/* Keep playback running if saving fails. */}}
 function detach(){cancelPauseRelease();trackControls.prepare();video.pause();if(hls){hls.destroy();hls=null;}video.removeAttribute('src');video.load();}
-async function stop(){cancelPauseRelease();if(document.pictureInPictureElement===video){try{await document.exitPictureInPicture();}catch{}}pausedPosition=null;++playerGeneration;clearTimeout(pollTimer);await saveProgress();detach();const previous=session;session=null;starting=false;trackControls.reset();if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}}
-async function play(item,position,keepList=false){if(starting||selectionBusy)return;selectionBusy=true;const stamp=++listGeneration;if(!keepList)capturePlaybackList(item);renderPlaybackList();try{await stop();if(stamp!==listGeneration)return;playingItem=item;compatibility=false;audioIndex=item.kind==='tv'?0:'auto';subtitleIndex=-1;trackControls.reset();if(!$('player').open)$('player').showModal();text('play-title',item.name);text('play-kind',item.kind==='tv'?'EM DIRETO':item.kind==='episode'?'EPISÓDIO':'FILME');text('plot',item.plot);text('play-favorite',item.favorite?'★ Remover favorito':'☆ Guardar favorito');$('vod-seek').hidden=item.kind==='tv';$('rewind').hidden=$('forward').hidden=item.kind==='tv';await start(position);}finally{selectionBusy=false;renderPlaybackList();}}
+async function stop(){cancelPauseRelease();if(document.pictureInPictureElement===video){try{await document.exitPictureInPicture();}catch{}}const progress=saveProgress();pausedPosition=null;++playerGeneration;clearTimeout(pollTimer);await progress;detach();const previous=session;session=null;starting=false;trackControls.reset();if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}}
+async function play(item,position,keepList=false){if(starting||selectionBusy)return;selectionBusy=true;const stamp=++listGeneration;if(!keepList)capturePlaybackList(item);renderPlaybackList();try{await stop();if(stamp!==listGeneration)return;playingItem=item;compatibility=false;audioIndex=item.kind==='tv'?0:'auto';subtitleIndex=-1;trackControls.reset();if(!$('player').open)$('player').showModal();text('play-title',item.name);text('play-kind',item.kind==='tv'?'EM DIRETO':item.kind==='episode'?'EPISÓDIO':'FILME');text('plot',item.plot);text('play-favorite',item.favorite?'★ Remover favorito':'☆ Guardar favorito');$('vod-seek').hidden=item.kind==='tv';video.controls=item.kind==='tv';$('video-stage').classList.toggle('vod',item.kind!=='tv');seekingTimeline=false;showVideoControls();$('rewind').hidden=$('forward').hidden=item.kind==='tv';await start(position);}finally{selectionBusy=false;renderPlaybackList();}}
 
 let hlsLoader=null;
 async function ensureHls(){
@@ -140,7 +140,7 @@ async function ensureHls(){
  await hlsLoader;
 }
 function preparing(data){
- renderPlaybackList();
+ renderPlaybackList();updateVideoControls();showVideoControls();
  const known=Number.isFinite(data?.duration)&&data.duration>0;
  duration=known?data.duration:0;
  $('timeline').disabled=true;$('timeline').max=Math.max(1,duration);$('timeline').value=known?basePosition:0;
@@ -154,10 +154,22 @@ async function ready(serial){if(serial!==playerGeneration||!session)return;try{c
  text('play-status',data.video_mode==='remux'?'Vídeo original · formato adaptado para o navegador':'Vídeo adaptado para compatibilidade');
  if(typeof Hls!=='undefined'&&Hls.isSupported()){hls=new Hls({enableWorker:true,backBufferLength:12,maxBufferLength:20,maxMaxBufferLength:30,startPosition:0,liveSyncDurationCount:1});hls.loadSource(data.url);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>text('play-status','Prima ▶ para reproduzir.')));hls.on(Hls.Events.ERROR,(_,e)=>{if(e.fatal)text('play-status','Não foi possível reproduzir. Experimente o modo compatível ou feche e volte a abrir.');});}
  else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=data.url;video.play().catch(()=>{});}else throw Error('Este navegador não suporta o leitor. Use Chrome ou Edge atualizado.');
- starting=false;renderPlaybackList();pulse();
+ starting=false;renderPlaybackList();updateVideoControls();pulse();
  }catch(e){if(serial!==playerGeneration)return;starting=false;renderPlaybackList();$('compatible').disabled=false;text('play-status','Não foi possível preparar o vídeo. '+e.message);}}
 function pulse(){clearTimeout(pollTimer);pollTimer=setTimeout(async()=>{if(!session)return;const current=session;try{const data=await api('/api/media/pulse',{token:current.token});if(session!==current)return;trackControls.feed(data);pulse();}catch(e){if(session!==current)return;detach();session=null;text('play-status',e.message);}},subtitleIndex>=0?1000:20000);}
-async function seek(position){if(!session||starting||playingItem.kind==='tv')return;await saveProgress();clearTimeout(pollTimer);await start(Math.min(Math.max(0,position),Math.max(0,duration-1)));}
+async function seek(position){
+ if(starting||seekBusy||!playingItem||playingItem.kind==='tv'||(!session&&pausedPosition===null)||!(duration>0)||!Number.isFinite(position))return;
+ const target=Math.min(Math.max(0,position),Math.max(0,duration-1)),serial=playerGeneration,stayPaused=video.paused||pausedPosition!==null;
+ seekBusy=true;updateVideoControls();
+ try{
+  await saveProgress();if(serial!==playerGeneration)return;cancelPauseRelease();clearTimeout(pollTimer);
+  if(stayPaused){
+   const previous=session;session=null;pausedPosition=target;if(hls)hls.stopLoad();
+   text('play-status','Em pausa · Prima ▶ para reproduzir a partir de '+fmt(target)+'.');updateTime();
+   if(previous){try{await api('/api/media/stop',{token:previous.token});}catch{}}
+  }else await start(target);
+ }finally{seekBusy=false;updateVideoControls();}
+}
 async function refreshStatus(){try{const s=await api('/api/refresh');$('refresh').disabled=s.running;text('refresh',s.running?'A verificar…':'↻ Atualizar catálogo');const a=s.summary&&s.summary.added;const when=s.last_success?new Date(s.last_success).toLocaleString('pt-PT'):'ainda não realizada';text('refresh-status',(s.error||s.running&&s.stage||a&&`${a.tv} canais, ${a.movie} filmes e ${a.series} séries adicionados`||'')+' · Última atualização: '+when);if(s.running)setTimeout(refreshStatus,2500);}catch(e){text('refresh-status',e.message);}}
 document.querySelectorAll('[data-section]').forEach(b=>b.onclick=()=>select(b.dataset.section));document.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>select('favorites',b.dataset.kind));
 $('search').oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{state={...state,view:'items',series:'',seriesName:'',season:'',seasonName:'',q:$('search').value};offset=0;history=[];load();},280);};
@@ -174,7 +186,7 @@ updatePipButton();
 let lastFullscreenChange=0;
 function resizePlayer(delta){const box=$('player');if(document.fullscreenElement)return;const max=innerWidth*.96,min=Math.min(420,max);box.style.width=Math.max(min,Math.min(max,box.getBoundingClientRect().width+delta))+'px';box.style.height='auto';}
 $('player-smaller').onclick=()=>resizePlayer(-160);$('player-larger').onclick=()=>resizePlayer(160);
-async function setFullscreen(enabled){if(!!document.fullscreenElement===enabled)return;try{if(enabled)await video.requestFullscreen();else await document.exitFullscreen();}catch{setTimeout(()=>{if(!!document.fullscreenElement!==enabled)text('play-status','Use o botão de ecrã inteiro nos controlos do vídeo.');},100);}}
+async function setFullscreen(enabled){if(!!document.fullscreenElement===enabled)return;try{if(enabled)await (playingItem&&playingItem.kind!=='tv'?$('video-stage'):video).requestFullscreen();else await document.exitFullscreen();}catch{setTimeout(()=>{if(!!document.fullscreenElement!==enabled)text('play-status','Use o botão de ecrã inteiro nos controlos do vídeo.');},100);}}
 function toggleFullscreen(){return setFullscreen(!document.fullscreenElement);}
 $('player-fullscreen').onclick=toggleFullscreen;
 let surfaceClick=null;
@@ -195,9 +207,33 @@ $('close-player').onclick=async()=>{closePlaybackList();await stop();$('player')
 video.onpause=schedulePauseRelease;
 video.onplay=()=>{cancelPauseRelease();if(pausedPosition!==null&&!starting){const position=playingItem.kind==='tv'?0:pausedPosition;start(position);}};
 video.onended=()=>{saveProgress();text('play-status','Reprodução terminada.');stop();};
-$('timeline').onchange=()=>seek(Number($('timeline').value));$('rewind').onclick=()=>seek(basePosition+video.currentTime-30);$('forward').onclick=()=>seek(basePosition+video.currentTime+30);$('compatible').onclick=()=>{compatibility=true;seekOrRestart();};function seekOrRestart(){if(!starting&&playingItem&&pausedPosition===null){clearTimeout(pollTimer);start(playingItem.kind==='tv'?0:basePosition+video.currentTime);}}
+$('timeline').oninput=()=>{seekingTimeline=true;text('play-time',fmt(Number($('timeline').value))+' / '+fmt(duration));$('timeline').setAttribute('aria-valuetext',fmt(Number($('timeline').value))+' de '+fmt(duration));showVideoControls();};$('timeline').onchange=()=>{seekingTimeline=false;seek(Number($('timeline').value));};$('timeline').onblur=()=>{seekingTimeline=false;updateTime();};$('rewind').onclick=()=>seek((pausedPosition!==null?pausedPosition:basePosition+video.currentTime)-30);$('forward').onclick=()=>seek((pausedPosition!==null?pausedPosition:basePosition+video.currentTime)+30);$('compatible').onclick=()=>{compatibility=true;seekOrRestart();};function seekOrRestart(){if(!starting&&playingItem&&pausedPosition===null){clearTimeout(pollTimer);start(playingItem.kind==='tv'?0:basePosition+video.currentTime);}}
 $('play-favorite').onclick=async()=>{try{await favorite(playingItem);render();}catch(e){text('play-status',e.message);}};
 $('settings').onclick=async()=>{$('source-url').value='';text('source-status','');$('settings-panel').showModal();try{const s=await api('/api/source');text('source-server',s.server?'Servidor: '+s.server:'Origem ainda não configurada.');}catch(e){text('source-status',e.message);}};$('close-settings').onclick=()=>{$('source-url').value='';$('settings-panel').close();};$('settings-panel').addEventListener('close',()=>{$('source-url').value='';});$('save-source').onclick=async()=>{try{await api('/api/source',{url:$('source-url').value});$('source-url').value='';text('source-status','Origem guardada. Atualize o catálogo para a aplicar.');}catch(e){text('source-status',e.message);}};
+/* Complete VOD timeline lives in the video frame, including fullscreen.
+   Native live controls remain unchanged; no invented HLS duration/seek range. */
+let videoControlsTimer=null;
+function showVideoControls(){
+ clearTimeout(videoControlsTimer);$('video-stage').classList.remove('controls-quiet');
+ videoControlsTimer=setTimeout(()=>{if(!video.paused&&!starting&&!seekingTimeline&&!$('video-stage').matches(':focus-within'))$('video-stage').classList.add('controls-quiet');},3000);
+}
+function updateVideoControls(){
+ const paused=video.paused||pausedPosition!==null,enabled=!!playingItem&&!starting&&!seekBusy&&(!!session||pausedPosition!==null);
+ $('video-toggle').disabled=!enabled;text('video-toggle',paused?'▶':'Ⅱ');$('video-toggle').setAttribute('aria-label',paused?'Reproduzir':'Pausar');$('video-toggle').title=paused?'Reproduzir':'Pausar';
+ $('timeline').disabled=!enabled||!(duration>0);$('video-volume').value=video.volume;
+ const muted=video.muted||video.volume===0;$('video-mute').setAttribute('aria-pressed',String(muted));$('video-mute').setAttribute('aria-label',muted?'Ligar som':'Desligar som');$('video-mute').title=muted?'Ligar som':'Desligar som';
+ $('video-screen').setAttribute('aria-label',document.fullscreenElement?'Sair do ecrã inteiro':'Ecrã inteiro');$('video-screen').title=document.fullscreenElement?'Sair do ecrã inteiro':'Ecrã inteiro';
+ if(paused||starting)showVideoControls();
+}
+$('video-toggle').onclick=()=>{if(starting||seekBusy)return;if(video.paused||pausedPosition!==null)video.play().catch(()=>text('play-status','Não foi possível retomar. Feche e abra novamente.'));else video.pause();};
+$('video-mute').onclick=()=>{const muted=video.muted||video.volume===0;if(video.volume===0)video.volume=0.5;video.muted=!muted;};
+$('video-volume').oninput=()=>{video.volume=Number($('video-volume').value);video.muted=video.volume===0;};
+$('video-screen').onclick=toggleFullscreen;
+for(const event of ['pointermove','pointerdown','focusin','focusout'])$('video-stage').addEventListener(event,showVideoControls);
+for(const event of ['play','pause','volumechange','loadeddata','emptied'])video.addEventListener(event,updateVideoControls);
+document.addEventListener('fullscreenchange',()=>{updateVideoControls();showVideoControls();});
+$('video-stage').addEventListener('keydown',event=>{if(event.target!==$('video-stage')&&event.target!==video)return;if((event.key===' '||event.key==='k')&&playingItem&&playingItem.kind!=='tv'){event.preventDefault();$('video-toggle').click();}});
+
 /* Installation stays discoverable even without a browser-provided prompt. */
 const installDisplay=window.matchMedia('(display-mode: standalone)');
 let appInstalled=installDisplay.matches||navigator.standalone===true;

@@ -553,3 +553,29 @@ Ativação concluída: utilizador confirmou fecho do leitor; guarda de playback/
 verificou idle, backend reiniciado. HTTP webv20/MAGr27/TVr17 confirmado. Samsung
 1.0.17 instalada (exit 0); Xiaomi recebe UI hospedada ao reabrir. Pessoalv6 inalterado.
 Próximo: Ctrl+F5 web / reabrir TVs / Restart portal MAG; confirmar em dispositivos físicos.
+
+
+## Barra de posição integrada no vídeo — webv21 (2026-11-03)
+
+Pedido: usar slider dentro do vídeo em vez do externo. HLS atual apresenta apenas
+janela preparada, por isso duração nativa não representa filme inteiro. Solução:
+barra VOD única no video-stage com range duração/posição completas, pausa/play,
+volume/mute e fullscreen do wrapper. VOD desativa controls nativos parciais;
+TV em direto mantém controls nativos. Barra auto-oculta, permanece em pausa/foco,
+responsiva390px e em fullscreen. Header/PiP/redimensionamento preservados.
+Sem mudança do backend/formato/HLS nem nova ligação para obter duração.
+
+Seek mantém pipeline existente e áudio/legendas; guarda de reentrância e geração
+cancela resposta tardia quando fecha. Paused seek não abre stream, retoma no ponto
+escolhido e guarda posição ao fechar. Botões +/-30 usam posição escolhida em pausa.
+Native PiP continua suportado mas a barra completa pertence à página; a janela
+PiP mantém controlos nativos do browser. MAGr27/TVr17/Samsung1.0.17/Pessoalv6 iguais.
+
+Testes: unidade preparação/cancelamento, seek duplo e close durante save, paused
+seek sem stream e posição persistida PASS; regressões lista/origem PASS. Chrome
+sintético120s, --mute-audio e video.muted=true: barra120s com buffer<60, click real
+~90s, recuo8s, inglês mantido, pausa/seek60/resume, fullscreen/seek30,390px e lease
+libertada PASS. Screenshot móvel inspecionado. Testes reais Chrome fullscreen
+botão/duplo-clique/resize e PiP sem novas sessões PASS. Sem fornecedor, ficheiros
+pessoais ou reinício backend. Estáticos webv21 ativos; aceitação física pendente.
+Próximo: Ctrl+F5 e usar a barra dentro do vídeo; pode haver preparação ao saltar.
