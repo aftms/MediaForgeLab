@@ -730,3 +730,17 @@ pacote Samsung foi instalado; não se reiniciou o serviço nem interrompeu o lei
 Primeira tentativa conservadora recusou instalação por qualquer playback ativo;
 identificou-se explicitamente Navegador antes de prosseguir. Testes desta segunda
 fase sem transmissões. Xiaomi continua desligada; não instalada APK1.4.
+
+
+## Títulos dos cartões mais pequenos — Coleções v4 (2026-11-03)
+
+Pedido com screenshot: reduzir títulos dos vídeos. CSS partilhado: web/mobile
+15/14→13px, MAG15→14px, TV17→15px; line-height1.35, padding8x10 e min-height50.
+Mantém negrito; sem novas regras de truncamento. CSS?v4 e módulo v4; TVr22,
+Samsung1.0.22 construída/instalada exit0. Web24/MAGr29 e APK1.4 pendente iguais.
+Chrome isolado mudo, leitura apenas: estilos computados13/14/15px e sem overflow
+horizontal a390/1280/1536/1920; screenshot desktop inspecionada. Não criar testes
+unitários para CSS. Sem vídeos iniciados, sem restart de backend. Instalação
+Samsung com guarda para playback Samsung; reprodução no navegador preservada.
+Commit/push desta fase. Próximo Ctrl+F5/reabrir Coleções. Categorias/tags continuam
+em discussão, hierarquia de tags não implementada; gestão web/favoritos todos mantidos.
